@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.108   2014-04-17
+        - Bugfix in "Term::Choose::Win32": error in variable name.
+
 1.107   2014-04-09
         - Documentation: update and bugfix.
 

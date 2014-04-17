@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.107';
+our $VERSION = '1.108';
 
 use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT
                              RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED );
@@ -129,7 +129,7 @@ sub __reset_mode {
 
 sub __get_term_size {
     my ( $self, $handle_out ) = @_;  # no use for $handle_out on win32
-    my ( $term_width, $term_heighT ) = Win32::Console->new()->Size();
+    my ( $term_width, $term_height ) = Win32::Console->new()->Size();
     return $term_width - 1, $term_height;
 }
 
@@ -159,7 +159,7 @@ Term::Choose::Win32 - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.107
+Version 1.108
 
 =head1 DESCRIPTION
 
