@@ -2,9 +2,9 @@ package Term::Choose;
 
 use warnings;
 use strict;
-use 5.10.1;
+use 5.010001;
 
-our $VERSION = '1.108';
+our $VERSION = '1.109';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -36,10 +36,10 @@ BEGIN {
 sub new {
     my $class = shift;
     my ( $opt ) = @_;
-    croak "new: called with " . @_ . " arguments - 0 or 1 arguments expected." if @_ > 1;
+    croak "new: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1;
     my $self = bless {}, $class;
     if ( defined $opt ) {
-        croak "new: the (optional) argument must be a HASH reference." if ref $opt ne 'HASH';
+        croak "new: the (optional) argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->__validate_options( $opt );
     }
     $self->{plugin} = $Plugin_Package->new();
@@ -111,7 +111,7 @@ sub __validate_options {
     my @warn = ();
     for my $key ( keys %$opt ) {
         if ( ! exists $valid->{$key} ) {
-            push @warn, "choose: '$key' is not a valid option name.";
+            push @warn, "'$key' is not a valid option name";
             next;
         }
         next if ! defined $opt->{$key};
@@ -128,7 +128,7 @@ sub __validate_options {
                 ++$err;
             }
             if ( $err ) {
-                push @warn, [ "'$key'", "the passed value" ];
+                push @warn, "option '$key' : the passed value is not a valid value. Falling back to the default value";
             }
             else {
                 $self->{$key} = $opt->{$key};
@@ -144,7 +144,7 @@ sub __validate_options {
                 ++$err;
             }
             if ( $err ) {
-                push @warn, [ "'$key'", "the passed value" ];
+                push @warn, "option '$key' : the passed value is not a valid value. Falling back to the default value";
             }
             else {
                 $self->{$key} = $opt->{$key};
@@ -154,13 +154,12 @@ sub __validate_options {
             $self->{$key} = $opt->{$key};
         }
         else {
-            push @warn, [ "'$key'", "'$opt->{$key}'" ];
+            push @warn, "option '$key' : '$opt->{$key}' is not a valid value. Falling back to the default value";
         }
     }
     if ( @warn ) {
         for my $w ( @warn ) {
-            my ( $option, $value ) = @$w;
-            carp "choose: option $option : $value is not a valid value. Falling back to the default value.";
+            carp "choose: " . $w;
         }
         print "Press a key to continue";
         my $dummy = <STDIN>;
@@ -170,7 +169,7 @@ sub __validate_options {
 
 sub __init_term {
     my ( $self ) = @_;
-    $self->{old_handle} = select( $self->{handle_out} );
+    $self->{old_handle} = select $self->{handle_out};
     $self->{backup_flush} = $|;
     $| = 1;
     $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse} );
@@ -196,7 +195,7 @@ sub __reset_term {
         delete $self->{backup_flush};
     }
     if ( defined $self->{old_handle} ) {
-        select( $self->{old_handle} );
+        select $self->{old_handle};
         delete $self->{old_handle};
     }
     if ( defined $self->{backup_opt} ) {
@@ -219,9 +218,9 @@ sub __get_key {
 sub config {
     my $self = shift;
     my ( $opt ) = @_;
-    croak "config: called with " . @_ . " arguments - 0 or 1 arguments expected." if @_ > 1; #
+    croak "config: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1; #
     if ( defined $opt ) {
-        croak "config: the argument must be a HASH reference." if ref $opt ne 'HASH';
+        croak "config: the argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->__validate_options( $opt );
     }
 }
@@ -233,14 +232,14 @@ sub choose {
     }
     my $self = shift;
     my ( $orig_list_ref, $opt ) = @_;
-    croak "choose: called with " . @_ . " arguments - 0 or 1 arguments expected." if @_ < 1 || @_ > 2;
-    croak "choose: the first argument must be an ARRAY reference." if ref $orig_list_ref ne 'ARRAY';
+    croak "choose: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ < 1 || @_ > 2;
+    croak "choose: the first argument must be an ARRAY reference" if ref $orig_list_ref ne 'ARRAY';
     if ( ! @$orig_list_ref ) {
-        carp "choose: The first argument refers to an empty list!";
+        carp "choose: The first argument refers to an empty list";
         return;
     }
     if ( defined $opt ) {
-        croak "choose: the (optional) second argument must be a HASH reference." if ref $opt ne 'HASH';
+        croak "choose: the (optional) second argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->{backup_opt} = { map{ $_ => $self->{$_} } keys %$opt };
         $self->__validate_options( $opt );
     }
@@ -257,8 +256,8 @@ sub choose {
     $self->__length_longest();
     $self->{col_width} = $self->{length_longest} + $self->{pad};
     local $SIG{'INT'} = sub {
-        my $signame = shift;
-        exit( 1 );
+        # my $signame = shift;
+        exit 1;
     };
     $self->__init_term();
     $self->__write_first_screen();
@@ -511,7 +510,7 @@ sub choose {
         elsif ( $key == CONTROL_C ) {
             $self->__reset_term( 1 );
             print STDERR "^C\n";
-            exit( 1 );
+            exit 1;
         }
         elsif ( $key == KEY_ENTER ) {
             my @chosen;
@@ -720,6 +719,7 @@ sub __write_first_screen {
     my ( $self ) = @_;
     ( $self->{term_width}, $self->{term_height} ) = $self->{plugin}->__get_term_size();
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
+    $self->{max_width} += WIDTH_CURSOR if defined $self->{max_width};
     if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
         $self->{avail_width} = $self->{max_width};
     }
@@ -831,7 +831,7 @@ sub __size_and_layout {
         }
     }
     else {
-        my $tmp_avail_width = $self->{avail_width};
+        my $tmp_avail_width = $self->{avail_width} + $self->{pad} - WIDTH_CURSOR;
         # auto_format
         if ( $self->{layout} == 1 || $self->{layout} == 2 ) {
             my $tmc = int( @{$self->{list}} / $self->{avail_height} );
@@ -1150,7 +1150,7 @@ Term::Choose - Choose items from a list.
 
 =head1 VERSION
 
-Version 1.108
+Version 1.109
 
 =cut
 
@@ -1588,7 +1588,9 @@ Allowed values: 1 or greater
 
 =head2 max_width
 
-If defined, sets the output width to I<max_width> if the terminal width is greater than I<max_width>.
+If defined, sets the maximal output width to I<max_width> if the terminal width is greater than I<max_width>.
+
+To prevent the "auto-format" to use a width less than I<max_width> set I<layout> to 0.
 
 Width refers here to the number of print columns.
 

@@ -11,8 +11,10 @@ README
 t/00-load.t
 xt/cmp_buildpl_makepl.t
 xt/cntr_choose.t
+xt/critic.t
 xt/manifest.t
 xt/perl_minimum_version.t
+xt/perlcriticrc
 xt/pod-coverage.t
 xt/pod.t
 xt/pod_defaults.t

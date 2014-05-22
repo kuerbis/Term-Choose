@@ -3,16 +3,16 @@ Term::Choose::Constants;
 
 use warnings;
 use strict;
-use 5.10.1;
+use 5.010001;
 
-our $VERSION = '1.108';
+our $VERSION = '1.109';
 
 use Exporter qw( import );
 
 our @EXPORT_OK = qw(
         ROW COL MIN MAX
         UP RIGHT LEFT LF CR
-        HIDE_CURSOR SHOW_CURSOR
+        HIDE_CURSOR SHOW_CURSOR WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
         GET_CURSOR_POSITION
         SET_ANY_EVENT_MOUSE_1003 SET_EXT_MODE_MOUSE_1005 SET_SGR_EXT_MODE_MOUSE_1006
@@ -30,7 +30,7 @@ our %EXPORT_TAGS = (
     choose => [ qw(
         ROW COL MIN MAX
         UP RIGHT LEFT LF CR
-        HIDE_CURSOR SHOW_CURSOR
+        HIDE_CURSOR SHOW_CURSOR WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
         GET_CURSOR_POSITION
         BEEP BOLD CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN RESET REVERSE UNDERLINE
@@ -69,7 +69,7 @@ sub LEFT                   () { "\e[D" }
 sub LF                     () { "\n" }
 sub CR                     () { "\r" }
 
-sub BEEP                   () { "\07" }
+sub BEEP                   () { "\a" }
 sub CLEAR_SCREEN           () { "\e[2J\e[1;1H" }
 sub CLEAR_TO_END_OF_SCREEN () { "\e[0J" }
 sub RESET                  () { "\e[0m" }
@@ -79,6 +79,7 @@ sub REVERSE                () { "\e[7m" }
 
 sub HIDE_CURSOR            () { "\e[?25l" }
 sub SHOW_CURSOR            () { "\e[?25h" }
+sub WIDTH_CURSOR           () { 1 }
 
 
 sub GET_CURSOR_POSITION           () { "\e[6n" }
@@ -154,7 +155,7 @@ Term::Choose::Constants - Provides constants for Term::Choose and its plugins.
 
 =head1 VERSION
 
-Version 1.108
+Version 1.109
 
 =head1 DESCRIPTION
 

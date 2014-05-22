@@ -3,9 +3,9 @@ Term::Choose::Win32;
 
 use warnings;
 use strict;
-use 5.10.1;
+use 5.010001;
 
-our $VERSION = '1.108';
+our $VERSION = '1.109';
 
 use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT
                              RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED );
@@ -159,7 +159,7 @@ Term::Choose::Win32 - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.108
+Version 1.109
 
 =head1 DESCRIPTION
 

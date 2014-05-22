@@ -1,8 +1,14 @@
 Revision history for Term::Choose
 
 
+1.109   2014-00-00
+        - Bugfix warning "invalid option name".
+        - Bugfix option "max_width / improvement layout.
+        - Removed the period at the end the error messages.
+        - Improved documentation.
+
 1.108   2014-04-17
-        - Bugfix in "Term::Choose::Win32": error in variable name.
+        - Fixed error in variable name in "Term::Choose::Win32".
 
 1.107   2014-04-09
         - Documentation: update and bugfix.
