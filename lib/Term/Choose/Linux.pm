@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.109';
+our $VERSION = '1.110';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -225,7 +225,7 @@ Term::Choose::Linux - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.109
+Version 1.110
 
 =head1 SYNOPSIS
 

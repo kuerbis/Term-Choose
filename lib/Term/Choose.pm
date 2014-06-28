@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.109';
+our $VERSION = '1.110';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -115,7 +115,7 @@ sub __validate_options {
             next;
         }
         next if ! defined $opt->{$key};
-        if ( $valid->{$key} eq '' ) {
+        if ( $valid->{$key} eq '' && ! ref $opt->{$key} ) {
             $self->{$key} = $opt->{$key};
         }
         elsif ( $key eq 'lf' ) {
@@ -180,7 +180,7 @@ sub __init_term {
 sub __reset_term {
     my ( $self, $from_choose ) = @_;
     if ( $from_choose ) {
-        print CR, UP x ( $self->{screen_row} + $self->{nr_prompt_lines} );
+        print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
         print CLEAR_TO_END_OF_SCREEN;
     }
     print RESET;
@@ -218,7 +218,7 @@ sub __get_key {
 sub config {
     my $self = shift;
     my ( $opt ) = @_;
-    croak "config: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1; #
+    croak "config: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1;
     if ( defined $opt ) {
         croak "config: the argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->__validate_options( $opt );
@@ -272,7 +272,7 @@ sub choose {
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
-            print CR, UP x ( $self->{screen_row} + $self->{nr_prompt_lines} );
+            print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
             print CLEAR_TO_END_OF_SCREEN;
             $self->__write_first_screen();
             next;
@@ -295,19 +295,19 @@ sub choose {
         # or the index of the last column in the first row would be $#{$self->{rc2idx}[0]}.
 
         if ( $key == KEY_j || $key == VK_DOWN ) {
-            if ( $#{$self->{rc2idx}} == 0 || ! (    $self->{rc2idx}[$self->{cursor}[ROW]+1]
-                                                 && $self->{rc2idx}[$self->{cursor}[ROW]+1][$self->{cursor}[COL]] )
+            if ( $#{$self->{rc2idx}} == 0 || ! (    $self->{rc2idx}[$self->{pos}[ROW]+1]
+                                                 && $self->{rc2idx}[$self->{pos}[ROW]+1][$self->{pos}[COL]] )
             ) {
                 $self->__beep();
             }
             else {
-                $self->{cursor}[ROW]++;
-                if ( $self->{cursor}[ROW] <= $self->{p_end} ) {
-                    $self->__wr_cell( $self->{cursor}[ROW] - 1, $self->{cursor}[COL] );
-                    $self->__wr_cell( $self->{cursor}[ROW],     $self->{cursor}[COL] );
+                $self->{pos}[ROW]++;
+                if ( $self->{pos}[ROW] <= $self->{p_end} ) {
+                    $self->__wr_cell( $self->{pos}[ROW] - 1, $self->{pos}[COL] );
+                    $self->__wr_cell( $self->{pos}[ROW],     $self->{pos}[COL] );
                 }
                 else {
-                    $self->{row_on_top} = $self->{cursor}[ROW];
+                    $self->{row_on_top} = $self->{pos}[ROW];
                     $self->{p_begin} = $self->{p_end} + 1;
                     $self->{p_end}   = $self->{p_end} + $self->{avail_height};
                     $self->{p_end}   = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
@@ -316,17 +316,17 @@ sub choose {
             }
         }
         elsif ( $key == KEY_k || $key == VK_UP ) {
-            if ( $self->{cursor}[ROW] == 0 ) {
+            if ( $self->{pos}[ROW] == 0 ) {
                 $self->__beep();
             }
             else {
-                $self->{cursor}[ROW]--;
-                if ( $self->{cursor}[ROW] >= $self->{p_begin} ) {
-                    $self->__wr_cell( $self->{cursor}[ROW] + 1, $self->{cursor}[COL] );
-                    $self->__wr_cell( $self->{cursor}[ROW],     $self->{cursor}[COL] );
+                $self->{pos}[ROW]--;
+                if ( $self->{pos}[ROW] >= $self->{p_begin} ) {
+                    $self->__wr_cell( $self->{pos}[ROW] + 1, $self->{pos}[COL] );
+                    $self->__wr_cell( $self->{pos}[ROW],     $self->{pos}[COL] );
                 }
                 else {
-                    $self->{row_on_top} = $self->{cursor}[ROW] - ( $self->{avail_height} - 1 );
+                    $self->{row_on_top} = $self->{pos}[ROW] - ( $self->{avail_height} - 1 );
                     $self->{p_end}   = $self->{p_begin} - 1;
                     $self->{p_begin} = $self->{p_begin} - $self->{avail_height};
                     $self->{p_begin} = 0 if $self->{p_begin} < 0;
@@ -335,81 +335,81 @@ sub choose {
             }
         }
         elsif ( $key == KEY_TAB || $key == CONTROL_I ) {
-            if (    $self->{cursor}[ROW] == $#{$self->{rc2idx}}
-                 && $self->{cursor}[COL] == $#{$self->{rc2idx}[$self->{cursor}[ROW]]}
+            if (    $self->{pos}[ROW] == $#{$self->{rc2idx}}
+                 && $self->{pos}[COL] == $#{$self->{rc2idx}[$self->{pos}[ROW]]}
             ) {
                 $self->__beep();
             }
             else {
-                if ( $self->{cursor}[COL] < $#{$self->{rc2idx}[$self->{cursor}[ROW]]} ) {
-                    $self->{cursor}[COL]++;
-                    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] - 1 );
-                    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+                if ( $self->{pos}[COL] < $#{$self->{rc2idx}[$self->{pos}[ROW]]} ) {
+                    $self->{pos}[COL]++;
+                    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] - 1 );
+                    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
                 }
                 else {
-                    $self->{cursor}[ROW]++;
-                    if ( $self->{cursor}[ROW] <= $self->{p_end} ) {
-                        $self->{cursor}[COL] = 0;
-                        $self->__wr_cell( $self->{cursor}[ROW] - 1, $#{$self->{rc2idx}[$self->{cursor}[ROW] - 1]} );
-                        $self->__wr_cell( $self->{cursor}[ROW],     $self->{cursor}[COL] );
+                    $self->{pos}[ROW]++;
+                    if ( $self->{pos}[ROW] <= $self->{p_end} ) {
+                        $self->{pos}[COL] = 0;
+                        $self->__wr_cell( $self->{pos}[ROW] - 1, $#{$self->{rc2idx}[$self->{pos}[ROW] - 1]} );
+                        $self->__wr_cell( $self->{pos}[ROW],     $self->{pos}[COL] );
                     }
                     else {
-                        $self->{row_on_top} = $self->{cursor}[ROW];
+                        $self->{row_on_top} = $self->{pos}[ROW];
                         $self->{p_begin} = $self->{p_end} + 1;
                         $self->{p_end}   = $self->{p_end} + $self->{avail_height};
                         $self->{p_end}   = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
-                        $self->{cursor}[COL] = 0;
+                        $self->{pos}[COL] = 0;
                         $self->__wr_screen();
                     }
                 }
             }
         }
         elsif ( $key == KEY_BSPACE || $key == CONTROL_H || $key == KEY_BTAB ) {
-            if ( $self->{cursor}[COL] == 0 && $self->{cursor}[ROW] == 0 ) {
+            if ( $self->{pos}[COL] == 0 && $self->{pos}[ROW] == 0 ) {
                 $self->__beep();
             }
             else {
-                if ( $self->{cursor}[COL] > 0 ) {
-                    $self->{cursor}[COL]--;
-                    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] + 1 );
-                    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+                if ( $self->{pos}[COL] > 0 ) {
+                    $self->{pos}[COL]--;
+                    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] + 1 );
+                    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
                 }
                 else {
-                    $self->{cursor}[ROW]--;
-                    if ( $self->{cursor}[ROW] >= $self->{p_begin} ) {
-                        $self->{cursor}[COL] = $#{$self->{rc2idx}[$self->{cursor}[ROW]]};
-                        $self->__wr_cell( $self->{cursor}[ROW] + 1, 0 );
-                        $self->__wr_cell( $self->{cursor}[ROW],     $self->{cursor}[COL] );
+                    $self->{pos}[ROW]--;
+                    if ( $self->{pos}[ROW] >= $self->{p_begin} ) {
+                        $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
+                        $self->__wr_cell( $self->{pos}[ROW] + 1, 0 );
+                        $self->__wr_cell( $self->{pos}[ROW],     $self->{pos}[COL] );
                     }
                     else {
-                        $self->{row_on_top} = $self->{cursor}[ROW] - ( $self->{avail_height} - 1 );
+                        $self->{row_on_top} = $self->{pos}[ROW] - ( $self->{avail_height} - 1 );
                         $self->{p_end}   = $self->{p_begin} - 1;
                         $self->{p_begin} = $self->{p_begin} - $self->{avail_height};
                         $self->{p_begin} = 0 if $self->{p_begin} < 0;
-                        $self->{cursor}[COL] = $#{$self->{rc2idx}[$self->{cursor}[ROW]]};
+                        $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
                         $self->__wr_screen();
                     }
                 }
             }
         }
         elsif ( $key == KEY_l || $key == VK_RIGHT ) {
-            if ( $self->{cursor}[COL] == $#{$self->{rc2idx}[$self->{cursor}[ROW]]} ) {
+            if ( $self->{pos}[COL] == $#{$self->{rc2idx}[$self->{pos}[ROW]]} ) {
                 $self->__beep();
             }
             else {
-                $self->{cursor}[COL]++;
-                $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] - 1 );
-                $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+                $self->{pos}[COL]++;
+                $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] - 1 );
+                $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
             }
         }
         elsif ( $key == KEY_h || $key == VK_LEFT ) {
-            if ( $self->{cursor}[COL] == 0 ) {
+            if ( $self->{pos}[COL] == 0 ) {
                 $self->__beep();
             }
             else {
-                $self->{cursor}[COL]--;
-                $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] + 1 );
-                $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+                $self->{pos}[COL]--;
+                $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] + 1 );
+                $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
             }
         }
         elsif ( $key == CONTROL_B || $key == VK_PAGE_UP ) {
@@ -417,8 +417,8 @@ sub choose {
                 $self->__beep();
             }
             else {
-                $self->{row_on_top} = $self->{avail_height} * ( int( $self->{cursor}[ROW] / $self->{avail_height} ) - 1 );
-                $self->{cursor}[ROW] -= $self->{avail_height};
+                $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) - 1 );
+                $self->{pos}[ROW] -= $self->{avail_height};
                 $self->{p_begin} = $self->{row_on_top};
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 $self->__wr_screen();
@@ -429,19 +429,19 @@ sub choose {
                 $self->__beep();
             }
             else {
-                $self->{row_on_top} = $self->{avail_height} * ( int( $self->{cursor}[ROW] / $self->{avail_height} ) + 1 );
-                $self->{cursor}[ROW] += $self->{avail_height};
-                if ( $self->{cursor}[ROW] >= $#{$self->{rc2idx}} ) {
-                    if ( $#{$self->{rc2idx}} == $self->{row_on_top} || ! $self->{rest} || $self->{cursor}[COL] <= $self->{rest} - 1 ) {
-                        if ( $self->{cursor}[ROW] != $#{$self->{rc2idx}} ) {
-                            $self->{cursor}[ROW] = $#{$self->{rc2idx}};
+                $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
+                $self->{pos}[ROW] += $self->{avail_height};
+                if ( $self->{pos}[ROW] >= $#{$self->{rc2idx}} ) {
+                    if ( $#{$self->{rc2idx}} == $self->{row_on_top} || ! $self->{rest} || $self->{pos}[COL] <= $self->{rest} - 1 ) {
+                        if ( $self->{pos}[ROW] != $#{$self->{rc2idx}} ) {
+                            $self->{pos}[ROW] = $#{$self->{rc2idx}};
                         }
-                        if ( $self->{rest} && $self->{cursor}[COL] > $self->{rest} - 1 ) {
-                            $self->{cursor}[COL] = $#{$self->{rc2idx}[$self->{cursor}[ROW]]};
+                        if ( $self->{rest} && $self->{pos}[COL] > $self->{rest} - 1 ) {
+                            $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
                         }
                     }
                     else {
-                        $self->{cursor}[ROW] = $#{$self->{rc2idx}} - 1;
+                        $self->{pos}[ROW] = $#{$self->{rc2idx}} - 1;
                     }
                 }
                 $self->{p_begin} = $self->{row_on_top};
@@ -451,13 +451,13 @@ sub choose {
             }
         }
         elsif ( $key == CONTROL_A || $key == VK_HOME ) {
-            if ( $self->{cursor}[COL] == 0 && $self->{cursor}[ROW] == 0 ) {
+            if ( $self->{pos}[COL] == 0 && $self->{pos}[ROW] == 0 ) {
                 $self->__beep();
             }
             else {
                 $self->{row_on_top} = 0;
-                $self->{cursor}[ROW] = $self->{row_on_top};
-                $self->{cursor}[COL] = 0;
+                $self->{pos}[ROW] = $self->{row_on_top};
+                $self->{pos}[COL] = 0;
                 $self->{p_begin} = $self->{row_on_top};
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 $self->{p_end}   = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
@@ -466,15 +466,15 @@ sub choose {
         }
         elsif ( $key == CONTROL_E || $key == VK_END ) {
             if ( $self->{order} == 1 && $self->{rest} ) {
-                if (    $self->{cursor}[ROW] == $#{$self->{rc2idx}} - 1
-                     && $self->{cursor}[COL] == $#{$self->{rc2idx}[$self->{cursor}[ROW]]}
+                if (    $self->{pos}[ROW] == $#{$self->{rc2idx}} - 1
+                     && $self->{pos}[COL] == $#{$self->{rc2idx}[$self->{pos}[ROW]]}
                 ) {
                     $self->__beep();
                 }
                 else {
                     $self->{row_on_top} = @{$self->{rc2idx}} - ( @{$self->{rc2idx}} % $self->{avail_height} || $self->{avail_height} );
-                    $self->{cursor}[ROW] = $#{$self->{rc2idx}} - 1;
-                    $self->{cursor}[COL] = $#{$self->{rc2idx}[$self->{cursor}[ROW]]};
+                    $self->{pos}[ROW] = $#{$self->{rc2idx}} - 1;
+                    $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
                     if ( $self->{row_on_top} == $#{$self->{rc2idx}} ) {
                         $self->{row_on_top} = $self->{row_on_top} - $self->{avail_height};
                         $self->{p_begin} = $self->{row_on_top};
@@ -488,15 +488,15 @@ sub choose {
                 }
             }
             else {
-                if (    $self->{cursor}[ROW] == $#{$self->{rc2idx}}
-                     && $self->{cursor}[COL] == $#{$self->{rc2idx}[$self->{cursor}[ROW]]}
+                if (    $self->{pos}[ROW] == $#{$self->{rc2idx}}
+                     && $self->{pos}[COL] == $#{$self->{rc2idx}[$self->{pos}[ROW]]}
                 ) {
                     $self->__beep();
                 }
                 else {
                     $self->{row_on_top} = @{$self->{rc2idx}} - ( @{$self->{rc2idx}} % $self->{avail_height} || $self->{avail_height} );
-                    $self->{cursor}[ROW] = $#{$self->{rc2idx}};
-                    $self->{cursor}[COL] = $#{$self->{rc2idx}[$self->{cursor}[ROW]]};
+                    $self->{pos}[ROW] = $#{$self->{rc2idx}};
+                    $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
                     $self->{p_begin} = $self->{row_on_top};
                     $self->{p_end}   = $#{$self->{rc2idx}};
                     $self->__wr_screen();
@@ -522,7 +522,7 @@ sub choose {
                 if ( $self->{order} == 1 ) {
                     for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
                         for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-                            if ( $self->{marked}[$row][$col] || $row == $self->{cursor}[ROW] && $col == $self->{cursor}[COL] ) {
+                            if ( $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL] ) {
                                 my $i = $self->{rc2idx}[$row][$col];
                                 push @chosen, $self->{index} ? $i : $self->{orig_list}[$i];
                             }
@@ -532,7 +532,7 @@ sub choose {
                 else {
                     for my $row ( 0 .. $#{$self->{rc2idx}} ) {
                         for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                            if ( $self->{marked}[$row][$col] || $row == $self->{cursor}[ROW] && $col == $self->{cursor}[COL] ) {
+                            if ( $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL] ) {
                                 my $i = $self->{rc2idx}[$row][$col];
                                 push @chosen, $self->{index} ? $i : $self->{orig_list}[$i];
                             }
@@ -543,7 +543,7 @@ sub choose {
                 return @chosen;
             }
             else {
-                my $i = $self->{rc2idx}[$self->{cursor}[ROW]][$self->{cursor}[COL]];
+                my $i = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
                 my $chosen = $self->{index} ? $i : $self->{orig_list}[$i];
                 $self->__reset_term( 1 );
                 return $chosen;
@@ -554,7 +554,7 @@ sub choose {
                 my $locked = 0;
                 if ( $self->{no_spacebar} ) {
                     for my $no_spacebar ( @{$self->{no_spacebar}} ) {
-                        if ( $self->{rc2idx}[$self->{cursor}[ROW]][$self->{cursor}[COL]] == $no_spacebar ) {
+                        if ( $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]] == $no_spacebar ) {
                             ++$locked;
                             last;
                         }
@@ -564,13 +564,13 @@ sub choose {
                     $self->__beep();
                 }
                 else {
-                    if ( ! $self->{marked}[$self->{cursor}[ROW]][$self->{cursor}[COL]] ) {
-                        $self->{marked}[$self->{cursor}[ROW]][$self->{cursor}[COL]] = 1;
+                    if ( ! $self->{marked}[$self->{pos}[ROW]][$self->{pos}[COL]] ) {
+                        $self->{marked}[$self->{pos}[ROW]][$self->{pos}[COL]] = 1;
                     }
                     else {
-                        $self->{marked}[$self->{cursor}[ROW]][$self->{cursor}[COL]] = 0;
+                        $self->{marked}[$self->{pos}[ROW]][$self->{pos}[COL]] = 0;
                     }
-                    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+                    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
                 }
             }
         }
@@ -626,7 +626,6 @@ sub __unmark_no_spacebar {
         }
     }
 }
-
 
 
 sub __beep {
@@ -746,15 +745,15 @@ sub __write_first_screen {
     $self->{p_end}      = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
     $self->{marked}     = [];
     $self->{row_on_top} = 0;
-    $self->{screen_row} = 0;
-    $self->{screen_col} = 0;
-    $self->{cursor}     = [ 0, 0 ];
+    $self->{i_row}      = 0;
+    $self->{i_col}      = 0;
+    $self->{pos}        = [ 0, 0 ];
     $self->__set_default_cell() if defined $self->{default} && $self->{default} <= $#{$self->{list}};
     print CLEAR_SCREEN if $self->{clear_screen};
     print $self->{prompt_copy} if $self->{prompt} ne '';
     $self->__wr_screen();
     $self->{plugin}->__term_cursor_position() if $self->{mouse};
-    $self->{cursor_row} = $self->{screen_row};
+    $self->{cursor_row} = $self->{i_row};
 }
 
 
@@ -928,46 +927,46 @@ sub __prepare_page_number {
 
 sub __set_default_cell {
     my ( $self ) = @_;
-    $self->{tmp_cursor} = [ 0, 0 ];
+    $self->{tmp_pos} = [ 0, 0 ];
     LOOP: for my $i ( 0 .. $#{$self->{rc2idx}} ) {
         # if ( $self->{default} ~~ @{$self->{rc2idx}[$i]} ) {
             for my $j ( 0 .. $#{$self->{rc2idx}[$i]} ) {
                 if ( $self->{default} == $self->{rc2idx}[$i][$j] ) {
-                    $self->{tmp_cursor} = [ $i, $j ];
+                    $self->{tmp_pos} = [ $i, $j ];
                     last LOOP;
                 }
             }
         # }
     }
-    while ( $self->{tmp_cursor}[ROW] > $self->{p_end} ) {
-        $self->{row_on_top} = $self->{avail_height} * ( int( $self->{cursor}[ROW] / $self->{avail_height} ) + 1 );
-        $self->{cursor}[ROW] = $self->{row_on_top};
+    while ( $self->{tmp_pos}[ROW] > $self->{p_end} ) {
+        $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
+        $self->{pos}[ROW] = $self->{row_on_top};
         $self->{p_begin} = $self->{row_on_top};
         $self->{p_end} = $self->{p_begin} + $self->{avail_height} - 1;
         $self->{p_end} = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
     }
-    $self->{cursor} = $self->{tmp_cursor};
+    $self->{pos} = $self->{tmp_pos};
 }
 
 
 sub __goto {
     my ( $self, $newrow, $newcol ) = @_;
-    if ( $newrow > $self->{screen_row} ) {
-        print CR, LF x ( $newrow - $self->{screen_row} );
-        $self->{screen_row} += ( $newrow - $self->{screen_row} );
-        $self->{screen_col} = 0;
+    if ( $newrow > $self->{i_row} ) {
+        print CR, LF x ( $newrow - $self->{i_row} );
+        $self->{i_row} += ( $newrow - $self->{i_row} );
+        $self->{i_col} = 0;
     }
-    elsif ( $newrow < $self->{screen_row} ) {
-        print UP x ( $self->{screen_row} - $newrow );
-        $self->{screen_row} -= ( $self->{screen_row} - $newrow );
+    elsif ( $newrow < $self->{i_row} ) {
+        print UP x ( $self->{i_row} - $newrow );
+        $self->{i_row} -= ( $self->{i_row} - $newrow );
     }
-    if ( $newcol > $self->{screen_col} ) {
-        print RIGHT x ( $newcol - $self->{screen_col} );
-        $self->{screen_col} += ( $newcol - $self->{screen_col} );
+    if ( $newcol > $self->{i_col} ) {
+        print RIGHT x ( $newcol - $self->{i_col} );
+        $self->{i_col} += ( $newcol - $self->{i_col} );
     }
-    elsif ( $newcol < $self->{screen_col} ) {
-        print LEFT x ( $self->{screen_col} - $newcol );
-        $self->{screen_col} -= ( $self->{screen_col} - $newcol );
+    elsif ( $newcol < $self->{i_col} ) {
+        print LEFT x ( $self->{i_col} - $newcol );
+        $self->{i_col} -= ( $self->{i_col} - $newcol );
     }
 }
 
@@ -980,11 +979,11 @@ sub __wr_screen {
         $self->__goto( $self->{avail_height_idx} + $self->{tail}, 0 );
         if ( $self->{pp_printf_type} == 0 ) {
             printf $self->{pp_printf_fmt}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1, $self->{pp};
-            $self->{screen_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1, $self->{pp};
+            $self->{i_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1, $self->{pp};
         }
         elsif ( $self->{pp_printf_type} == 1 ) {
             printf $self->{pp_printf_fmt}, $self->{width_pp}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
-            $self->{screen_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
+            $self->{i_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
         }
      }
     for my $row ( $self->{p_begin} .. $self->{p_end} ) {
@@ -992,7 +991,7 @@ sub __wr_screen {
             $self->__wr_cell( $row, $col );
         }
     }
-    $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+    $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
 }
 
 
@@ -1009,19 +1008,19 @@ sub __wr_cell {
         }
         $self->__goto( $row - $self->{row_on_top}, $lngth );
         print BOLD, UNDERLINE if $self->{marked}[$row][$col];
-        print REVERSE         if $row == $self->{cursor}[ROW] && $col == $self->{cursor}[COL];
+        print REVERSE         if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->{list}[$self->{rc2idx}[$row][$col]];
         my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
-        $self->{screen_col} += $gcs_element->columns();
+        $self->{i_col} += $gcs_element->columns();
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
         print BOLD, UNDERLINE if $self->{marked}[$row][$col];
-        print REVERSE         if $row == $self->{cursor}[ROW] && $col == $self->{cursor}[COL];
+        print REVERSE         if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->__unicode_sprintf( $self->{rc2idx}[$row][$col] );
-        $self->{screen_col} += $self->{length_longest};
+        $self->{i_col} += $self->{length_longest};
     }
-    print RESET if $self->{marked}[$row][$col] || $row == $self->{cursor}[ROW] && $col == $self->{cursor}[COL];
+    print RESET if $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
 }
 
 
@@ -1061,9 +1060,9 @@ sub __mouse_info_to_key {
     elsif ( $button == 5 ) {
         return VK_PAGE_DOWN;
     }
-    my $pos_top_row = $abs_cursor_y - $self->{cursor_row};
-    return NEXT_get_key if $abs_mouse_y < $pos_top_row;
-    my $mouse_row = $abs_mouse_y - $pos_top_row;
+    my $abs_y_top_row = $abs_cursor_y - $self->{cursor_row};
+    return NEXT_get_key if $abs_mouse_y < $abs_y_top_row;
+    my $mouse_row = $abs_mouse_y - $abs_y_top_row;
     my $mouse_col = $abs_mouse_x;
     my( $found_row, $found_col );
     my $found = 0;
@@ -1124,11 +1123,11 @@ sub __mouse_info_to_key {
     else {
         return NEXT_get_key;
     }
-    if ( $found_row != $self->{cursor}[ROW] || $found_col != $self->{cursor}[COL] ) {
-        my $tmp = $self->{cursor};
-        $self->{cursor} = [ $found_row, $found_col ];
+    if ( $found_row != $self->{pos}[ROW] || $found_col != $self->{pos}[COL] ) {
+        my $tmp = $self->{pos};
+        $self->{pos} = [ $found_row, $found_col ];
         $self->__wr_cell( $tmp->[0], $tmp->[1] );
-        $self->__wr_cell( $self->{cursor}[ROW], $self->{cursor}[COL] );
+        $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
     }
     return $return_char;
 }
@@ -1150,7 +1149,7 @@ Term::Choose - Choose items from a list.
 
 =head1 VERSION
 
-Version 1.109
+Version 1.110
 
 =cut
 
@@ -1763,6 +1762,8 @@ For a correct output it is required to set an encoding layer for C<STDOUT> match
 =head2 Monospaced font
 
 It is required a terminal that uses a monospaced font which supports the printed characters.
+
+Also the width of the terminals cursor must not be larger than one print-column.
 
 =head2 Escape sequences
 

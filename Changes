@@ -1,10 +1,14 @@
 Revision history for Term::Choose
 
 
+1.110   2014-06-28
+        - Imporved argument validation: don't allow references as values for the options "prompt", "empty" and "undef".
+        - Renamed variables and hash keys.
+
 1.109   2014-05-22
         - Bugfix warning "invalid option name".
         - Bugfix option "max_width / improvement layout.
-        - Removed the period at the end the error messages.
+        - Removed the period at the end of the error messages.
         - Improved documentation.
 
 1.108   2014-04-17
