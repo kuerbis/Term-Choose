@@ -1763,8 +1763,6 @@ For a correct output it is required to set an encoding layer for C<STDOUT> match
 
 It is required a terminal that uses a monospaced font which supports the printed characters.
 
-Also the width of the terminals cursor must not be larger than one print-column.
-
 =head2 Escape sequences
 
 The following ANSI escape sequences are used:

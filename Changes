@@ -2,7 +2,8 @@ Revision history for Term::Choose
 
 
 1.110   2014-06-28
-        - Imporved argument validation: don't allow references as values for the options "prompt", "empty" and "undef".
+        - Improved argument validation: don't allow references as values for the options "prompt", "empty" and "undef".
+        - Changed the workaround concerning the "\e(U" escape sequence in "Term::Choose::Win32".
         - Renamed variables and hash keys.
 
 1.109   2014-05-22
