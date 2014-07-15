@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.110';
+our $VERSION = '1.111';
 
 use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT
                              RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED );
@@ -23,10 +23,12 @@ sub SHIFTED_MASK () {
 }
 
 
-print "\e(U";
-# print "\e(U" lets the test fail.
-# workaround:
-print "\n" if $ENV{HARNESS_ACTIVE};
+if ( ! $ENV{TC_KEEP_WINDOWS_MAPPING} ) {
+    print "\e(U";
+    # print "\e(U" lets the test fail.
+    # workaround:
+    print "\n" if $ENV{HARNESS_ACTIVE};
+}
 
 
 
@@ -157,7 +159,7 @@ Term::Choose::Win32 - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.110
+Version 1.111
 
 =head1 DESCRIPTION
 

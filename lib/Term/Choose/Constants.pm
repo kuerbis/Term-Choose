@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.110';
+our $VERSION = '1.111';
 
 use Exporter qw( import );
 
@@ -155,7 +155,7 @@ Term::Choose::Constants - Provides constants for Term::Choose and its plugins.
 
 =head1 VERSION
 
-Version 1.110
+Version 1.111
 
 =head1 DESCRIPTION
 

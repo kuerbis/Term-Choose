@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.111   2014-07-15
+        - It is now possible to disable the 'print "\e(U"' with the TC_KEEP_WINDOWS_MAPPING environment variable.
+        - Announcement: "\e(U" will be removed in a future release.
+        - Update documentation.
+
 1.110   2014-06-28
         - Improved argument validation: don't allow references as values for the options "prompt", "empty" and "undef".
         - Changed the workaround concerning the "\e(U" escape sequence in "Term::Choose::Win32".

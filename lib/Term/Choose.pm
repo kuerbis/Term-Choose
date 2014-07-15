@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.110';
+our $VERSION = '1.111';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1145,13 +1145,35 @@ __END__
 
 =head1 NAME
 
-Term::Choose - Choose items from a list.
+Term::Choose - Choose items from a list - ANNOUNCEMENT.
 
 =head1 VERSION
 
-Version 1.110
+Version 1.111
 
 =cut
+
+=head1 ANNOUNCEMENT
+
+This announcement has no meaning if the operating system is not a MSWin32 operating system.
+
+If the operating system is MSWin32 C<Term::Choose> disables the Windows own codepage conversion globally by printing the
+C<"\e(U"> escape sequence - see C<"\e(U"> in L<Win32::Console::ANSI/Escape_sequences_for_Select_Character_Set>.
+
+In a future release of C<Term::Choose> this disabling of the Windows own codepage conversion will be removed by removing
+the C<"\e(U"> escape sequence.
+
+You can already now re-enabling the Windows own codepage conversion by setting the environment variable
+TC_KEEP_WINDOWS_MAPPING to a true value. (TC_KEEP_WINDOWS_MAPPING will become meaningless with the C<Term::Choose>
+release where C<"\e(U"> is removed.)
+
+If you want to keep the Windows own codepage conversion disabled add
+
+    use Win32::Console::ANSI;
+
+    print "\e(U";
+
+to your code.
 
 =head1 SYNOPSIS
 
@@ -1281,7 +1303,8 @@ If C<choose> is called in an I<list context>, the user can also mark an item wit
 
 C<choose> then returns - when C<Return> is pressed - the list of marked items including the highlighted item.
 
-In I<list context> C<Ctrl-SpaceBar> (or C<Ctrl-@>) inverts the choices: marked items are unmarked and unmarked items are marked.
+In I<list context> C<Ctrl-SpaceBar> (or C<Ctrl-@>) inverts the choices: marked items are unmarked and unmarked items are
+marked.
 
 =item
 
@@ -1524,8 +1547,8 @@ The option I<lf> expects a reference to an array with one or two elements:
 
 - the first element (C<INITIAL_TAB>) sets the number of spaces inserted at beginning of paragraphs
 
-- a second element (C<SUBSEQUENT_TAB>) sets the number of spaces inserted at the beginning of all broken lines apart from the
-beginning of paragraphs
+- a second element (C<SUBSEQUENT_TAB>) sets the number of spaces inserted at the beginning of all broken lines apart
+from the beginning of paragraphs
 
 Allowed values for the two elements are: 0 or greater.
 
@@ -1685,7 +1708,8 @@ default: "<undef>"
 
 =over
 
-=item * If the array referred by the first argument is empty C<choose> warns and returns C<undef> respective an empty list.
+=item * If the array referred by the first argument is empty C<choose> warns and returns C<undef> respective an empty
+list.
 
 =item * If an option does not exist C<new|config|choose> warns.
 
@@ -1752,12 +1776,15 @@ is additionally required.
 
 C<choose> expects decoded strings as array elements.
 
-If the operating system is MSWin32 C<Term::Choose> disables the automatic conversion done by C<Win32::Console::ANSI>
-globally - see C<"\e(U"> in L<Win32::Console::ANSI|Win32::Console::ANSI/Escape sequences for Select Character Set>.
+(In a future release of C<Term::Choose> the below mentioned disabling of the Windows own codepage conversion will be
+removed - see L</ANNOUNCEMENT>)
+
+If the operating system is MSWin32 Term::Choose disables the Windows own codepage conversion globally - see C<"\e(U"> in
+L<Win32::Console::ANSI|Win32::Console::ANSI/Escape sequences for Select Character Set>.
 
 =head2 Encoding layer for STDOUT
 
-For a correct output it is required to set an encoding layer for C<STDOUT> matching the terminal's character set.
+For a correct output it is required an appropriate encoding layer for STDOUT matching the terminal's character set.
 
 =head2 Monospaced font
 
