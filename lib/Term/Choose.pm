@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.111';
+our $VERSION = '1.112';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -169,9 +169,6 @@ sub __validate_options {
 
 sub __init_term {
     my ( $self ) = @_;
-    $self->{old_handle} = select $self->{handle_out};
-    $self->{backup_flush} = $|;
-    $| = 1;
     $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse} );
     print HIDE_CURSOR if $self->{hide_cursor};
 }
@@ -189,14 +186,6 @@ sub __reset_term {
     }
     if ( $self->{hide_cursor} ) {
         print SHOW_CURSOR;
-    }
-    if ( defined $self->{backup_flush} ) {
-        $| = $self->{backup_flush};
-        delete $self->{backup_flush};
-    }
-    if ( defined $self->{old_handle} ) {
-        select $self->{old_handle};
-        delete $self->{old_handle};
     }
     if ( defined $self->{backup_opt} ) {
         my $backup_opt = delete $self->{backup_opt};
@@ -245,8 +234,8 @@ sub choose {
     }
     local $\ = undef;
     local $, = undef;
+    local $| = 1;
     $self->{wantarray}  = wantarray;
-    $self->{handle_out} = -t \*STDOUT ? \*STDOUT : \*STDERR;
     $self->__set_defaults();
     if ( $self->{limit} && @$orig_list_ref > $self->{limit} ) {
         $self->{list_to_long} = 1;
@@ -1145,37 +1134,17 @@ __END__
 
 =head1 NAME
 
-Term::Choose - Choose items from a list - ANNOUNCEMENT.
+Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.111
+Version 1.112
 
 =cut
 
-=head1 ANNOUNCEMENT
-
-This announcement has no meaning if the operating system is not a MSWin32 operating system.
-
-If the operating system is MSWin32 C<Term::Choose> disables the Windows own codepage conversion globally by printing the
-C<"\e(U"> escape sequence - see C<"\e(U"> in L<Win32::Console::ANSI/Escape_sequences_for_Select_Character_Set>.
-
-In a future release of C<Term::Choose> this disabling of the Windows own codepage conversion will be removed by removing
-the C<"\e(U"> escape sequence.
-
-You can already now re-enabling the Windows own codepage conversion by setting the environment variable
-TC_KEEP_WINDOWS_MAPPING to a true value. (TC_KEEP_WINDOWS_MAPPING will become meaningless with the C<Term::Choose>
-release where C<"\e(U"> is removed.)
-
-If you want to keep the Windows own codepage conversion disabled add
-
-    use Win32::Console::ANSI;
-
-    print "\e(U";
-
-to your code.
-
 =head1 SYNOPSIS
+
+Functional interface:
 
     use 5.10.1;
     use Term::Choose qw( choose );
@@ -1190,9 +1159,7 @@ to your code.
 
     choose( [ 'Press ENTER to continue' ], { prompt => '' } );    # no choice
 
-
-    # or OO-interface:
-
+Object-oriented interface:
 
     use 5.10.1;
     use Term::Choose;
@@ -1204,18 +1171,16 @@ to your code.
     my $choice = $new->choose( $array_ref );                       # single choice
     say $choice;
 
-    $new->config( { justify => 1 } )
+    $new->config( { justify => 1 } );
     my @choices = $new->choose( [ 1 .. 100 ] );                    # multiple choice
     say "@choices";
 
-    my $stopp = Term::Choose->new( { prompt => '' } )
+    my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
 
 =head1 DESCRIPTION
 
-Choose from a list of items.
-
-Based on the C<choose> function from the L<Term::Clui> module.
+Choose interactively from a list of items.
 
 C<Term::Choose> provides a functional interface (L</SUBROUTINES>) and an object-oriented interface (L</METHODS>).
 
@@ -1748,10 +1713,6 @@ Additionally, if the OS is MSWin32
 
 =item
 
-L<Term::Size::Win32>
-
-=item
-
 L<Win32::Console>
 
 =item
@@ -1776,15 +1737,35 @@ is additionally required.
 
 C<choose> expects decoded strings as array elements.
 
-(In a future release of C<Term::Choose> the below mentioned disabling of the Windows own codepage conversion will be
-removed - see L</ANNOUNCEMENT>)
-
-If the operating system is MSWin32 Term::Choose disables the Windows own codepage conversion globally - see C<"\e(U"> in
-L<Win32::Console::ANSI|Win32::Console::ANSI/Escape sequences for Select Character Set>.
-
 =head2 Encoding layer for STDOUT
 
 For a correct output it is required an appropriate encoding layer for STDOUT matching the terminal's character set.
+
+=head3 MSWin32 operating systems
+
+C<Term::Choose> uses L<Win32::Console::ANSI> if the operating system is MSWin32.
+
+C<Win32::Console::ANSI> enables the Windows own codepage conversion globally. C<Term::Choose> disables this codepage
+conversion by printing the C<"\e(U"> escape sequence - see C<"\e(U"> in
+L<Win32::Console::ANSI/Escape_sequences_for_Select_Character_Set>.
+
+In a future release of C<Term::Choose> the C<"\e(U"> escape sequence will probably be removed.
+
+You can already gain the C<Win32::Console::ANSI> default (codepage conversion enabled) by setting the environment variable
+TC_KEEP_WINDOWS_MAPPING to a true value (TC_KEEP_WINDOWS_MAPPING will become meaningless if C<"\e(U"> is removed from
+C<Term::Choose>). If you want the automatic conversion you should also ad
+
+    use Win32::Console::ANSI;
+    print "\e(K";
+
+to your code in the case that C<Win32::Console::ANSI> is removed from C<Term::Choose>.
+
+If you want to keep the automatic codepage conversion disabled add
+
+    use Win32::Console::ANSI;
+    print "\e(U";
+
+to your code.
 
 =head2 Monospaced font
 

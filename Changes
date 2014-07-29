@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.112   2014-07-29
+        - Removed undocumented behavior.
+        - Update documentation.
+
 1.111   2014-07-15
         - It is now possible to disable the 'print "\e(U"' with the TC_KEEP_WINDOWS_MAPPING environment variable.
         - Announcement: "\e(U" will be removed in a future release.

@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.111';
+our $VERSION = '1.112';
 
 use Exporter qw( import );
 
@@ -53,7 +53,6 @@ our %EXPORT_TAGS = (
         VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_INSERT VK_DELETE
         MOUSE_WHEELED
         LEFTMOST_BUTTON_PRESSED RIGHTMOST_BUTTON_PRESSED FROM_LEFT_2ND_BUTTON_PRESSED
-
     ) ]
 );
 
@@ -155,7 +154,7 @@ Term::Choose::Constants - Provides constants for Term::Choose and its plugins.
 
 =head1 VERSION
 
-Version 1.111
+Version 1.112
 
 =head1 DESCRIPTION
 
