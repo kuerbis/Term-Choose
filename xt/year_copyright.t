@@ -35,4 +35,3 @@ for my $file ( @files ) {
 
 ok( $error == 0, "Copyright year" ) or diag( $diag );
 diag( "\n" );
-

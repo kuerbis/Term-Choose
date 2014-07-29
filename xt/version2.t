@@ -78,5 +78,3 @@ is( $v,            $v_pod_linux,   'Version in POD Term::Choose::Linux OK' );
 is( $v,            $v_pod_win32,   'Version in POD Term::Choose::Win32 OK' );
 is( $v,            $v_changes,     'Version in "Changes" OK' );
 is( $release_date, $today,         'Release date in Changes is date from today' );
-
-

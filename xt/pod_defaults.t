@@ -49,7 +49,7 @@ for my $key ( @all ) {
     }
     close $fh;
 }
- 
+
 for my $key ( @simple ) {
     next if $key ~~ @deprecated;
     my $opt;

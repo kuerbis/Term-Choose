@@ -9,6 +9,7 @@ use Test::Whitespaces {
     dirs => [
         'lib',
         't',
+        'xt',
         'example',
     ],
 

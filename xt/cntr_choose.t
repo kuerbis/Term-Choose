@@ -14,9 +14,9 @@ while ( my $line = <$fh1> ) {
     if ( $line =~ /^\s*use\s+warnings\s+FATAL/s ) {
         $test_env++;
     }
-	if ( $line =~ /(?:^\s*|\s+)use\s+Log::Log4perl/ ) {
-		$test_env++;
-	}
+    if ( $line =~ /(?:^\s*|\s+)use\s+Log::Log4perl/ ) {
+        $test_env++;
+    }
 }
 close $fh1;
 
