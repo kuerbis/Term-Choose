@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.112_01   2014-07-31
+        - New test.
+
 1.112   2014-07-29
         - Removed undocumented behavior.
         - Update documentation.

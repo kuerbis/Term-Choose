@@ -9,6 +9,8 @@ Makefile.PL
 MANIFEST			This list of files
 README
 t/00-load.t
+t/01-choose_1.t
+t/choose_1.pl
 xt/01_option.t
 xt/02_option_error.t
 xt/cmp_buildpl_makepl.t
