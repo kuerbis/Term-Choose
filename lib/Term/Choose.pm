@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_01';
+our $VERSION = '1.112_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -169,8 +169,7 @@ sub __validate_options {
 
 sub __init_term {
     my ( $self ) = @_;
-    $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse} );
-    print HIDE_CURSOR if $self->{hide_cursor};
+    $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse}, $self->{hide_cursor} );
 }
 
 
@@ -178,14 +177,11 @@ sub __reset_term {
     my ( $self, $from_choose ) = @_;
     if ( $from_choose ) {
         print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
-        print CLEAR_TO_END_OF_SCREEN;
+        $self->{plugin}->__clear_to_end_of_screen();  ###
     }
     print RESET;
     if ( defined $self->{plugin} ) {
-        $self->{plugin}->__reset_mode( $self->{mouse} );
-    }
-    if ( $self->{hide_cursor} ) {
-        print SHOW_CURSOR;
+        $self->{plugin}->__reset_mode( $self->{mouse}, $self->{hide_cursor} );
     }
     if ( defined $self->{backup_opt} ) {
         my $backup_opt = delete $self->{backup_opt};
@@ -217,7 +213,7 @@ sub config {
 
 sub choose {
     if ( ref $_[0] ne 'Term::Choose' ) {
-        return Term::Choose->new( $_[1] )->choose( $_[0] );
+        return Term::Choose->new()->choose( @_ );
     }
     my $self = shift;
     my ( $orig_list_ref, $opt ) = @_;
@@ -262,7 +258,7 @@ sub choose {
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
             print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
-            print CLEAR_TO_END_OF_SCREEN;
+            $self->{plugin}->__clear_to_end_of_screen();
             $self->__write_first_screen();
             next;
         }
@@ -741,7 +737,7 @@ sub __write_first_screen {
     print CLEAR_SCREEN if $self->{clear_screen};
     print $self->{prompt_copy} if $self->{prompt} ne '';
     $self->__wr_screen();
-    $self->{plugin}->__term_cursor_position() if $self->{mouse};
+    $self->{plugin}->__get_cursor_position() if $self->{mouse};
     $self->{cursor_row} = $self->{i_row};
 }
 
@@ -963,7 +959,7 @@ sub __goto {
 sub __wr_screen {
     my ( $self ) = @_;
     $self->__goto( 0, 0 );
-    print CLEAR_TO_END_OF_SCREEN;
+    $self->{plugin}->__clear_to_end_of_screen();
     if ( $self->{page} && $self->{pp} > 1 ) {
         $self->__goto( $self->{avail_height_idx} + $self->{tail}, 0 );
         if ( $self->{pp_printf_type} == 0 ) {
@@ -1138,7 +1134,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.112_01
+Version 1.112_02
 
 =cut
 

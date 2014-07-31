@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_01';
+our $VERSION = '1.112_02';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -139,7 +139,7 @@ sub __mouse_event_to_button {
 
 
 sub __set_mode {
-    my ( $self, $mouse ) = @_;
+    my ( $self, $mouse, $hide_cursor ) = @_;
     if ( $mouse ) {
         if ( $mouse == 3 ) {
             my $return = binmode STDIN, ':utf8';
@@ -178,12 +178,14 @@ sub __set_mode {
         }
     }
     Term::ReadKey::ReadMode( 'ultra-raw' );
+    $self->__hide_cursor if $hide_cursor; ####
     return $mouse;
 };
 
 
 sub __reset_mode {
-    my ( $self, $mouse ) = @_;
+    my ( $self, $mouse, $hide_cursor ) = @_;
+    $self->__show_cursor if $hide_cursor; ####
     if ( $mouse ) {
         binmode STDIN, ':encoding(UTF-8)' or warn "binmode STDIN, :encoding(UTF-8): $!\n";
         print UNSET_EXT_MODE_MOUSE_1005     if $mouse == 3;
@@ -200,13 +202,28 @@ sub __get_term_size {
 }
 
 
-sub __term_cursor_position {
+sub __get_cursor_position {
     my ( $self ) = @_;
     #$self->{abs_cursor_x} = 0; # unused
     $self->{abs_cursor_y} = 0;
     print GET_CURSOR_POSITION;
 }
 
+sub __hide_cursor {
+    #my ( $self ) = @_;
+    print "\e[?25l";
+}
+
+sub __show_cursor {
+    #my ( $self ) = @_;
+    print "\e[?25h";
+}
+
+
+sub __clear_to_end_of_screen {
+    #my ( $self ) = @_;
+    print "\e[0J";
+}
 
 
 
@@ -225,7 +242,7 @@ Term::Choose::Linux - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.112_01
+Version 1.112_02
 
 =head1 SYNOPSIS
 

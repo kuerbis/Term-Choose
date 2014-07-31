@@ -5,9 +5,9 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_01';
+our $VERSION = '1.112_02';
 
-use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT
+use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                              RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED );
 use Win32::Console::ANSI qw( :func );
 
@@ -102,17 +102,19 @@ sub __get_key_OS {
 
 
 sub __set_mode {
-    my ( $self, $mouse ) = @_;
+    my ( $self, $mouse, $hide_cursor ) = @_;
     $self->{input} = Win32::Console->new( STD_INPUT_HANDLE );
     $self->{old_in_mode} = $self->{input}->Mode();
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT )                    if ! $mouse;
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT ) if   $mouse;
+    $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
+    $self->__hide_cursor() if $hide_cursor; ###
     return $mouse;
 }
 
 
 sub __reset_mode {
-    my ( $self, $mouse ) = @_;  # no use for $mouse on win32
+    my ( $self, $mouse, $hide_cursor ) = @_;  # no use for $mouse on win32
     if ( defined $self->{input} ) {
         if ( defined $self->{old_in_mode} ) {
             $self->{input}->Mode( $self->{old_in_mode} );
@@ -122,6 +124,11 @@ sub __reset_mode {
         # workaround Bug #33513:
         delete $self->{input}{handle};
         #
+    }
+    if ( defined $self->{output} ) {
+        $self->__show_cursor() if $hide_cursor; ###
+        #$self->{output}->Free();
+        delete $self->{output}{handle}; # ?
     }
 }
 
@@ -133,16 +140,36 @@ sub __get_term_size {
 }
 
 
-sub __term_cursor_position {
+sub __get_cursor_position {
     my ( $self ) = @_;
-    ( $self->{abs_cursor_x}, $self->{abs_cursor_y} ) = Cursor();
-    #$self->{abs_cursor_x}--; # unused
-    $self->{abs_cursor_y}--;
+    ( $self->{abs_cursor_x}, $self->{abs_cursor_y} ) = $self->{output}->Cursor();
+}
+
+sub __set_cursor_position {
+    my ( $self, $col, $row ) = @_;
+    $self->{output}->Cursor( $col, $row );
 }
 
 
+sub __hide_cursor {
+    my ( $self ) = @_;
+    $self->{output}->Cursor( -1, -1, -1, 0 );
+}
 
 
+sub __show_cursor {
+    my ( $self ) = @_;
+    $self->{output}->Cursor( -1, -1, -1, 1 );
+}
+
+
+sub __clear_to_end_of_screen {
+    my ( $self ) = @_;
+    my ( $width, $height ) = $self->{output}->Size(); ###
+    $self->__get_cursor_position();
+    print ' ' x ( $width * $height ); ###
+    $self->__set_cursor_position( $self->{abs_cursor_x}, $self->{abs_cursor_y} );
+}
 
 1;
 
@@ -158,7 +185,7 @@ Term::Choose::Win32 - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.112_01
+Version 1.112_02
 
 =head1 DESCRIPTION
 
