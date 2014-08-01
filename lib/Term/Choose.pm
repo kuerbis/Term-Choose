@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_02';
+our $VERSION = '1.112_03';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -176,10 +176,10 @@ sub __init_term {
 sub __reset_term {
     my ( $self, $from_choose ) = @_;
     if ( $from_choose ) {
-        print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
+        print CR;
+        $self->{plugin}->__up( $self->{i_row} + $self->{nr_prompt_lines} );
         $self->{plugin}->__clear_to_end_of_screen();  ###
     }
-    print RESET;
     if ( defined $self->{plugin} ) {
         $self->{plugin}->__reset_mode( $self->{mouse}, $self->{hide_cursor} );
     }
@@ -257,7 +257,8 @@ sub choose {
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
-            print CR, UP x ( $self->{i_row} + $self->{nr_prompt_lines} );
+            print CR;
+            $self->{plugin}->__up( $self->{i_row} + $self->{nr_prompt_lines} );
             $self->{plugin}->__clear_to_end_of_screen();
             $self->__write_first_screen();
             next;
@@ -734,7 +735,7 @@ sub __write_first_screen {
     $self->{i_col}      = 0;
     $self->{pos}        = [ 0, 0 ];
     $self->__set_default_cell() if defined $self->{default} && $self->{default} <= $#{$self->{list}};
-    print CLEAR_SCREEN if $self->{clear_screen};
+    $self->{plugin}->__clear_screen() if $self->{clear_screen};
     print $self->{prompt_copy} if $self->{prompt} ne '';
     $self->__wr_screen();
     $self->{plugin}->__get_cursor_position() if $self->{mouse};
@@ -942,15 +943,18 @@ sub __goto {
         $self->{i_col} = 0;
     }
     elsif ( $newrow < $self->{i_row} ) {
-        print UP x ( $self->{i_row} - $newrow );
+        #print UP x ( $self->{i_row} - $newrow );
+        $self->{plugin}->__up( $self->{i_row} - $newrow );
         $self->{i_row} -= ( $self->{i_row} - $newrow );
     }
     if ( $newcol > $self->{i_col} ) {
-        print RIGHT x ( $newcol - $self->{i_col} );
+        #print RIGHT x ( $newcol - $self->{i_col} );
+        $self->{plugin}->__right( $newcol - $self->{i_col} );
         $self->{i_col} += ( $newcol - $self->{i_col} );
     }
     elsif ( $newcol < $self->{i_col} ) {
-        print LEFT x ( $self->{i_col} - $newcol );
+        #print LEFT x ( $self->{i_col} - $newcol );
+        $self->{plugin}->__left( $self->{i_col} - $newcol );
         $self->{i_col} -= ( $self->{i_col} - $newcol );
     }
 }
@@ -992,20 +996,20 @@ sub __wr_cell {
             }
         }
         $self->__goto( $row - $self->{row_on_top}, $lngth );
-        print BOLD, UNDERLINE if $self->{marked}[$row][$col];
-        print REVERSE         if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
+        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
+        $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->{list}[$self->{rc2idx}[$row][$col]];
         my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
         $self->{i_col} += $gcs_element->columns();
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
-        print BOLD, UNDERLINE if $self->{marked}[$row][$col];
-        print REVERSE         if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
+        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
+        $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->__unicode_sprintf( $self->{rc2idx}[$row][$col] );
         $self->{i_col} += $self->{length_longest};
     }
-    print RESET if $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
+    $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
 }
 
 
@@ -1134,7 +1138,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.112_02
+Version 1.112_03
 
 =cut
 

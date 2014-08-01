@@ -13,7 +13,7 @@ $exp->raw_pty( 1 );
 $exp->log_stdout( 0 );
 
 my $command     = 'perl';
-my $script      = 't/choose_1.pl';
+my $script      = 't/expect_2.pl';
 my @parameters  = ( $script );
 
 ok( -r $script, "$script is readable" );
@@ -22,11 +22,12 @@ ok( -x $script, "$script is executable" );
 
 ok( $exp->spawn( $command, @parameters ), "Spawn '$command @parameters' OK" );
 
-$exp->send( "\x{0d}" );
+my $expected = '<Hallo>';
 
-my $expected = 'choice: 1';
-
-my $ret = $exp->expect( 2, $expected );
+my $ret = $exp->expect( 2,
+    [ qr/Enter: /  => sub { $exp->send( "Hallo\n" ); 'exp_continue'; } ],
+    [ qr/\Q$expected\E/  => sub {} ],
+);
 
 ok( $ret, 'matched something' );
 

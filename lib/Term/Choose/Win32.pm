@@ -5,10 +5,11 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_02';
+our $VERSION = '1.112_03';
 
 use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
-                             RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED );
+                             RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
+                             FOREGROUND_INTENSITY BACKGROUND_INTENSITY );
 use Win32::Console::ANSI qw( :func );
 
 use Term::Choose::Constants qw( :win32 );
@@ -108,7 +109,11 @@ sub __set_mode {
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT )                    if ! $mouse;
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT ) if   $mouse;
     $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
-    $self->__hide_cursor() if $hide_cursor; ###
+    $self->{def_attr} = $self->{output}->Attr();
+    $self->{fg_color} = $self->{def_attr} & 0x7;
+    $self->{bg_color} = $self->{def_attr} & 0x70;
+    $self->{inverse}  = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
+    $self->{output}->Cursor( -1, -1, -1, 0 ) if $hide_cursor;
     return $mouse;
 }
 
@@ -126,7 +131,8 @@ sub __reset_mode {
         #
     }
     if ( defined $self->{output} ) {
-        $self->__show_cursor() if $hide_cursor; ###
+        $self->__reset;
+        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor;
         #$self->{output}->Free();
         delete $self->{output}{handle}; # ?
     }
@@ -151,15 +157,9 @@ sub __set_cursor_position {
 }
 
 
-sub __hide_cursor {
+sub __clear_screen {
     my ( $self ) = @_;
-    $self->{output}->Cursor( -1, -1, -1, 0 );
-}
-
-
-sub __show_cursor {
-    my ( $self ) = @_;
-    $self->{output}->Cursor( -1, -1, -1, 1 );
+    $self->{output}->cls( $self->{def_attr} );
 }
 
 
@@ -167,8 +167,47 @@ sub __clear_to_end_of_screen {
     my ( $self ) = @_;
     my ( $width, $height ) = $self->{output}->Size(); ###
     $self->__get_cursor_position();
-    print ' ' x ( $width * $height ); ###
-    $self->__set_cursor_position( $self->{abs_cursor_x}, $self->{abs_cursor_y} );
+    $self->{output}->FillAttr(
+            $self->{bg_color} | $self->{bg_color},
+            $width * $height,
+            $self->{abs_cursor_x}, $self->{abs_cursor_y} );
+}
+
+
+sub __bold_underline {
+    my ( $self ) = @_;
+    $self->{output}->Attr( $self->{def_attr} | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY  );
+}
+
+
+sub __reverse {
+    my ( $self ) = @_;
+    $self->{output}->Attr( $self->{inverse} );
+}
+
+
+sub __reset {
+    my ( $self ) = @_;
+    $self->{output}->Attr( $self->{def_attr} );
+}
+
+
+sub __up {
+    #my ( $self, $rows_up ) = @_;
+    my ( $col, $row ) = $_[0]->__get_cursor_position;
+    $_[0]->__set_cursor_position( $col, $row - $_[1] );
+}
+
+sub __left {
+    #my ( $self, $cols_left ) = @_;
+    my ( $col, $row ) = $_[0]->__get_cursor_position;
+    $_[0]->__set_cursor_position( $col - $_[1], $row );
+}
+
+sub __right {
+    #my ( $self, $cols_right ) = @_;
+    my ( $col, $row ) = $_[0]->__get_cursor_position;
+    $_[0]->__set_cursor_position( $col + $_[1], $row );
 }
 
 1;
@@ -185,7 +224,7 @@ Term::Choose::Win32 - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.112_02
+Version 1.112_03
 
 =head1 DESCRIPTION
 

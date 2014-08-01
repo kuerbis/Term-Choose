@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_02';
+our $VERSION = '1.112_03';
 
 use Exporter qw( import );
 
@@ -29,8 +29,8 @@ our @EXPORT_OK = qw(
 our %EXPORT_TAGS = (
     choose => [ qw(
         ROW COL MIN MAX
-        UP RIGHT LEFT LF CR
-        HIDE_CURSOR SHOW_CURSOR WIDTH_CURSOR
+        LF CR
+        WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
         GET_CURSOR_POSITION
         BEEP BOLD CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN RESET REVERSE UNDERLINE
@@ -40,6 +40,7 @@ our %EXPORT_TAGS = (
         VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_INSERT VK_DELETE
     ) ],
     linux  => [ qw(
+        HIDE_CURSOR SHOW_CURSOR
         GET_CURSOR_POSITION
         SET_ANY_EVENT_MOUSE_1003 SET_EXT_MODE_MOUSE_1005 SET_SGR_EXT_MODE_MOUSE_1006
         UNSET_ANY_EVENT_MOUSE_1003 UNSET_EXT_MODE_MOUSE_1005 UNSET_SGR_EXT_MODE_MOUSE_1006
@@ -154,7 +155,7 @@ Term::Choose::Constants - Provides constants for Term::Choose and its plugins.
 
 =head1 VERSION
 
-Version 1.112_02
+Version 1.112_03
 
 =head1 DESCRIPTION
 

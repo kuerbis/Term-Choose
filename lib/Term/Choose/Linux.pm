@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_02';
+our $VERSION = '1.112_03';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -178,20 +178,21 @@ sub __set_mode {
         }
     }
     Term::ReadKey::ReadMode( 'ultra-raw' );
-    $self->__hide_cursor if $hide_cursor; ####
+    print HIDE_CURSOR if $hide_cursor;
     return $mouse;
 };
 
 
 sub __reset_mode {
     my ( $self, $mouse, $hide_cursor ) = @_;
-    $self->__show_cursor if $hide_cursor; ####
+    print SHOW_CURSOR if $hide_cursor;
     if ( $mouse ) {
         binmode STDIN, ':encoding(UTF-8)' or warn "binmode STDIN, :encoding(UTF-8): $!\n";
         print UNSET_EXT_MODE_MOUSE_1005     if $mouse == 3;
         print UNSET_SGR_EXT_MODE_MOUSE_1006 if $mouse == 4;
         print UNSET_ANY_EVENT_MOUSE_1003;
     }
+    $self->__reset();
     Term::ReadKey::ReadMode( 'restore' );
 }
 
@@ -209,14 +210,10 @@ sub __get_cursor_position {
     print GET_CURSOR_POSITION;
 }
 
-sub __hide_cursor {
-    #my ( $self ) = @_;
-    print "\e[?25l";
-}
 
-sub __show_cursor {
+sub __clear_screen {
     #my ( $self ) = @_;
-    print "\e[?25h";
+    print "\e[2J\e[1;1H";
 }
 
 
@@ -226,6 +223,40 @@ sub __clear_to_end_of_screen {
 }
 
 
+sub __bold_underline {
+    #my ( $self ) = @_;
+    print "\e[1m\e[4m";
+}
+
+
+sub __reverse {
+    #my ( $self ) = @_;
+    print "\e[7m";
+}
+
+
+sub __reset {
+    #my ( $self ) = @_;
+    print "\e[0m";
+}
+
+
+sub __up {
+    #my ( $self ) = @_;
+    print "\e[${_[1]}A";
+}
+
+
+sub __left {
+    #my ( $self ) = @_;
+    print "\e[${_[1]}D";
+}
+
+
+sub __right {
+    #my ( $self ) = @_;
+    print "\e[${_[1]}C";
+}
 
 
 1;
@@ -242,7 +273,7 @@ Term::Choose::Linux - Plugin for Term::Choose.
 
 =head1 VERSION
 
-Version 1.112_02
+Version 1.112_03
 
 =head1 SYNOPSIS
 

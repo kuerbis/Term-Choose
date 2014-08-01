@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.112_03   2014-08-01
+        - Code refactoring.
+        - Replaced test.
+
 1.112_02   2014-07-31
         - Bugfix: argument checking if "choose" is called as function.
         - Modified test.
