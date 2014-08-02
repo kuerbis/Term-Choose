@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.113_02   2014-08-03
+        - Developer test.
+
 1.113_01   2014-08-02
         - Added developer tests.
         - Invalid options are now fatal.
