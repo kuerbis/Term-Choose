@@ -1,6 +1,13 @@
 Revision history for Term::Choose
 
 
+1.113_01   2014-08-02
+        - Added developer tests.
+        - Invalid options are now fatal.
+        - Removed "Win32::Console::ANSI".
+        - Update documentation.
+        - Removed POD from "Term::Choose::Linux", "Term::Choose::Win32" and "Term::Choose::Constants".
+
 1.113   2014-08-02
         - Announcement: invalid options will become fatal.
         - Announcement: "Win32::Console::ANSI" will be removed.

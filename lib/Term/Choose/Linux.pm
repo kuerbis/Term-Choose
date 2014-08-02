@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113';
+our $VERSION = '1.113_01';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -262,40 +262,3 @@ sub __right {
 1;
 
 __END__
-
-=pod
-
-=encoding UTF-8
-
-=head1 NAME
-
-Term::Choose::Linux - Plugin for Term::Choose.
-
-=head1 VERSION
-
-Version 1.113
-
-=head1 SYNOPSIS
-
-Internal use only.
-
-=head1 DESCRIPTION
-
-This module is not expected to be directly used by any module other than L<Term::Choose>.
-
-=head1 SEE ALSO
-
-L<Term::Choose>
-
-=head1 AUTHORS
-
-Matthäus Kiem <cuer2s@gmail.com>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright (C) 2012-2014 Matthäus Kiem.
-
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
-details, see the full text of the licenses in the file LICENSE.
-
-=cut

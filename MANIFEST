@@ -9,6 +9,21 @@ Makefile.PL
 MANIFEST			This list of files
 README
 t/00-load.t
+t/01_expect_1.t
+t/02_expect_2.t
+t/03_expect_3.t
+t/04_expect_4.t
+t/05_termcap_trequire.t
+t/06_choose_1.t
+t/07_choose_2.t
+t/08_choose_3.t
+t/choose_1.pl
+t/choose_2.pl
+t/choose_3.pl
+t/expect_1.pl
+t/expect_2.pl
+t/expect_3.pl
+t/expect_4.pl
 xt/01_option.t
 xt/02_option_error.t
 xt/cmp_buildpl_makepl.t

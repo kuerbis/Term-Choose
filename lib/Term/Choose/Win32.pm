@@ -5,12 +5,11 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113';
+our $VERSION = '1.113_01';
 
 use Win32::Console       qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                              RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
                              FOREGROUND_INTENSITY BACKGROUND_INTENSITY );
-use Win32::Console::ANSI qw( :func );
 
 use Term::Choose::Constants qw( :win32 );
 
@@ -21,14 +20,6 @@ sub SHIFTED_MASK () {
     | RIGHT_CTRL_PRESSED
     | LEFT_CTRL_PRESSED
     | SHIFT_PRESSED
-}
-
-
-if ( ! $ENV{TC_KEEP_WINDOWS_MAPPING} ) {
-    print "\e(U";
-    # print "\e(U" lets the test fail.
-    # workaround:
-    print "\n" if $ENV{HARNESS_ACTIVE};
 }
 
 
@@ -213,36 +204,3 @@ sub __right {
 1;
 
 __END__
-
-=pod
-
-=encoding UTF-8
-
-=head1 NAME
-
-Term::Choose::Win32 - Plugin for Term::Choose.
-
-=head1 VERSION
-
-Version 1.113
-
-=head1 DESCRIPTION
-
-This module is not expected to be directly used by any module other than L<Term::Choose>.
-
-=head1 SEE ALSO
-
-L<Term::Choose>
-
-=head1 AUTHORS
-
-Matthäus Kiem <cuer2s@gmail.com>
-
-=head1 LICENSE AND COPYRIGHT
-
-Copyright (C) 2012-2014 Matthäus Kiem.
-
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
-details, see the full text of the licenses in the file LICENSE.
-
-=cut

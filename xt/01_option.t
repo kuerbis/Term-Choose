@@ -43,7 +43,7 @@ my $int = {
 
 for my $opt ( sort keys %$int ) {
     for my $val ( @{$int->{$opt}}, undef ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( exception { $d = choose( $choices, { $opt => $val } ) } ) );
     }
 }
 

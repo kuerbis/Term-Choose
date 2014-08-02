@@ -65,8 +65,10 @@ my $string = {
     undef  => '',
 };
 
+my @wrong_string = ( { 1, 1 }, [ 1 ], {}, [], [ 2 ] );
+
 for my $opt ( sort keys %$string ) {
-    for my $val ( grep { ref } @wrong ) {
+    for my $val ( grep { ref } @wrong_string ) {
         my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
         ok( $exception =~ /choose:/ );
     }

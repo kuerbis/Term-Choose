@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113';
+our $VERSION = '1.113_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -81,7 +81,7 @@ sub __set_defaults {
 }
 
 
-sub _next_release__validate_options {
+sub __validate_options {
     my ( $self, $opt ) = @_;
     return if ! defined $opt;
     my $valid = {
@@ -140,91 +140,6 @@ sub _next_release__validate_options {
             croak "$sub: option '$key' : '$opt->{$key}' is not a valid value.";
         }
         $self->{$key} = $opt->{$key};
-    }
-}
-
-sub __validate_options {
-    my ( $self, $opt ) = @_;
-    return if ! defined $opt;
-    my $valid = {
-        beep            => '[ 0 1 ]',
-        clear_screen    => '[ 0 1 ]',
-        default         => '[ 0-9 ]+',
-        empty           => '',
-        hide_cursor     => '[ 0 1 ]',
-        index           => '[ 0 1 ]',
-        justify         => '[ 0 1 2 ]',
-        keep            => '[ 1-9 ][ 0-9 ]*',
-        layout          => '[ 0 1 2 3 ]',
-        lf              => 'ARRAY',
-        ll              => '[ 1-9 ][ 0-9 ]*',
-        limit           => '[ 1-9 ][ 0-9 ]*',
-        max_height      => '[ 1-9 ][ 0-9 ]*',
-        max_width       => '[ 1-9 ][ 0-9 ]*',
-        mouse           => '[ 0 1 2 3 4 ]',
-        no_spacebar     => 'ARRAY',
-        order           => '[ 0 1 ]',
-        pad             => '[ 0-9 ]+',
-        pad_one_row     => '[ 0-9 ]+',
-        page            => '[ 0 1 ]',
-        prompt          => '',
-        undef           => '',
-    };
-    my @warn = ();
-    for my $key ( keys %$opt ) {
-        if ( ! exists $valid->{$key} ) {
-            push @warn, "'$key' is not a valid option name";
-            next;
-        }
-        next if ! defined $opt->{$key};
-        if ( $valid->{$key} eq '' && ! ref $opt->{$key} ) {
-            $self->{$key} = $opt->{$key};
-        }
-        elsif ( $key eq 'lf' ) {
-            my $err;
-            if ( ref $opt->{$key} eq 'ARRAY' && @{$opt->{$key}} <= 2 ) {
-                no warnings 'uninitialized';
-                /^[0-9]+\z/ || ++$err && last for @{$opt->{$key}};
-            }
-            else {
-                ++$err;
-            }
-            if ( $err ) {
-                push @warn, "option '$key' : the passed value is not a valid value. Falling back to the default value";
-            }
-            else {
-                $self->{$key} = $opt->{$key};
-            }
-        }
-        elsif ( $key eq 'no_spacebar' ) {
-            my $err;
-            if ( ref $opt->{$key} eq 'ARRAY' ) {
-                no warnings 'uninitialized';
-                /^[0-9]+\z/ || ++$err && last for @{$opt->{$key}};
-            }
-            else {
-                ++$err;
-            }
-            if ( $err ) {
-                push @warn, "option '$key' : the passed value is not a valid value. Falling back to the default value";
-            }
-            else {
-                $self->{$key} = $opt->{$key};
-            }
-        }
-        elsif ( $opt->{$key} =~ m/^$valid->{$key}\z/x ) {
-            $self->{$key} = $opt->{$key};
-        }
-        else {
-            push @warn, "option '$key' : '$opt->{$key}' is not a valid value. Falling back to the default value";
-        }
-    }
-    if ( @warn ) {
-        for my $w ( @warn ) {
-            carp "choose: " . $w;
-        }
-        print "Press a key to continue";
-        my $dummy = <STDIN>;
     }
 }
 
@@ -1200,7 +1115,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.113
+Version 1.113_01
 
 =cut
 
@@ -1239,13 +1154,6 @@ Object-oriented interface:
 
     my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
-
-=head1 ANNOUNCEMENTS
-
-Passing invalid options will become fatal with the next release!
-
-MSWin32: from the next release on L<Win32::Console::ANSI> will be removed! L<Win32::Console> will be used then to
-emulate the escape sequences.
 
 =head1 DESCRIPTION
 
@@ -1786,10 +1694,6 @@ Additionally, if the OS is MSWin32
 
 L<Win32::Console>
 
-=item
-
-L<Win32::Console::ANSI> (removed with the next release)
-
 =back
 
 are required. Else
@@ -1811,34 +1715,6 @@ C<choose> expects decoded strings as array elements.
 =head2 Encoding layer for STDOUT
 
 For a correct output it is required an appropriate encoding layer for STDOUT matching the terminal's character set.
-
-=head3 MSWin32 operating systems
-
-C<Win32::Console::ANSI> will be removed from the next release on so the following will become obsolete!
-
-C<Term::Choose> uses L<Win32::Console::ANSI> if the operating system is MSWin32.
-
-C<Win32::Console::ANSI> enables the Windows own codepage conversion globally. C<Term::Choose> disables this codepage
-conversion by printing the C<"\e(U"> escape sequence - see C<"\e(U"> in
-L<Win32::Console::ANSI/Escape_sequences_for_Select_Character_Set>.
-
-In a future release of C<Term::Choose> the C<"\e(U"> escape sequence will probably be removed.
-
-You can already gain the C<Win32::Console::ANSI> default (codepage conversion enabled) by setting the environment variable
-TC_KEEP_WINDOWS_MAPPING to a true value (TC_KEEP_WINDOWS_MAPPING will become meaningless if C<"\e(U"> is removed from
-C<Term::Choose>). If you want the automatic conversion you should also ad
-
-    use Win32::Console::ANSI;
-    print "\e(K";
-
-to your code in the case that C<Win32::Console::ANSI> is removed from C<Term::Choose>.
-
-If you want to keep the automatic codepage conversion disabled add
-
-    use Win32::Console::ANSI;
-    print "\e(U";
-
-to your code.
 
 =head2 Monospaced font
 
@@ -1876,9 +1752,7 @@ If the option "clear_screen" is enabled:
 
     "\e[1;1H"   Go to Top Left (Cursor Position)
 
-If the OS is MSWin32 the L<Win32::Console::ANSI> module is used to understand these escape sequences.
-
-C<Win32::Console::ANSI> will be replaced by C<Win32::Console> from the next release on to emulate the escape sequences.
+If the OS is MSWin32 L<Win32::Console> is used, to emulate these escape sequences.
 
 If a I<mouse> mode is enabled
 
