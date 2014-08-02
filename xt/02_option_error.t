@@ -6,7 +6,7 @@ use Test::More;
 
 use Term::Choose qw( choose );
 
-use Test::Warnings qw( :all );
+use Test::Fatal;
 
 
 no warnings 'redefine';
@@ -53,7 +53,8 @@ my @wrong = ( -1, 2, 2 .. 10, 999999, '01', '', 'a', { 1, 1 }, [ 1 ], {}, [], [ 
 
 for my $opt ( sort keys %$int ) {
     for my $val ( grep { ! /^$int->{$opt}\z/x } @wrong ) {
-        like( warning { $d = choose( $choices, { $opt => $val } ) || 1 }, qr/choose/, "Test for 'option $opt: $val invalid value' warning" );
+        my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
+        ok( $exception =~ /choose:/ );
     }
 }
 
@@ -66,7 +67,8 @@ my $string = {
 
 for my $opt ( sort keys %$string ) {
     for my $val ( grep { ref } @wrong ) {
-        like( warning { $d = choose( $choices, { $opt => $val } ) || 1 }, qr/choose|ARRAY/, "Test for 'option $opt: $val invalid value' warning" ); # ARRAY ?
+        my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
+        ok( $exception =~ /choose:/ );
     }
 }
 
@@ -78,7 +80,8 @@ my @val_lf = ( -2, -1, 0, 1, '', 'a', { 1, 1 }, {}  );
 
 for my $opt ( sort keys %$lf ) {
     for my $val ( @val_lf ) {
-        like( warning { $d = choose( $choices, { $opt => $val } ) || 1 }, qr/choose/, "Test for 'option $opt: $val invalid value' warning" );
+        my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
+        ok( $exception =~ /choose:/ );
     }
 }
 
@@ -90,23 +93,24 @@ my @val_no_spacebar = ( -2, -1, 0, 1, '', 'a', { 1, 1 }, {}  );
 
 for my $opt ( sort keys %$no_spacebar ) {
     for my $val ( @val_no_spacebar ) {
-        like( warning { $d = choose( $choices, { $opt => $val } ) || 1 }, qr/choose/, "Test for 'option $opt: $val invalid value' warning" );
+        my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
+        ok( $exception =~ /choose:/ );
     }
 }
 
 
-like( warning { $d = choose( $choices, {
+my $exception = exception { $d = choose( $choices, {
     beep  => -1, clear_screen => 2, hide_cursor => 3, index => 4, justify => '@', layout => 5, mouse => {},
     order => 1, page => 0, keep => -1, ll => -1, limit => 0, max_height => 0, max_width => 0, default => [],
-    pad => 'a', pad_one_row => 'b', empty => [], prompt => {}, undef => [], lf => 4, no_spacebar => 4 } ) || 1 },
-qr/choose|ARRAY/, "Test for 'option: invalid value' warning" ); # ARRAY ?
+    pad => 'a', pad_one_row => 'b', empty => [], prompt => {}, undef => [], lf => 4, no_spacebar => 4 } ) };
+ok( $exception =~ /choose:/ );
 
 
-like( warning { $d = choose( [ 'aaa' .. 'zzz' ], {
+$exception = exception { $d = choose( [ 'aaa' .. 'zzz' ], {
     no_spacebar => 'a', lf => 'b', undef => [], prompt => {}, empty => {}, pad_one_row => 'c', pad => 'd',
     default => 'e', max_width => -1, max_height => -2,  limit => -3, ll => -4, keep => -5, page => -6, order => -7,
-    mouse => 'k', layout => 'e', justify => [], index => {}, hide_cursor => -1,  clear_screen => [], beep  => 10 } ) || 1 },
-qr/choose|ARRAY/, "Test for 'option: invalid value' warning" ); # ARRAY ?
+    mouse => 'k', layout => 'e', justify => [], index => {}, hide_cursor => -1,  clear_screen => [], beep  => 10 } ) };
+ok( $exception =~ /choose:/ );
 
 
 

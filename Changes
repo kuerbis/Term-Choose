@@ -1,6 +1,13 @@
 Revision history for Term::Choose
 
 
+1.113   2014-08-02
+        - Announcement: invalid options will become fatal.
+        - Announcement: "Win32::Console::ANSI" will be removed.
+        - Code refactoring: prepare the announced changes.
+        - Removed developer tests.
+        - Update documentation.
+
 1.112_03   2014-08-01
         - Code refactoring.
         - Replaced test.

@@ -6,8 +6,7 @@ use Test::More;
 
 use Term::Choose qw( choose );
 
-eval "use Test::FailWarnings";
-plan skip_all => "Test::FailWarnings required to test options" if $@;
+use Test::Fatal;
 
 
 no warnings 'redefine';
@@ -60,7 +59,7 @@ my @val_one_or_greater = ( 1, 2, 100, 999999, undef );
 
 for my $opt ( sort keys %$one_or_greater ) {
     for my $val ( @val_one_or_greater ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( exception { $d = choose( $choices, { $opt => $val } ) } ) );
     }
 }
 
@@ -74,7 +73,7 @@ my @val_zero_or_greater = ( 0, 1, 2, 100, 999999, undef );
 
 for my $opt ( sort keys %$zero_or_greater ) {
     for my $val ( @val_zero_or_greater ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( exception { $d = choose( $choices, { $opt => $val } ) } ) );
     }
 }
 
@@ -85,10 +84,10 @@ my $string = {
     undef  => '',
 };
 my @val_string = ( 0, 'Hello' x 50, '', ' ', '☻☮☺', "\x{263a}\x{263b}", '한글', undef, 'æða' );
-
+my $fail;
 for my $opt ( sort keys %$string ) {
     for my $val ( @val_string ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( $fail = exception { $d = choose( $choices, { $opt => $val } ) } ), $fail // 'OK' );
     }
 }
 
@@ -100,7 +99,7 @@ my @val_lf = ( [ 2, 4 ], [ 8 ], [], undef );
 
 for my $opt ( sort keys %$lf ) {
     for my $val ( @val_lf ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( exception { $d = choose( $choices, { $opt => $val } ) } ) );
     }
 }
 
@@ -112,21 +111,21 @@ my @val_no_spacebar = ( [ 0, 1, 2, 100, 999999 ], [ 1 ], undef );
 
 for my $opt ( sort keys %$no_spacebar ) {
     for my $val ( @val_no_spacebar ) {
-        ok( $d = choose( $choices, { $opt => $val } ) || 1 );
+        ok( ! defined( exception { $d = choose( $choices, { $opt => $val } ) } ) );
     }
 }
 
 
-ok( $d = choose( $choices, {
+ok( ! defined( exception {  $d = choose( $choices, {
     beep  => 0, clear_screen => undef, hide_cursor => 1, index => 0, justify => 0, layout => 0, mouse => 0,
     order => 1, page => 0, keep => 1, ll => 1, limit => 9, max_height => 19, max_width => 19, default => 9,
-    pad => 3, pad_one_row => 2, empty => '', prompt => '', undef => '', lf => [ 1 ], no_spacebar => [ 0 ] } ) || 1 );
+    pad => 3, pad_one_row => 2, empty => '', prompt => '', undef => '', lf => [ 1 ], no_spacebar => [ 0 ] } ) } ) );
 
 
-ok( $d = choose( [ 'aaa' .. 'zzz' ], {
+ok( ! defined( exception {  $d = choose( [ 'aaa' .. 'zzz' ], {
     no_spacebar => [ 11, 0, 8 ], lf => [ 1, 1 ], undef => '', prompt => 'prompt_line', empty => '', pad_one_row => 2, pad => 3,
     default => 9, max_width => 19, max_height => 119,  limit => 999999, ll => 15, keep => 1, page => 1, order => 1,
-    mouse => 0, layout => 3, justify => 0, index => 0, hide_cursor => 1,  clear_screen => undef, beep  => 0 } ) || 1 );
+    mouse => 0, layout => 3, justify => 0, index => 0, hide_cursor => 1,  clear_screen => undef, beep  => 0 } ) } ) );
 
 
 

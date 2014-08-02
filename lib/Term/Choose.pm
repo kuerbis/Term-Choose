@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.112_03';
+our $VERSION = '1.113';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -80,6 +80,68 @@ sub __set_defaults {
     $self->{undef}            //= '<undef>';
 }
 
+
+sub _next_release__validate_options {
+    my ( $self, $opt ) = @_;
+    return if ! defined $opt;
+    my $valid = {
+        beep            => '[ 0 1 ]',
+        clear_screen    => '[ 0 1 ]',
+        default         => '[ 0-9 ]+',
+        empty           => '',
+        hide_cursor     => '[ 0 1 ]',
+        index           => '[ 0 1 ]',
+        justify         => '[ 0 1 2 ]',
+        keep            => '[ 1-9 ][ 0-9 ]*',
+        layout          => '[ 0 1 2 3 ]',
+        lf              => 'ARRAY',
+        ll              => '[ 1-9 ][ 0-9 ]*',
+        limit           => '[ 1-9 ][ 0-9 ]*',
+        max_height      => '[ 1-9 ][ 0-9 ]*',
+        max_width       => '[ 1-9 ][ 0-9 ]*',
+        mouse           => '[ 0 1 2 3 4 ]',
+        no_spacebar     => 'ARRAY',
+        order           => '[ 0 1 ]',
+        pad             => '[ 0-9 ]+',
+        pad_one_row     => '[ 0-9 ]+',
+        page            => '[ 0 1 ]',
+        prompt          => '',
+        undef           => '',
+    };
+    my $sub =  ( caller( 1 ) )[3];
+    $sub =~ s/^.+::([^:]+)\z/$1/;
+    for my $key ( keys %$opt ) {
+        if ( ! exists $valid->{$key} ) {
+            croak "$sub: '$key' is not a valid option name";
+        }
+        next if ! defined $opt->{$key};
+        if ( $key eq 'lf' ) {
+            if ( ! ( ref $opt->{$key} eq 'ARRAY' && @{$opt->{$key}} <= 2 ) ) {
+                croak "$sub: option '$key' : the passed value has to be an ARRAY reference.";
+            }
+            no warnings 'uninitialized';
+            for ( @{$opt->{$key}} ) {
+                /^[0-9]+\z/ or croak "$sub: option '$key' : $_ is an invalid array element";
+            }
+        }
+        elsif ( $key eq 'no_spacebar' ) {
+            if ( ref $opt->{$key} ne 'ARRAY' ) {
+                croak "$sub: option '$key' : the passed value has to be an ARRAY reference.";
+            }
+            no warnings 'uninitialized';
+            for ( @{$opt->{$key}} ) {
+                /^[0-9]+\z/ or croak "$sub: option '$key' : $_ is an invalid array element";
+            }
+        }
+        elsif ( $valid->{$key} eq '' && ref $opt->{$key} ne '' ) {
+            croak "$sub: option '$key' : references are not valid values.";
+        }
+        elsif ( length $valid->{$key} && $opt->{$key} !~ m/^$valid->{$key}\z/x ) {
+            croak "$sub: option '$key' : '$opt->{$key}' is not a valid value.";
+        }
+        $self->{$key} = $opt->{$key};
+    }
+}
 
 sub __validate_options {
     my ( $self, $opt ) = @_;
@@ -1138,7 +1200,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.112_03
+Version 1.113
 
 =cut
 
@@ -1177,6 +1239,13 @@ Object-oriented interface:
 
     my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
+
+=head1 ANNOUNCEMENTS
+
+Passing invalid options will become fatal with the next release!
+
+MSWin32: from the next release on L<Win32::Console::ANSI> will be removed! L<Win32::Console> will be used then to
+emulate the escape sequences.
 
 =head1 DESCRIPTION
 
@@ -1671,6 +1740,8 @@ default: "<undef>"
 
 =head2 carp
 
+Passing invalid options will become fatal with the next release!
+
 =over
 
 =item * If the array referred by the first argument is empty C<choose> warns and returns C<undef> respective an empty
@@ -1717,7 +1788,7 @@ L<Win32::Console>
 
 =item
 
-L<Win32::Console::ANSI>
+L<Win32::Console::ANSI> (removed with the next release)
 
 =back
 
@@ -1742,6 +1813,8 @@ C<choose> expects decoded strings as array elements.
 For a correct output it is required an appropriate encoding layer for STDOUT matching the terminal's character set.
 
 =head3 MSWin32 operating systems
+
+C<Win32::Console::ANSI> will be removed from the next release on so the following will become obsolete!
 
 C<Term::Choose> uses L<Win32::Console::ANSI> if the operating system is MSWin32.
 
@@ -1804,6 +1877,8 @@ If the option "clear_screen" is enabled:
     "\e[1;1H"   Go to Top Left (Cursor Position)
 
 If the OS is MSWin32 the L<Win32::Console::ANSI> module is used to understand these escape sequences.
+
+C<Win32::Console::ANSI> will be replaced by C<Win32::Console> from the next release on to emulate the escape sequences.
 
 If a I<mouse> mode is enabled
 
