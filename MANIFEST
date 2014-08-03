@@ -14,6 +14,7 @@ t/02_expect_2.t
 t/expect_1.pl
 t/expect_2.pl
 t/term_cap.t
+t/term_cap_keys.t
 xt/01_option.t
 xt/02_option_error.t
 xt/cmp_buildpl_makepl.t

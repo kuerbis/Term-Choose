@@ -39,7 +39,6 @@ WriteMakefile(
     BUILD_REQUIRES   => {
         'Test::More'        => 0,
         'Test::Fatal'       => 0, ###
-        'Devel::Peek'       => 0, ###
     },
     PREREQ_PM => {
         'strict'            => 0,

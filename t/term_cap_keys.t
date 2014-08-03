@@ -15,24 +15,18 @@ $termios->getattr;
 
 my $terminal = Term::Cap->Tgetent( { TERM => undef, OSPEED => $termios->getospeed } );
 
+
 my %seq = (
-    cl => "\e[H\e[2J",
-    cd => "\e[J",
-    cm => "\e[%i%d;%dH",
-    do => "\n",
-    le => "\x{08}",
-    nd => "\e[C",
-    up => "\e[A",
-    sc => "\0337",
-    rc => "\0338",
-
-    me => "\e[0m",
-    md => "\e[1m",
-    mr => "\e[7m",
-    ms => "\0\0\0\0\0",
-
-    ve => "\e[?12l\e[?25h",
-    vi => "\e[?25l",
+    kb => "\x{7f}",
+    kd => "\eOB",
+    kh => "\eOH",
+    kl => "\eOD",
+    kr => "\eOC",
+    ku => "\eOA",
+    kI => "\e[2~",
+    kD => "\e[3~",
+    kN => "\e[6~",
+    kP => "\e[5~",
 );
 
 diag( $ENV{TERM} );
