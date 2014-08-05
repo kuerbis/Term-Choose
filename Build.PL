@@ -34,6 +34,9 @@ my $builder = Module::Build->new(
         'Test::More'        => 0,
         'Test::Fatal'       => 0, ###
         'Expect'            => 0, ###
+        'Text::LineFold'    => 0, ###
+        'Unicode::GCString' => 0, ###
+        'Term::ReadKey'     => 0, ###
     },
     requires => {
         'perl'              => '5.010001',

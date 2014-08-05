@@ -13,8 +13,8 @@ $exp->raw_pty( 1 );
 $exp->log_stdout( 0 );
 $exp->slave->set_winsize( 80, 24, undef, undef );
 
-my $command     = 'perl';
-my $script      = 't/choose.pl';
+my $command     = $^X;
+my $script      = 't/expect_choose_choose.pl';
 my @parameters  = ( $script );
 
 ok( -r $script, "$script is readable" );
@@ -26,6 +26,10 @@ $exp->send( "\r" );
 my $expected = 'choice: 1';
 my $ret = $exp->expect( 2, $expected );
 ok( $ret, 'matched something' );
-ok( $exp->match() eq $expected, "expected: '$expected', got: '" . $exp->match() . "'" );
+
+my $result = $exp->match() // '';
+ok( $result eq $expected, "expected: '$expected', got: '$result'" );
+
+$exp->soft_close();
 
 done_testing();

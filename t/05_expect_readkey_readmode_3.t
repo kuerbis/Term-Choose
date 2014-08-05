@@ -13,17 +13,22 @@ $exp->raw_pty( 1 );
 $exp->log_stdout( 0 );
 $exp->slave->set_winsize( 80, 24, undef, undef );
 
-my $command     = 'perl';
-my $script      = 't/choose.pl';
+my $command     = $^X;
+my $script      = 't/expect_readkey_readmode_3.pl';
 my @parameters  = ( $script );
 
 ok( -r $script, "$script is readable" );
 ok( -x $script, "$script is executable" );
 ok( $exp->spawn( $command, @parameters ), "Spawn '$command @parameters' OK" );
 
-my $expected = 'Choose: ';
-my $ret = $exp->expect( 2, -re, $expected );
+my $expected = 'choice:';
+my $ret = $exp->expect( 2, $expected );
 ok( $ret, 'matched something' );
-ok( $exp->match() eq $expected, "expected: '$expected', got: '" . $exp->match() );
+
+my $result = $exp->match() // '';
+
+ok( $result eq $expected, "expected: '$expected', got: '$result'" );
+
+$exp->soft_close();
 
 done_testing();
