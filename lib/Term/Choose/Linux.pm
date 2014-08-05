@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113_03';
+our $VERSION = '1.113_04';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -30,8 +30,7 @@ sub __get_key_OS {
         #elsif ( $c3 eq 'C' ) { return VK_RIGHT; }
         #elsif ( $c3 eq 'D' ) { return VK_LEFT; }
         #elsif ( $c3 eq 'H' ) { return VK_HOME; }
-        #elsif ( $c3 eq 'Z' ) { return KEY_BTAB; }
-        elsif ( $c2 eq 'O' ) {
+         elsif ( $c2 eq 'O' ) {
             my $c3 = ReadKey( 0 );
                if ( $c3 eq 'A' ) { return VK_UP; }
             elsif ( $c3 eq 'B' ) { return VK_DOWN; }
@@ -39,7 +38,7 @@ sub __get_key_OS {
             elsif ( $c3 eq 'D' ) { return VK_LEFT; }
             elsif ( $c3 eq 'F' ) { return VK_END; }
             elsif ( $c3 eq 'H' ) { return VK_HOME; }
-            elsif ( $c3 eq 'Z' ) { return KEY_BTAB; } #
+            elsif ( $c3 eq 'Z' ) { return KEY_BTAB; }
             else {
                 return NEXT_get_key;
             }
@@ -52,7 +51,7 @@ sub __get_key_OS {
             elsif ( $c3 eq 'D' ) { return VK_LEFT; }
             elsif ( $c3 eq 'F' ) { return VK_END; }
             elsif ( $c3 eq 'H' ) { return VK_HOME; }
-            elsif ( $c3 eq 'Z' ) { return KEY_BTAB; } #
+            elsif ( $c3 eq 'Z' ) { return KEY_BTAB; }
             elsif ( $c3 =~ /^[0-9]$/ ) {
                 my $c4 = ReadKey( 0 );
                 if ( $c4 eq '~' ) {
@@ -232,7 +231,8 @@ sub __get_cursor_position {
 
 sub __clear_screen {
     #my ( $self ) = @_;
-    print "\e[2J\e[1;1H";
+    #print "\e[2J\e[1;1H";
+    print "\e[H\e[J";
 }
 
 

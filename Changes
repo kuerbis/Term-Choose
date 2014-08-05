@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.113_04   2014-08-05
+        - Update tests.
+
 1.113_03   2014-08-03
         - Update keycodes.
         - Update tests.

@@ -3,11 +3,10 @@ use warnings;
 use strict;
 use utf8;
 use Test::More;
-
-use Term::Choose qw( choose );
-
 use Test::Fatal;
 
+use lib 'lib';
+use Term::Choose qw( choose );
 
 no warnings 'redefine';
 sub Term::Choose::__get_key { sleep 0.01; return 0x0d };

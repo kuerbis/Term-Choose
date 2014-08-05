@@ -33,6 +33,7 @@ my $builder = Module::Build->new(
     build_requires => {
         'Test::More'        => 0,
         'Test::Fatal'       => 0, ###
+        'Expect'            => 0, ###
     },
     requires => {
         'perl'              => '5.010001',

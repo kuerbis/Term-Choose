@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113_03';
+our $VERSION = '1.113_04';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -194,7 +194,7 @@ sub choose {
     }
     my $self = shift;
     my ( $orig_list_ref, $opt ) = @_;
-    croak "choose: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ < 1 || @_ > 2;
+    croak "choose: called with " . @_ . " arguments - 1 or 2 arguments expected" if @_ < 1 || @_ > 2;
     croak "choose: the first argument must be an ARRAY reference" if ref $orig_list_ref ne 'ARRAY';
     if ( ! @$orig_list_ref ) {
         carp "choose: The first argument refers to an empty list";
@@ -1115,7 +1115,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.113_03
+Version 1.113_04
 
 =cut
 
@@ -1638,26 +1638,26 @@ default: "<undef>"
 
 =head2 croak
 
+C<new|config|choose> dies if
+
 =over
 
-=item * If passed an invalid number of arguments C<new|config|choose> dies.
+=item * passed an invalid number of arguments.
 
-=item * If passed an invalid argument C<new|config|choose> dies.
+=item * passed an invalid argument.
+
+=item * passed an invalid option name.
+
+=item * passed an invalid option value.
 
 =back
 
 =head2 carp
 
-Passing invalid options will become fatal with the next release!
-
 =over
 
 =item * If the array referred by the first argument is empty C<choose> warns and returns C<undef> respective an empty
 list.
-
-=item * If an option does not exist C<new|config|choose> warns.
-
-=item * If an option value is not valid C<new|config|choose> warns and uses the default value instead.
 
 =item * If after pressing a key L<Term::ReadKey>::ReadKey returns C<undef> C<choose> warns with C<EOT: $!> and returns
 I<undef> or an empty list in list context.
