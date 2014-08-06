@@ -2,6 +2,8 @@ use 5.010001;
 use warnings;
 use strict;
 use Test::More;
+use FindBin               qw( $RealBin );
+use File::Spec::Functions qw( catfile );
 
 eval "use Expect";
 if ( $@ ) {
@@ -11,10 +13,10 @@ if ( $@ ) {
 my $exp = Expect->new();
 $exp->raw_pty( 1 );
 $exp->log_stdout( 0 );
-$exp->slave->set_winsize( 80, 24, undef, undef );
+$exp->slave->clone_winsize_from( \*STDIN );
 
 my $command     = $^X;
-my $script      = 't/expect.pl';
+my $script      = catfile $RealBin, 'expect.pl';
 my @parameters  = ( $script );
 
 ok( -r $script, "$script is readable" );
@@ -26,7 +28,6 @@ my $ret = $exp->expect( 2, $expected );
 ok( $ret, 'matched something' );
 
 my $result = $exp->match() // '';
-
 ok( $result eq $expected, "expected: '$expected', got: '$result'" );
 
 $exp->soft_close();

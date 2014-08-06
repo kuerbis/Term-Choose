@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010001;
 
-our $VERSION = '1.113_05';
+our $VERSION = '1.113_06';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -196,14 +196,14 @@ sub choose {
     my ( $orig_list_ref, $opt ) = @_;
     croak "choose: called with " . @_ . " arguments - 1 or 2 arguments expected" if @_ < 1 || @_ > 2;
     croak "choose: the first argument must be an ARRAY reference" if ref $orig_list_ref ne 'ARRAY';
-    if ( ! @$orig_list_ref ) {
-        carp "choose: The first argument refers to an empty list";
-        return;
-    }
     if ( defined $opt ) {
         croak "choose: the (optional) second argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->{backup_opt} = { map{ $_ => $self->{$_} } keys %$opt };
         $self->__validate_options( $opt );
+    }
+    if ( ! @$orig_list_ref ) {
+        #carp "choose: The first argument refers to an empty list"; ###
+        return;
     }
     local $\ = undef;
     local $, = undef;
@@ -1115,7 +1115,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.113_05
+Version 1.113_06
 
 =cut
 

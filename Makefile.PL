@@ -5,14 +5,19 @@ use ExtUtils::MakeMaker;
 
 
 my %prereqs_os_specific;
+my %test_prereqs_os_specific;
+
 if ( $^O eq 'MSWin32' ) {
     %prereqs_os_specific = (
-        'Win32::Console'       => 0,
+        'Win32::Console' => 0,
     );
 }
 else {
     %prereqs_os_specific = (
-        'Term::ReadKey'        => 0,
+        'Term::ReadKey'  => 0,
+    );
+    %test_prereqs_os_specific = (
+        'Expect'         => 0,
     );
 }
 
@@ -38,11 +43,8 @@ WriteMakefile(
     EXE_FILES        => [],
     BUILD_REQUIRES   => {
         'Test::More'        => 0,
-        'Test::Fatal'       => 0, ###
-        'Expect'            => 0, ###
-        'Text::LineFold'    => 0, ###
-        'Unicode::GCString' => 0, ###
-        'Term::ReadKey'     => 0, ###
+        'Test::Fatal'       => 0,  ###
+        %test_prereqs_os_specific, ###
     },
     PREREQ_PM => {
         'strict'            => 0,
@@ -52,6 +54,9 @@ WriteMakefile(
         'Text::LineFold'    => 0,
         'Unicode::GCString' => 0,
         %prereqs_os_specific,
+    },
+    test  => {
+        TESTS => 't/*/*.t',
     },
     dist  => {
         COMPRESS => 'gzip',
