@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.113_07   2014-08-07
+        - Update tests.
+        - Perl minimum version "5.10.0".
+        - Removed warning: empty list.
+
 1.113_06   2014-08-06
         - Update tests.
         - Removed "Build.PL".

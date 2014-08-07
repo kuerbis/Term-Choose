@@ -21,8 +21,10 @@ t/01_expect/expect_2.pl
 t/01_expect/expect_choose.pl
 t/01_expect/expect_choose_choose.pl
 t/01_expect/expect_choose_choose_2.pl
+t/02_get_char/choose.pl
 t/02_get_char/get_key_linux.pl
 t/02_get_char/get_key_linux.t
+t/02_get_char/move_key.t
 t/03_arguments/01_new.t
 t/03_arguments/01_new_invalid.t
 t/03_arguments/02_config.t

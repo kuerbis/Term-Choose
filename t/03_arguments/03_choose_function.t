@@ -1,4 +1,4 @@
-use 5.010001;
+use 5.010000;
 use warnings;
 use strict;
 use Test::More;
@@ -24,11 +24,11 @@ ok( -x $script, "$script is executable" );
 ok( $exp->spawn( $command, @parameters ), "Spawn '$command @parameters' OK" );
 
 my $expected = '<End function choose argument test>';
-my $ret = $exp->expect( 2, [ qr/.....+/ ] );
+my $ret = $exp->expect( 2, [ qr/(?:<End|choose).+/ ] );
 
 ok( $ret, 'matched something' );
 my $result = $exp->match() // '';
-ok( $result =~ /\Q$expected\E/, "expected: '$expected', got: '$result'" );
+ok( $result =~ $expected, "expected: '$expected', got: '$result'" );
 
 $exp->soft_close();
 

@@ -2,9 +2,9 @@ package Term::Choose;
 
 use warnings;
 use strict;
-use 5.010001;
+use 5.010000;
 
-our $VERSION = '1.113_06';
+our $VERSION = '1.113_07';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -202,7 +202,6 @@ sub choose {
         $self->__validate_options( $opt );
     }
     if ( ! @$orig_list_ref ) {
-        #carp "choose: The first argument refers to an empty list"; ###
         return;
     }
     local $\ = undef;
@@ -1115,7 +1114,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.113_06
+Version 1.113_07
 
 =cut
 
@@ -1254,6 +1253,8 @@ If C<choose> is called in an I<void context>, the user can move around but mark 
 can be closed with C<Return>.
 
 Called in void context C<choose> returns nothing.
+
+If the first argument refers to an empty array, C<choose> returns nothing.
 
 =back
 
@@ -1656,9 +1657,6 @@ C<new|config|choose> dies if
 
 =over
 
-=item * If the array referred by the first argument is empty C<choose> warns and returns C<undef> respective an empty
-list.
-
 =item * If after pressing a key L<Term::ReadKey>::ReadKey returns C<undef> C<choose> warns with C<EOT: $!> and returns
 I<undef> or an empty list in list context.
 
@@ -1668,7 +1666,7 @@ I<undef> or an empty list in list context.
 
 =head2 Perl version
 
-Requires Perl version 5.10.1 or greater.
+Requires Perl version 5.10.0 or greater.
 
 =head2 Modules
 

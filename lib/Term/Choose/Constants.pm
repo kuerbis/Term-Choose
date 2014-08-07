@@ -3,9 +3,9 @@ Term::Choose::Constants;
 
 use warnings;
 use strict;
-use 5.010001;
+use 5.010000;
 
-our $VERSION = '1.113_06';
+our $VERSION = '1.113_07';
 
 use Exporter qw( import );
 

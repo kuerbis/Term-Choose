@@ -1,7 +1,7 @@
 package # hide
 InvalidValues;
 
-use 5.010001;
+use 5.010000;
 use warnings;
 use strict;
 use utf8;
