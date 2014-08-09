@@ -14,9 +14,8 @@ if( Test::Builder->VERSION < 2 ) {
 use lib '../../lib';
 use Term::Choose;
 
-use FindBin qw( $RealBin );
-use lib $RealBin;
-use ValidValues;
+use lib 't/';
+use Term_Choose_Testdata;
 
 
 my $new = Term::Choose->new();
@@ -29,7 +28,7 @@ $exception = exception { $new->config( {} ) };
 ok( ! defined $exception, '$new->config( {} )' );
 
 
-my $valid_values = ValidValues::valid_values();
+my $valid_values = Term_Choose_Testdata::valid_values();
 my $new1  = Term::Choose->new( { order => 1, layout => 2, mouse => 3 } ); # ?
 
 for my $opt ( sort keys %$valid_values ) {
@@ -40,12 +39,12 @@ for my $opt ( sort keys %$valid_values ) {
 }
 
 
-my $mixed_options_1 = ValidValues::mixed_options_1();
+my $mixed_options_1 = Term_Choose_Testdata::mixed_options_1();
 $exception = exception { $new1->config( $mixed_options_1 ) };
 ok( ! defined $exception, "\$new->config( { >>> } )"  );
 
 
-my $mixed_options_2 = ValidValues::mixed_options_2();
+my $mixed_options_2 = Term_Choose_Testdata::mixed_options_2();
 $exception = exception { $new1->config( $mixed_options_2 ) };
 ok( ! defined $exception, "\$new->config( { <<< } )" );
 

@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.113_08   2014-08-09
+        - Update tests.
+
 1.113_07   2014-08-07
         - Update tests.
         - Perl minimum version "5.10.0".

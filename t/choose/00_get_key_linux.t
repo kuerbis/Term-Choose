@@ -20,38 +20,48 @@ use lib '../../lib';
 use Term::Choose::Constants qw( :linux );
 
 
-my $script     = catfile $RealBin, 'get_key_linux.pl';
-ok( -r $script, "$script is readable" );
-ok( -x $script, "$script is executable" );
+my $script = catfile $RealBin, 'get_key_linux.pl';
+
+eval {
+    my $exp = Expect->new();
+    $exp->raw_pty( 1 );
+    $exp->slave->set_winsize( 24, 80, undef, undef );
+    -r $script or die "$script is NOT readable $!";
+    $exp->spawn( $script ) or die "Spawn '$script' NOT ok $!";
+    1;
+}
+or plan skip_all => $@;
+
 
 for my $char ( qw( h j k l q ), ' ', "\t" ) {
     my $exp = Expect->new();
     $exp->raw_pty( 1 );
     $exp->slave->set_winsize( 24, 80, undef, undef );
-    ok( $exp->spawn( $script ), "Spawn '$script' OK" );
+    $exp->spawn( $script );
     $exp->send( $char );
     my $expected = '<' . ord( $char ) . '>';
-    my $ret = $exp->expect( 3, , $expected );
+    my $ret = $exp->expect( 3, [ qr/...+/ ]  );
     ok( $ret, 'matched something' );
     my $result = $exp->match() // '';
     ok( $result eq $expected, "expected: '$expected', got: '$result'" );
     $exp->soft_close();
 }
 
+
 for my $char ( "\cA", "\cB", "\cC", "\cD", "\cE", "\cF", "\cH", "\cI", "\c@" ) {
-    say $char;
     my $exp = Expect->new();
     $exp->raw_pty( 1 );
     $exp->slave->set_winsize( 24, 80, undef, undef );
-    ok( $exp->spawn( $script ), "Spawn '$script' OK" );
+    $exp->spawn( $script );
     $exp->send( $char );
     my $expected = '<' . ord( $char ) . '>';
-    my $ret = $exp->expect( 3, , $expected );
+    my $ret = $exp->expect( 3, [ qr/...+/ ] );
     ok( $ret, 'matched something' );
     my $result = $exp->match() // '';
     ok( $result eq $expected, "expected: '$expected', got: '$result'" );
     $exp->soft_close();
 }
+
 
 my $array = [
     [ [ "\e[A", "\eOA" ],   VK_UP ],
@@ -61,9 +71,6 @@ my $array = [
     [ [ "\e[F", "\eOF" ],   VK_END ],
     [ [ "\e[H", "\eOH" ],   VK_HOME ],
     [ [ "\e[Z", "\eOZ" ],   KEY_BTAB ],
-    [ [ "\e" ],             KEY_ESC ],
-    [ [ "\e[2~" ],          VK_INSERT ],
-    [ [ "\e[3~" ],          VK_DELETE ],
     [ [ "\e[5~" ],          VK_PAGE_UP ],
     [ [ "\e[6~" ],          VK_PAGE_DOWN ],
 ];
@@ -73,10 +80,10 @@ for my $elem ( @$array ) {
         my $exp = Expect->new();
         $exp->raw_pty( 1 );
         $exp->slave->set_winsize( 24, 80, undef, undef );
-        ok( $exp->spawn( $script ), "Spawn '$script' OK" );
+        $exp->spawn( $script );
         $exp->send( $seq );
         my $expected = '<' . $elem->[1] . '>';
-        my $ret = $exp->expect( 3, , $expected );
+        my $ret = $exp->expect( 3, [ qr/...+/ ] );
         ok( $ret, 'matched something' );
         my $result = $exp->match() // '';
         ok( $result eq $expected, "expected: '$expected', got: '$result'" );

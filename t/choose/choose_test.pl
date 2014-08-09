@@ -6,10 +6,16 @@ use 5.010000;
 use lib '../../lib';
 use Term::Choose qw( choose );
 
-for my $count ( 1 .. 32 ) {
+use lib 't/';
+use Term_Choose_Testdata;
+
+my $a_ref = Term_Choose_Testdata::test_options();
+
+for my $ref ( @$a_ref ) {
+    my $opt = $ref->[1];
     my @choice = choose(
         [ 0 .. 1999 ],
-        { order => 0, layout => 0, hide_cursor => 0 }
+        $opt
     );
     say "<@choice>";
 }

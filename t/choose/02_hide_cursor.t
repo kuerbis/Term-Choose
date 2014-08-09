@@ -10,26 +10,27 @@ if ( $@ ) {
     plan skip_all => "Expect required for $0.";
 }
 
-my $exp = Expect->new();
-$exp->raw_pty( 1 );
-$exp->log_stdout( 0 );
-$exp->slave->set_winsize( 24, 80, undef, undef );
+my $exp;
+eval {
+    $exp = Expect->new();
+    $exp->raw_pty( 1 );
+    $exp->log_stdout( 0 );
+    $exp->slave->set_winsize( 24, 80, undef, undef );
 
-my $command     = $^X;
-my $script      = catfile $RealBin, 'choose.pl';
-my @parameters  = ( $script );
+    my $command     = $^X;
+    my $script      = catfile $RealBin, 'hide_cursor.pl';
+    my @parameters  = ( $script );
 
-ok( -r $script, "$script is readable" );
-ok( -x $script, "$script is executable" );
-ok( $exp->spawn( $command, @parameters ), "Spawn '$command @parameters' OK" );
+    -r $script or die "$script is NOT readable";
+    $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
+    1;
+}
+or plan skip_all => $@;
 
-my $expected = 'choice: 37';
+
+my $expected = 'choice: 1';
 my $ret = $exp->expect( 2,
     [ 'Your choice: ' => sub {
-            $exp->send( "\e[C" x 6 );
-            $exp->send( "\e[B" x 3 );
-            $exp->send( "\e[D" );
-            $exp->send( "\e[A" );
             $exp->send( "\r" );
             'exp_continue';
         }

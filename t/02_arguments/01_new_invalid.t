@@ -14,9 +14,8 @@ if( Test::Builder->VERSION < 2 ) {
 use lib '../../lib';
 use Term::Choose;
 
-use FindBin qw( $RealBin );
-use lib $RealBin;
-use InvalidValues;
+use lib 't/';
+use Term_Choose_Testdata;
 
 my $exception;
 
@@ -31,7 +30,7 @@ ok( $exception =~ /new:/, "\$new = Term::Choose->new( 'a' ) => $exception" );
 my %new;
 my $n = 1; # ?
 
-my $invalid_values = InvalidValues::invalid_values();
+my $invalid_values = Term_Choose_Testdata::invalid_values();
 
 for my $opt ( sort keys %$invalid_values ) {
     for my $val ( @{$invalid_values->{$opt}} ) {
@@ -41,12 +40,12 @@ for my $opt ( sort keys %$invalid_values ) {
 }
 
 
-my $mixed_invalid_1 = InvalidValues::mixed_invalid_1();
+my $mixed_invalid_1 = Term_Choose_Testdata::mixed_invalid_1();
 $exception = exception { $new{$n++} = Term::Choose->new( $mixed_invalid_1  ) };
 ok( $exception =~ /new:/, "\$new = Term::Choose->new( { >>> } ) => $exception" );
 
 
-my $mixed_invalid_2 = InvalidValues::mixed_invalid_2();
+my $mixed_invalid_2 = Term_Choose_Testdata::mixed_invalid_2();
 $exception = exception { $new{$n++} = Term::Choose->new( $mixed_invalid_2 ) };
 ok( $exception =~ /new:/, "\$new = Term::Choose->new( { <<< } ) => $exception" );
 

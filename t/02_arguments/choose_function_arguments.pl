@@ -7,26 +7,25 @@ use utf8;
 use lib '../../lib';
 use Term::Choose qw( choose );
 
-use FindBin qw( $RealBin );
-use lib $RealBin;
-use ValidValues;
+use lib 't/';
+use Term_Choose_Testdata;
 
 
 choose( [] );
 choose( [], {} );
 
-my $valid_values = ValidValues::valid_values();
+my $valid_values = Term_Choose_Testdata::valid_values();
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}}, undef ) {
         choose( [], { $opt => $val } );
     }
 }
 
-my $mixed_options_1 = ValidValues::mixed_options_1();
+my $mixed_options_1 = Term_Choose_Testdata::mixed_options_1();
 choose( [], $mixed_options_1 );
 
-my $mixed_options_2 = ValidValues::mixed_options_2();
+my $mixed_options_2 = Term_Choose_Testdata::mixed_options_2();
 choose( [], $mixed_options_1 );
 
 
-say "<End function choose argument test>";
+say "<End_func_chse_arg_test>";
