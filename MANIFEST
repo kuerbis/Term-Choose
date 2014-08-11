@@ -20,6 +20,7 @@ t/02_arguments/choose_function_arguments.pl
 t/02_arguments/choose_function_invalid_arguments.pl
 t/02_arguments/choose_method_arguments.pl
 t/02_arguments/choose_method_invalid_arguments.pl
+t/02_arguments/Data_Test_Arguments.pm
 t/choose/00_clone_win.t
 t/choose/00_get_key_linux.t
 t/choose/01_move_key.t
@@ -27,11 +28,11 @@ t/choose/02_hide_cursor.t
 t/choose/choose.pl
 t/choose/choose.t
 t/choose/choose_simple.pl
-t/choose/choose_test.pl
-t/choose/clear_screen.pl
+t/choose/Data_Test_Choose.pm
 t/choose/get_key_linux.pl
 t/choose/hide_cursor.pl
-t/Term_Choose_Testdata.pm
+t/choose/key_test.pl
+Textdatei.txt
 xt/01_option.t
 xt/02_option_error.t
 xt/cntr_choose.t

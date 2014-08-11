@@ -2,14 +2,9 @@
 use warnings;
 use strict;
 use 5.010000;
-use Term::ReadKey;
 
 use lib '../../lib';
-use Term::Choose::Constants qw( :linux );
 use Term::Choose::Linux;
-
-ReadMode 'ultra-raw';
-END{ ReadMode 'normal' }
 
 my $linux = Term::Choose::Linux->new();
 

@@ -2,14 +2,29 @@
 use warnings;
 use strict;
 use 5.010000;
+use utf8;
+binmode STDOUT, ':encoding(UTF-8)';
 
 use lib '../../lib';
 use Term::Choose qw( choose );
 
-for my $count ( 1 .. 32 ) {
+use FindBin qw( $RealBin );
+use lib $RealBin;
+use Data_Test_Choose;
+
+my $a_ref = Data_Test_Choose::test_options();
+my $b_ref = Data_Test_Choose::test_list();
+
+my $type = shift;
+my $list = $b_ref->{$type};
+
+
+
+for my $ref ( @$a_ref ) {
+    my $opt = $ref->{options};
     my @choice = choose(
-        [ 0 .. 1999 ],
-        { order => 0, layout => 0, hide_cursor => 0 }
+        $list,
+        $opt
     );
-    say "<@choice>";
+   say "<@choice>";
 }

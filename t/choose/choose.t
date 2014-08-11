@@ -2,6 +2,7 @@ use 5.010000;
 use warnings;
 use strict;
 use Test::More;
+use Encode;
 use FindBin               qw( $RealBin );
 use File::Spec::Functions qw( catfile );
 
@@ -11,13 +12,20 @@ BEGIN {
     }
 }
 
+if( Test::Builder->VERSION < 2 ) {
+    for my $method ( qw( output failure_output todo_output ) ) {
+        binmode Test::More->builder->$method(), ':encoding(UTF-8)';
+    }
+}
+
 eval "use Expect";
 if ( $@ ) {
     plan skip_all => "Expect required for $0.";
 }
 
-use lib 't/';
-use Term_Choose_Testdata;
+use lib $RealBin;
+use Data_Test_Choose;
+
 
 my $exp;
 eval {
@@ -27,7 +35,7 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose.pl';
+    my $script      = catfile $RealBin, 'key_test.pl';
     my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
@@ -36,7 +44,7 @@ eval {
 }
 or plan skip_all => $@;
 
-my $data = Term_Choose_Testdata::key_move_results();
+my $data = Data_Test_Choose::key_move_results();
 my %ok = ();
 for my $key ( sort keys %$data ) {
     my $expected   = $data->{$key}[0];
@@ -57,57 +65,34 @@ for my $key ( sort keys %$data ) {
     }
 }
 
-my $CONTROL_at    = "\x{00}";
-my $CONTROL_Space = "\x{00}";
 
-my $CONTROL_C     = "\x{03}";
-my $CONTROL_D     = "\x{04}";
+my $key = Data_Test_Choose::keys();
 
-my $CONTROL_H     = "\x{08}";
-my $BTAB          = "\x{08}";
-my $BSPACE        = "\x{7f}";
-my $BTAB_Z        = $ok{BTAB_Z}    ? "\e[Z"  : $CONTROL_H;
-my $BTAB_OZ       = $ok{BTAB_OZ}   ? "\eOZ"  : $CONTROL_H;
+$key->{BTAB_Z}    //= $key->{CONTROL_H};
+$key->{BTAB_OZ}   //= $key->{CONTROL_H};
 
-my $CONTROL_I     = "\x{09}";
-my $TAB           = "\x{09}";
+$key->{UP}        //= $key->{Key_k};
+$key->{UP_O}      //= $key->{Key_k};
 
-my $CONTROL_M     = "\x{0d}";
-my $ENTER         = "\x{0d}";
+$key->{DOWN}      //= $key->{Key_j};
+$key->{DOWN_O}    //= $key->{Key_j};
 
-my $SPACE         = "\x{20}";
-my $KEY_q         = "\x{71}";
+$key->{RIGHT}     //= $key->{Key_l};
+$key->{RIGHT_O}   //= $key->{Key_l};
 
-my $KEY_k         = "\x{6b}";
-my $UP            = $ok{UP}        ? "\e[A"  : $KEY_k;
-my $UP_O          = $ok{UP_O}      ? "\eOA"  : $KEY_k;
+$key->{LEFT}      //= $key->{Key_h};
+$key->{LEFT_O}    //= $key->{Key_h};
 
-my $KEY_j         = "\x{6a}";
-my $DOWN          = $ok{DOWN}      ? "\e[B"  : $KEY_j;
-my $DOWN_O        = $ok{DOWN_O}    ? "\eOB"  : $KEY_j;
+$key->{PAGE_UP}   //= $key->{CONTROL_B};
+$key->{PAGE_DOWN} //= $key->{CONTROL_F};
 
-my $KEY_l         = "\x{6c}";
-my $RIGHT         = $ok{RIGHT}     ? "\e[C"  : $KEY_l;
-my $RIGHT_O       = $ok{RIGHT_O}   ? "\eOC"  : $KEY_l;
-
-my $KEY_h         = "\x{68}";
-my $LEFT          = $ok{LEFT}      ? "\e[D"  : $KEY_h;
-my $LEFT_O        = $ok{LEFT_O}    ? "\eOD"  : $KEY_h;
-
-my $CONTROL_B     = "\x{02}";
-my $PAGE_UP       = $ok{PAGE_UP}   ? "\e[5~" : $CONTROL_B;
-
-my $CONTROL_F     = "\x{06}";
-my $PAGE_DOWN     = $ok{PAGE_DOWN} ? "\e[6~" : $CONTROL_F;
-
-my $CONTROL_A     = "\x{01}";
-my $HOME          = $ok{HOME}      ? "\e[H"  : $CONTROL_A;
-
-my $CONTROL_E     = "\x{05}";
-my $END           = $ok{END}       ? "\e[F"  : $CONTROL_E;
+$key->{HOME}      //= $key->{CONTROL_A};
+$key->{END}       //= $key->{CONTROL_E};
 
 
-my $a_ref = Term_Choose_Testdata::test_options();
+my $a_ref = Data_Test_Choose::test_options();
+
+
 
 eval {
     $exp = Expect->new();
@@ -116,8 +101,8 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose_test.pl';
-    my @parameters  = ( $script );
+    my $script      = catfile $RealBin, 'choose.pl';
+    my @parameters  = ( $script, 'long' );
 
     -r $script or die "$script is NOT readable";
     $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
@@ -125,10 +110,10 @@ eval {
 }
 or plan skip_all => $@;
 
+my $pressed_keys = Data_Test_Choose::pressed_keys();
 for my $ref ( @$a_ref ) {
-    my $expected = "<$ref->[0]>";
-    $exp->send( $CONTROL_E );
-    $exp->send( $ENTER );
+    my $expected = $ref->{long};
+    $exp->send( @{$key}{@$pressed_keys} );
     my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
     ok( $ret, 'matched something' );
     my $result = $exp->match() // '';
@@ -136,5 +121,67 @@ for my $ref ( @$a_ref ) {
 }
 
 $exp->soft_close();
+
+
+
+eval {
+    $exp = Expect->new();
+    $exp->raw_pty( 1 );
+    $exp->log_stdout( 0 );
+    $exp->slave->set_winsize( 24, 80, undef, undef );
+
+    my $command     = $^X;
+    my $script      = catfile $RealBin, 'choose.pl';
+    my @parameters  = ( $script, 'short' );
+
+    -r $script or die "$script is NOT readable";
+    $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
+    1;
+}
+or plan skip_all => $@;
+
+$pressed_keys = Data_Test_Choose::pressed_keys_short();
+for my $ref ( @$a_ref ) {
+    my $expected = $ref->{short};
+    $exp->send( @{$key}{@$pressed_keys} );
+    my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
+    ok( $ret, 'matched something' );
+    my $result = $exp->match() // '';
+    ok( $result eq $expected, "expected: '$expected', got: '$result'" );
+}
+
+$exp->soft_close();
+
+
+
+eval {
+    $exp = Expect->new();
+    $exp->raw_pty( 1 );
+    $exp->log_stdout( 0 );
+    $exp->slave->set_winsize( 24, 80, undef, undef );
+
+    my $command     = $^X;
+    my $script      = catfile $RealBin, 'choose.pl';
+    my @parameters  = ( $script, 'unicode' );
+
+    -r $script or die "$script is NOT readable";
+    $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
+    1;
+}
+or plan skip_all => $@;
+
+$pressed_keys = Data_Test_Choose::pressed_keys();
+for my $ref ( @$a_ref ) {
+    my $expected = $ref->{unicode};
+    $exp->send( @{$key}{@$pressed_keys} );
+    my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
+    ok( $ret, 'matched something' );
+    my $result = decode( 'utf8', $exp->match() // '' );
+    ok( $result eq $expected, "expected: '$expected', got: '$result'" );
+}
+
+$exp->soft_close();
+
+
 
 done_testing();

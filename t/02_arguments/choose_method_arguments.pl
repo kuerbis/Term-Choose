@@ -7,8 +7,9 @@ use utf8;
 use lib '../../lib';
 use Term::Choose;
 
-use lib 't/';
-use Term_Choose_Testdata;
+use FindBin qw( $RealBin );
+use lib $RealBin;
+use Data_Test_Arguments;
 
 
 my $new = Term::Choose->new();
@@ -16,18 +17,18 @@ my $new = Term::Choose->new();
 $new->choose( [] );
 $new->choose( [], {} );
 
-my $valid_values = Term_Choose_Testdata::valid_values();
+my $valid_values = Data_Test_Arguments::valid_values();
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}}, undef ) {
         $new->choose( [], { $opt => $val } );
     }
 }
 
-my $mixed_options_1 = Term_Choose_Testdata::mixed_options_1();
+my $mixed_options_1 = Data_Test_Arguments::mixed_options_1();
 $new->choose( [], $mixed_options_1 );
 
-my $mixed_options_2 = Term_Choose_Testdata::mixed_options_2();
+my $mixed_options_2 = Data_Test_Arguments::mixed_options_2();
 $new->choose( [], $mixed_options_1 );
 
 
-say "<End_meth_chse_arg_test>";
+say "<End_mc_va>";

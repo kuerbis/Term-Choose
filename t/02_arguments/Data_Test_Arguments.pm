@@ -1,72 +1,12 @@
 package # hide
-Term_Choose_Testdata;
+Data_Test_Arguments;
 
 use 5.010000;
 use warnings;
 use strict;
 use utf8;
 
-# CONTROL_C
-# KEY_q CONTROL_D
 
-sub key_move_results {
-# 24 x 80
-#for my $count ( 1 .. 32 ) {
-#    my @choice = choose(
-#        [ 0 .. 1999 ],
-#        { order => 0, layout => 0, hide_cursor => 0 }
-#    );
-#    say "<@choice>";
-#}
-    return {
-        ENTER       => [ '<0>',     ( "\r" )                                      ],
-        CONTROL_M   => [ '<0>',     ( "\cM" )                                     ],
-
-        RIGHT       => [ '<3>',     ( "\e[C" x 3 )                     . ( "\r" ) ],
-        RIGHT_O     => [ '<3>',     ( "\eOC" x 3 )                     . ( "\r" ) ],
-        Key_l       => [ '<3>',     ( "l" x 3 )                        . ( "\r" ) ],
-
-        LEFT        => [ '<2>',     ( "\e[C" x 4 ) . ( "\e[D" x 2 )    . ( "\r" ) ],
-        LEFT_O      => [ '<2>',     ( "\eOC" x 4 ) . ( "\eOD" x 2 )    . ( "\r" ) ],
-        Key_h       => [ '<2>',     ( "l" x 4 )    . ( "h" x 2 )       . ( "\r" ) ],
-
-        DOWN        => [ '<40>',    ( "\e[C" x 1 ) . ( "\e[B" x 3 )    . ( "\r" ) ],
-        DOWN_O      => [ '<40>',    ( "\eOC" x 1 ) . ( "\eOB" x 3 )    . ( "\r" ) ],
-        Key_j       => [ '<40>',    ( "l" x 1 )    . ( "j" x 3 )       . ( "\r" ) ],
-
-        UP          => [ '<39>',    ( "\e[B" x 6 ) . ( "\e[A" x 3 )    . ( "\r" ) ],
-        UP_O        => [ '<39>',    ( "\eOB" x 6 ) . ( "\eOA" x 3 )    . ( "\r" ) ],
-        Key_k       => [ '<39>',    ( "j" x 6 )    . ( "k" x 3 )       . ( "\r" ) ],
-
-        TAB         => [ '<16>',    ( "\t" x 16 )                      . ( "\r" ) ],
-        CONTROL_I   => [ '<16>',    ( "\cI" x 16 )                     . ( "\r" ) ],
-
-        BSPACE      => [ '<68>',    ( "\e[B" x 6 ) . ( "\x{7f}" x 10 ) . ( "\r" ) ],
-        CONTROL_H   => [ '<68>',    ( "\e[B" x 6 ) . ( "\cH" x 10 )    . ( "\r" ) ],
-        BTAB        => [ '<68>',    ( "\e[B" x 6 ) . ( "\x{08}" x 10 ) . ( "\r" ) ],
-        BTAB_Z      => [ '<68>',    ( "\e[B" x 6 ) . ( "\e[Z" x 10 )   . ( "\r" ) ],
-        BTAB_OZ     => [ '<68>',    ( "\eOB" x 6 ) . ( "\eOZ" x 10 )   . ( "\r" ) ],
-
-        HOME        => [ '<0>',     ( "\e[H" )                         . ( "\r" ) ],
-        CONTROL_A   => [ '<0>',     ( "\cA" )                          . ( "\r" ) ],
-
-        END         => [ '<1999>',  ( "\e[F" )                         . ( "\r" ) ],
-        CONTROL_E   => [ '<1999>',  ( "\cE" )                          . ( "\r" ) ],
-
-        PAGE_DOWN   => [ '<286>',   ( "\e[6~" )                        . ( "\r" ) ],
-        CONTROL_F   => [ '<286>',   ( "\cF" )                          . ( "\r" ) ],
-
-        PAGE_UP     => [ '<572>',   ( "\e[6~" x 3 ) . ( "\e[5~" )      . ( "\r" ) ],
-        CONTROL_B   => [ '<572>',   ( "\cF" x 3 ) . ( "\cB" )          . ( "\r" ) ],
-
-        SPACE       => [ '<0 1>',   ( "\x{20}" ) . ( "\e[C" )          . ( "\r" ) ],
-
-        CONTROL_Space => [ '<0 1>',   ( "\x{20}" ) . ( "\e[C" ) . ( "\c\x{20}" x 2 ) . ( "\r" ) ],
-        'CONTROL_@'   => [ '<0 1>',   ( "\x{20}" ) . ( "\e[C" ) . ( "\c@ " x 2 )     . ( "\r" ) ],
-    };
-}
-
-#################################################################################################
 
 sub valid_values {
     return {
@@ -174,42 +114,6 @@ sub mixed_invalid_2 {
         mouse => 'k', layout => 'e', justify => [], index => {}, hide_cursor => -1,  clear_screen => [], beep  => 10
     };
 }
-
-
-##############################################################################################################
-
-sub test_options {
-    return [
-        [ 1999, { max_height => undef, max_width => undef, layout => 0 } ],
-        [ 1999, { max_height => 20,    max_width => undef, layout => 0 } ],
-        [ 1999, { max_height => undef, max_width => undef, layout => 1 } ],
-        [ 1999, { max_height => 20,    max_width => undef, layout => 3 } ],
-        [ 1999, { max_height => undef, max_width => 61,    layout => 2 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 0 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 1 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 2 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 3 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 1,
-            prompt => 'Your choice: ', page => 0, pad => 3,
-            order => 1, justify => 2, keep => 8, clear_screen => 1 } ],
-        [ 1999, { max_height => 20,    max_width => 60,    layout => 1,
-            prompt => 'Your choice: ' x 100, page => 0, pad => 3,
-            order => 1, justify => 2, keep => 8, clear_screen => 1, pad_one_row => 4 } ],
-        [ 1000, { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 1001,
-            beep => 1, no_spacebar => [ 1 ..14 ], lf => [ 0, 4 ], keep => 16 } ],
-        [ 10, { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 11,
-            pad_one_row => 4, no_spacebar => [ 1 ..14 ], lf => [ 3, 2 ], keep => 7 } ],
-    ];
-    # ll
-}
-
-
-
-
-
-
-
-
 
 
 

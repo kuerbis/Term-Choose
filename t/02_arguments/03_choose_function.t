@@ -28,7 +28,7 @@ eval {
 or plan skip_all => $@;
 
 
-my $expected = '<End_func_chse_arg_test>';
+my $expected = '<End_fc_va>';
 my $ret = $exp->expect( 2, [ qr/(?:<End|choose).+/ ] );
 
 ok( $ret, 'matched something' );

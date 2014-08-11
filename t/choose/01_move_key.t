@@ -16,8 +16,9 @@ if ( $@ ) {
     plan skip_all => "Expect required for $0.";
 }
 
-use lib 't/';
-use Term_Choose_Testdata;
+use FindBin qw( $RealBin );
+use lib $RealBin;
+use Data_Test_Choose;
 
 my $exp;
 eval {
@@ -27,7 +28,7 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose.pl';
+    my $script      = catfile $RealBin, 'key_test.pl';
     my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
@@ -36,7 +37,7 @@ eval {
 }
 or plan skip_all => $@;
 
-my $data = Term_Choose_Testdata::key_move_results();
+my $data = Data_Test_Choose::key_move_results();
 
 my %ok = ();
 for my $key ( sort keys %$data ) {

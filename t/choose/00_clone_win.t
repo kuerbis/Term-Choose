@@ -22,7 +22,6 @@ eval {
     my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
-    # -x $script or die "$script is NOT executable";
     $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
     1;
 }
