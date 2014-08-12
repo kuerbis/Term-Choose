@@ -323,20 +323,20 @@ sub test_options {
             options => { max_height => 20,    max_width => 60,    layout => 1, prompt => 'Your choice: ' x 100, page => 0,
                         pad => 3, order => 1, justify => 2, keep => 8, clear_screen => 1, pad_one_row => 4 }
         },
-        {
-            long    => "<0 10 57 66 481 529 709 780 789 828 923 936 984 1000>",
-            short   => "<0 7 67 93 99>",
-            unicode => "<\x{043a}\x{043e}\x{043d}\x{044c} ad \x{06f2}\x{06f0}\x{06f1}\x{06f4} \x{0627}\x{0644}\x{0639}\x{064a}\x{0646} av \x{308a}\x{3085}\x{3046} T ac av A ai ar L \x{0627}\x{0644}\x{0639}\x{064a}\x{0646}>",
-            options => { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 1001, beep => 1,
-                        no_spacebar => [ 11 .. 14 ], lf => [ 0, 4 ], keep => 16 }
-        },
-        {
-            long    => "<0 9>",
-            short   => "<9>",
-            unicode => "<\x{043a}\x{043e}\x{043d}\x{044c} ac>",
-            options => { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 11, pad_one_row => 4,
-                        no_spacebar => [ 1 .. 14 ], lf => [ 3, 2 ], keep => 7 }
-        },
+        #{
+         #   long    => "<0 10 57 66 481 529 709 780 789 828 923 936 984 1000>",
+         #   short   => "<0 7 67 93 99>",
+         #   unicode => "<\x{043a}\x{043e}\x{043d}\x{044c} ad \x{06f2}\x{06f0}\x{06f1}\x{06f4} \x{0627}\x{0644}\x{0639}\x{064a}\x{0646} av \x{308a}\x{3085}\x{3046} T ac av A ai ar L #\x{0627}\x{0644}\x{0639}\x{064a}\x{0646}>",
+         #   options => { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 1001, beep => 1,
+         #               no_spacebar => [ 11 .. 14 ], lf => [ 0, 4 ], keep => 16 }
+        #},
+        #{
+         #   long    => "<0 9>",
+         #   short   => "<9>",
+         #   unicode => "<\x{043a}\x{043e}\x{043d}\x{044c} ac>",
+         #   options => { prompt => 'Hello world' x 50, default => 10, empty =>' ', undef => '--', limit => 11, pad_one_row => 4,
+         #               no_spacebar => [ 1 .. 14 ], lf => [ 3, 2 ], keep => 7 }
+        #},
 
     ];
     # ll

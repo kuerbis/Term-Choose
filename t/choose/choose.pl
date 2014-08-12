@@ -5,7 +5,6 @@ use 5.010000;
 use utf8;
 binmode STDOUT, ':encoding(UTF-8)';
 
-use lib '../../lib';
 use Term::Choose qw( choose );
 
 use FindBin qw( $RealBin );

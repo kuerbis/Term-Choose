@@ -4,7 +4,6 @@ use warnings;
 use strict;
 use utf8;
 
-use lib '../../lib';
 use Term::Choose;
 
 use FindBin qw( $RealBin );

@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.113_10   2014-08-12
+        - Removed option "limit".
+        - Update tests.
+
 1.113_09   2014-08-11
         - Update tests.
 

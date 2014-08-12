@@ -32,7 +32,6 @@ t/choose/Data_Test_Choose.pm
 t/choose/get_key_linux.pl
 t/choose/hide_cursor.pl
 t/choose/key_test.pl
-Textdatei.txt
 xt/01_option.t
 xt/02_option_error.t
 xt/cntr_choose.t

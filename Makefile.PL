@@ -18,6 +18,7 @@ else {
     );
     %test_prereqs_os_specific = (
         'Expect'         => 0,
+        'Term::ReadKey'  => 0,
     );
 }
 

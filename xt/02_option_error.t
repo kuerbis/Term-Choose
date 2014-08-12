@@ -38,7 +38,7 @@ my $int = {
     page         => '[ 0 1 ]',
     keep         => '[ 1-9 ][ 0-9 ]*',
     ll           => '[ 1-9 ][ 0-9 ]*',
-    limit        => '[ 1-9 ][ 0-9 ]*',
+#    limit        => '[ 1-9 ][ 0-9 ]*',
     max_height   => '[ 1-9 ][ 0-9 ]*',
     max_width    => '[ 1-9 ][ 0-9 ]*',
     default      => '[ 0-9 ]+',
@@ -102,17 +102,17 @@ for my $opt ( sort keys %$no_spacebar ) {
 
 my $exception = exception { $d = choose( $choices, {
     beep  => -1, clear_screen => 2, hide_cursor => 3, index => 4, justify => '@', layout => 5, mouse => {},
-    order => 1, page => 0, keep => -1, ll => -1, limit => 0, max_height => 0, max_width => 0, default => [],
+    order => 1, page => 0, keep => -1, ll => -1, max_height => 0, max_width => 0, default => [],
     pad => 'a', pad_one_row => 'b', empty => [], prompt => {}, undef => [], lf => 4, no_spacebar => 4 } ) };
 ok( $exception =~ /choose:/ );
 
-
+#, limit => 0
 $exception = exception { $d = choose( [ 'aaa' .. 'zzz' ], {
     no_spacebar => 'a', lf => 'b', undef => [], prompt => {}, empty => {}, pad_one_row => 'c', pad => 'd',
-    default => 'e', max_width => -1, max_height => -2,  limit => -3, ll => -4, keep => -5, page => -6, order => -7,
+    default => 'e', max_width => -1, max_height => -2, ll => -4, keep => -5, page => -6, order => -7,
     mouse => 'k', layout => 'e', justify => [], index => {}, hide_cursor => -1,  clear_screen => [], beep  => 10 } ) };
 ok( $exception =~ /choose:/ );
-
+#,  limit => -3
 
 
 done_testing();

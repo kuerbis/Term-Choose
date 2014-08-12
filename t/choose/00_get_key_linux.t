@@ -16,7 +16,13 @@ if ( $@ ) {
     plan skip_all => "Expect required for $0.";
 }
 
-use lib '../../lib';
+
+eval "use Term::ReadKey";
+if ( $@ ) {
+    plan skip_all => $@;
+}
+
+
 use Term::Choose::Constants qw( :linux );
 
 

@@ -11,7 +11,6 @@ if( Test::Builder->VERSION < 2 ) {
     }
 }
 
-use lib '../../lib';
 use Term::Choose;
 
 use FindBin qw( $RealBin );
