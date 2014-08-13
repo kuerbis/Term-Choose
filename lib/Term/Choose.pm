@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010000;
 
-our $VERSION = '1.113_10';
+our $VERSION = '1.114';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -96,7 +96,7 @@ sub __validate_options {
         layout          => '[ 0 1 2 3 ]',
         lf              => 'ARRAY',
         ll              => '[ 1-9 ][ 0-9 ]*',
-        #limit           => '[ 1-9 ][ 0-9 ]*',
+        limit           => '[ 1-9 ][ 0-9 ]*',
         max_height      => '[ 1-9 ][ 0-9 ]*',
         max_width       => '[ 1-9 ][ 0-9 ]*',
         mouse           => '[ 0 1 2 3 4 ]',
@@ -207,7 +207,7 @@ sub choose {
     local $\ = undef;
     local $, = undef;
     local $| = 1;
-    $self->{wantarray}  = wantarray;
+    $self->{wantarray} = wantarray;
     $self->__set_defaults();
     if ( $self->{limit} && @$orig_list_ref > $self->{limit} ) {
         $self->{list_to_long} = 1;
@@ -1114,7 +1114,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.113_10
+Version 1.114
 
 =cut
 
@@ -1153,6 +1153,10 @@ Object-oriented interface:
 
     my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
+
+=head1 ANNOUNCEMENT
+
+The option I<limit> will be removed with the next release.
 
 =head1 DESCRIPTION
 
@@ -1499,7 +1503,9 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 (default: undefined)
 
-=head2 limit
+=head2 limit - Will be removed with the next release.
+
+This option will be removed with the next release.
 
 Sets the maximal allowed length of the array. (default: undefined)
 
