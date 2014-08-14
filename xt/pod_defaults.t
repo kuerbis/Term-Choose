@@ -5,7 +5,7 @@ no if $] >= 5.018, warnings => "experimental::smartmatch";
 use Test::More;
 
 
-my @long = ( qw( pad pad_one_row empty undef ll default limit max_height max_width lf keep no_spacebar ) );
+my @long = ( qw( pad pad_one_row empty undef ll default max_height max_width lf keep no_spacebar ) );
 my @simple = ( qw( justify layout order clear_screen page mouse beep hide_cursor index ) ); # prompt
 my @all = ( @long, @simple );
 my @deprecated = ( qw() );

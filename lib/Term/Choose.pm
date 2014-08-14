@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010000;
 
-our $VERSION = '1.114';
+our $VERSION = '1.114_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -68,7 +68,6 @@ sub __set_defaults {
     $self->{layout}           //= 1;
     #$self->{lf}              //= undef;
     #$self->{ll}              //= undef;
-    #$self->{limit}           //= undef;
     #$self->{max_height}      //= undef;
     #$self->{max_width}       //= undef;
     $self->{mouse}            //= 0;
@@ -96,7 +95,6 @@ sub __validate_options {
         layout          => '[ 0 1 2 3 ]',
         lf              => 'ARRAY',
         ll              => '[ 1-9 ][ 0-9 ]*',
-        limit           => '[ 1-9 ][ 0-9 ]*',
         max_height      => '[ 1-9 ][ 0-9 ]*',
         max_width       => '[ 1-9 ][ 0-9 ]*',
         mouse           => '[ 0 1 2 3 4 ]',
@@ -209,9 +207,6 @@ sub choose {
     local $| = 1;
     $self->{wantarray} = wantarray;
     $self->__set_defaults();
-    if ( $self->{limit} && @$orig_list_ref > $self->{limit} ) {
-        $self->{list_to_long} = 1;
-    }
     $self->{orig_list} = $orig_list_ref;
     $self->__copy_orig_list();
     $self->__length_longest();
@@ -599,58 +594,29 @@ sub __beep {
 sub __copy_orig_list {
     my ( $self ) = @_;
     if ( $self->{ll} ) {
-        if ( $self->{list_to_long} ) {
-            $self->{list} = [ map {
-                my $copy = $_;
-                if ( ! $copy ) {
-                    $copy = $self->{undef} if ! defined $copy;
-                    $copy = $self->{empty} if $copy eq '';
-                }
-                $copy;
-            } @{$self->{orig_list}}[ 0 .. $self->{limit} - 1 ] ];
-        }
-        else {
-            $self->{list} = [ map {
-                my $copy = $_;
-                if ( ! $copy ) {
-                    $copy = $self->{undef} if ! defined $copy;
-                    $copy = $self->{empty} if $copy eq '';
-                }
-                $copy;
-            } @{$self->{orig_list}} ];
-        }
+        $self->{list} = [ map {
+            my $copy = $_;
+            if ( ! $copy ) {
+                $copy = $self->{undef} if ! defined $copy;
+                $copy = $self->{empty} if $copy eq '';
+            }
+            $copy;
+        } @{$self->{orig_list}} ];
     }
     else {
-        if ( $self->{list_to_long} ) {
-            $self->{list} = [ map {
-                my $copy = $_;
-                if ( ! $copy ) {
-                    $copy = $self->{undef} if ! defined $copy;
-                    $copy = $self->{empty} if $copy eq '';
-                }
-                if ( ref $copy ) {
-                    $copy = sprintf "%s(0x%x)", ref $copy, $copy;
-                }
-                $copy =~ s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
-                $copy =~ s/\p{C}//g;
-                $copy;
-            } @{$self->{orig_list}}[ 0 .. $self->{limit} - 1 ] ];
-        }
-        else {
-            $self->{list} = [ map {
-                my $copy = $_;
-                if ( ! $copy ) {
-                    $copy = $self->{undef} if ! defined $copy;
-                    $copy = $self->{empty} if $copy eq '';
-                }
-                if ( ref $copy ) {
-                    $copy = sprintf "%s(0x%x)", ref $copy, $copy;
-                }
-                $copy =~ s/\p{Space}/ /g;
-                $copy =~ s/\p{C}//g;
-                $copy;
-            } @{$self->{orig_list}} ];
-        }
+        $self->{list} = [ map {
+            my $copy = $_;
+            if ( ! $copy ) {
+                $copy = $self->{undef} if ! defined $copy;
+                $copy = $self->{empty} if $copy eq '';
+            }
+            if ( ref $copy ) {
+                $copy = sprintf "%s(0x%x)", ref $copy, $copy;
+            }
+            $copy =~ s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
+            $copy =~ s/\p{C}//g;
+            $copy;
+        } @{$self->{orig_list}} ];
     }
 }
 
@@ -1114,7 +1080,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.114
+Version 1.114_01
 
 =cut
 
@@ -1153,10 +1119,6 @@ Object-oriented interface:
 
     my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
-
-=head1 ANNOUNCEMENT
-
-The option I<limit> will be removed with the next release.
 
 =head1 DESCRIPTION
 
@@ -1502,17 +1464,6 @@ Allowed values for the two elements are: 0 or greater.
 See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 (default: undefined)
-
-=head2 limit - Will be removed with the next release.
-
-This option will be removed with the next release.
-
-Sets the maximal allowed length of the array. (default: undefined)
-
-If the array referred by the first argument has more than I<limit> elements choose uses only the first I<limit> array
-elements.
-
-Allowed values: 1 or greater
 
 =head2 ll
 
