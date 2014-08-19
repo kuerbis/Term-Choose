@@ -264,11 +264,11 @@ my $options = [
     { max_height => 20, max_width => 60, layout => 2 },
     { max_height => 20, max_width => 60, layout => 3 },
     { max_height => 20, max_width => 60, layout => 1, prompt => 'Your choice: ', page => 0, pad => 3, order => 1,
-        justify => 2, keep => 8, clear_screen => 1 },
+      justify => 2, keep => 8, clear_screen => 1 },
     { max_height => 20, max_width => 60, layout => 1, prompt => 'Your choice: ' x 100, page => 0, pad => 3, order => 1,
-        justify => 2, keep => 8, clear_screen => 1, pad_one_row => 4 },
+      justify => 2, keep => 8, clear_screen => 1, pad_one_row => 4 },
     { prompt => 'abc \x{842c}\x{91cc}\x{9577}\x{57ce} def' x 50, default => 10, empty =>' ', undef => '--', beep => 1,
-        no_spacebar => [ 11 .. 2000 ], lf => [ 0, 4 ], keep => 16 },
+      no_spacebar => [ 11 .. 2000 ], lf => [ 0, 4 ], keep => 16 },
 ];
 
 

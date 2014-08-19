@@ -35,6 +35,6 @@ ok( $ret, 'matched something' );
 my $result = $exp->match() // '';
 ok( $result eq $expected, "expected: '$expected', got: '$result'" );
 
-$exp->soft_close();
+$exp->hard_close();
 
 done_testing();

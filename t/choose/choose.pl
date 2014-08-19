@@ -2,8 +2,7 @@
 use warnings;
 use strict;
 use 5.010000;
-use utf8;
-binmode STDOUT, ':encoding(UTF-8)';
+binmode STDOUT, ':utf8';
 
 use Term::Choose qw( choose );
 

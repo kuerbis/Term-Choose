@@ -4,8 +4,6 @@ Data_Test_Arguments;
 use 5.010000;
 use warnings;
 use strict;
-use utf8;
-
 
 
 sub valid_values {
@@ -52,7 +50,6 @@ sub mixed_options_1 {
     };
 }
 
-# limit => 9,
 
 sub mixed_options_2 {
     return {

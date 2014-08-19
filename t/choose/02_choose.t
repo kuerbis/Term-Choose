@@ -20,6 +20,8 @@ if ( $@ ) {
 use lib $RealBin;
 use Data_Test_Choose;
 
+my $binmode_builder = Test::Builder->VERSION < 2 ? 1 : 0;
+
 
 my $command = $^X;
 my $choose_pl = catfile $RealBin, 'choose.pl';
@@ -73,10 +75,12 @@ for my $type ( @types ) {
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {
-        if( Test::Builder->VERSION < 2 ) {
-            binmode Test::More->builder->output(), ':encoding(UTF-8)';
-            binmode Test::More->builder->failure_output(), ':encoding(UTF-8)';
-        }
+        #if( Test::Builder->VERSION < 2 ) {
+        #    binmode Test::More->builder->output(), ':utf8';
+        #    binmode Test::More->builder->failure_output(), ':utf8';
+        #}
+        binmode Test::More->builder->output(), ':utf8' if $binmode_builder;
+
         my $exp = Expect->new();
         $exp->raw_pty( 1 );
         $exp->log_stdout( 0 );
@@ -111,10 +115,12 @@ for my $type ( @types ) {
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {
-        if( Test::Builder->VERSION < 2 ) {
-            binmode Test::More->builder->output(), ':encoding(UTF-8)';
-            binmode Test::More->builder->failure_output(), ':encoding(UTF-8)';
-        }
+        #if( Test::Builder->VERSION < 2 ) {
+        #    binmode Test::More->builder->output(), ':utf8';
+        #    binmode Test::More->builder->failure_output(), ':utf8';
+        #}
+        binmode Test::More->builder->output(), ':utf8' if $binmode_builder;
+
         my $exp = Expect->new();
         $exp->raw_pty( 1 );
         $exp->log_stdout( 0 );

@@ -2,7 +2,6 @@
 use 5.010000;
 use warnings;
 use strict;
-use utf8;
 
 use Term::Choose;
 
