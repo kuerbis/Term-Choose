@@ -4,12 +4,6 @@ use strict;
 use Test::More;
 use Test::Fatal;
 
-if( Test::Builder->VERSION < 2 ) {
-    for my $method ( qw( output failure_output todo_output ) ) {
-        binmode Test::More->builder->$method(), ':encoding(UTF-8)';
-    }
-}
-
 use Term::Choose;
 
 use FindBin qw( $RealBin );

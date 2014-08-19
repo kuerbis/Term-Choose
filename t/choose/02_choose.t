@@ -2,7 +2,6 @@ use 5.010000;
 use warnings;
 use strict;
 use Test::More;
-use Encode;
 use FindBin               qw( $RealBin );
 use File::Spec::Functions qw( catfile );
 
@@ -20,13 +19,9 @@ if ( $@ ) {
 use lib $RealBin;
 use Data_Test_Choose;
 
-my $binmode_builder = Test::Builder->VERSION < 2 ? 1 : 0;
-
 
 my $command = $^X;
 my $choose_pl = catfile $RealBin, 'choose.pl';
-eval { -r $choose_pl or die "$choose_pl is NOT readable"; 1 } or plan skip_all => $@;
-
 my $key = Data_Test_Choose::key_seq();
 
 {
@@ -65,7 +60,7 @@ my $key = Data_Test_Choose::key_seq();
     }
 }
 
-my @types = ( qw( long short unicode_long unicode_short option_ll pad_one_row ) );
+my @types = ( qw( long short option_ll pad_one_row ) );
 my $rows = 24;
 my $cols = 80;
 
@@ -75,12 +70,6 @@ for my $type ( @types ) {
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {
-        #if( Test::Builder->VERSION < 2 ) {
-        #    binmode Test::More->builder->output(), ':utf8';
-        #    binmode Test::More->builder->failure_output(), ':utf8';
-        #}
-        binmode Test::More->builder->output(), ':utf8' if $binmode_builder;
-
         my $exp = Expect->new();
         $exp->raw_pty( 1 );
         $exp->log_stdout( 0 );
@@ -93,7 +82,7 @@ for my $type ( @types ) {
 
             $exp->send( @{$key}{@$pressed_keys} );
             my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
-            my $result = decode( 'utf8', $exp->match() // '' );
+            my $result = $exp->match() // '';
 
             ok( $ret, 'matched something' );
             ok( $result eq $expected, "expected: '$expected', got: '$result'" );
@@ -115,12 +104,6 @@ for my $type ( @types ) {
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {
-        #if( Test::Builder->VERSION < 2 ) {
-        #    binmode Test::More->builder->output(), ':utf8';
-        #    binmode Test::More->builder->failure_output(), ':utf8';
-        #}
-        binmode Test::More->builder->output(), ':utf8' if $binmode_builder;
-
         my $exp = Expect->new();
         $exp->raw_pty( 1 );
         $exp->log_stdout( 0 );
@@ -133,7 +116,7 @@ for my $type ( @types ) {
 
             $exp->send( @{$key}{@$pressed_keys} );
             my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
-            my $result = decode( 'utf8', $exp->match() // '' );
+            my $result = $exp->match() // '';
 
             ok( $ret, 'matched something' );
             ok( $result eq $expected, "expected: '$expected', got: '$result'" );

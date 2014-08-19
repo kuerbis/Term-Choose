@@ -30,9 +30,9 @@ sub valid_values {
         pad_one_row => [ 0, 1, 2, 100, 999999, undef ],
 
         # ''
-        empty  => [ 0, 'Hello' x 50, '', ' ', '☻☮☺', "\x{263a}\x{263b}", '한글', undef, 'æða' ],
-        prompt => [ 0, 'Hello' x 50, '', ' ', '☻☮☺', "\x{263a}\x{263b}", '한글', undef, 'æða' ],
-        undef  => [ 0, 'Hello' x 50, '', ' ', '☻☮☺', "\x{263a}\x{263b}", '한글', undef, 'æða' ],
+        empty  => [ 0, 'Hello' x 50, '', ' ', 'abc', 'world', undef ],
+        prompt => [ 0, 'Hello' x 50, '', ' ', 'abc', 'world', undef ],
+        undef  => [ 0, 'Hello' x 50, '', ' ', 'abc', 'world', undef ],
 
         # ARRAY max 2 int
         lf => [ [ 2, 4 ], [ 8 ], [], undef ],
