@@ -21,6 +21,7 @@ use Data_Test_Choose;
 
 
 my $command = $^X;
+my $timeout = 5;
 my $choose_pl = catfile $RealBin, 'choose.pl';
 my $key = Data_Test_Choose::key_seq();
 
@@ -49,7 +50,7 @@ my $key = Data_Test_Choose::key_seq();
             my $expected     = $ref->{expected};
 
             $exp->send( @{$key}{@$pressed_keys}, $key->{ENTER} );
-            my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
+            my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
             my $result = $exp->match() // '';
 
             ok( $expected eq $result, "'@{$ref->{used_keys}}' OK: " . sprintf( "%10.10s - %10.10s", $expected, $result ) );
@@ -81,7 +82,7 @@ for my $type ( @types ) {
             my $expected     = $ref->{expected};
 
             $exp->send( @{$key}{@$pressed_keys} );
-            my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
+            my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
             my $result = $exp->match() // '';
 
             ok( $ret, 'matched something' );
@@ -115,7 +116,7 @@ for my $type ( @types ) {
             my $expected     = $ref->{expected_w81} // $ref->{expected};
 
             $exp->send( @{$key}{@$pressed_keys} );
-            my $ret = $exp->expect( 2, [ qr/<.+>/ ] );
+            my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
             my $result = $exp->match() // '';
 
             ok( $ret, 'matched something' );

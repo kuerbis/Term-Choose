@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.010000;
 
-our $VERSION = '1.114_03';
+our $VERSION = '1.114_04';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -152,7 +152,8 @@ sub __reset_term {
     my ( $self, $from_choose ) = @_;
     if ( $from_choose ) {
         print CR;
-        $self->{plugin}->__up( $self->{i_row} + $self->{nr_prompt_lines} );
+        my $up = $self->{i_row} + $self->{nr_prompt_lines};
+        $self->{plugin}->__up( $up ) if $up;
         $self->{plugin}->__clear_to_end_of_screen();  ###
     }
     if ( defined $self->{plugin} ) {
@@ -229,7 +230,8 @@ sub choose {
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
             print CR;
-            $self->{plugin}->__up( $self->{i_row} + $self->{nr_prompt_lines} );
+            my $up = $self->{i_row} + $self->{nr_prompt_lines};
+            $self->{plugin}->__up( $up ) if $up;
             $self->{plugin}->__clear_to_end_of_screen();
             $self->__write_first_screen();
             next;
@@ -885,17 +887,14 @@ sub __goto {
         $self->{i_col} = 0;
     }
     elsif ( $newrow < $self->{i_row} ) {
-        #print UP x ( $self->{i_row} - $newrow );
         $self->{plugin}->__up( $self->{i_row} - $newrow );
         $self->{i_row} -= ( $self->{i_row} - $newrow );
     }
     if ( $newcol > $self->{i_col} ) {
-        #print RIGHT x ( $newcol - $self->{i_col} );
         $self->{plugin}->__right( $newcol - $self->{i_col} );
         $self->{i_col} += ( $newcol - $self->{i_col} );
     }
     elsif ( $newcol < $self->{i_col} ) {
-        #print LEFT x ( $self->{i_col} - $newcol );
         $self->{plugin}->__left( $self->{i_col} - $newcol );
         $self->{i_col} -= ( $self->{i_col} - $newcol );
     }
@@ -1080,7 +1079,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.114_03
+Version 1.114_04
 
 =cut
 

@@ -5,13 +5,13 @@ use warnings;
 use strict;
 use 5.010000;
 
-our $VERSION = '1.114_03';
+our $VERSION = '1.114_04';
 
 use Exporter qw( import );
 
 our @EXPORT_OK = qw(
         ROW COL MIN MAX
-        UP RIGHT LEFT LF CR
+        LF CR
         HIDE_CURSOR SHOW_CURSOR WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
         GET_CURSOR_POSITION
@@ -33,7 +33,7 @@ our %EXPORT_TAGS = (
         WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
         GET_CURSOR_POSITION
-        BEEP BOLD CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN RESET REVERSE UNDERLINE
+        BEEP
         NEXT_get_key
         CONTROL_SPACE CONTROL_A CONTROL_B CONTROL_C CONTROL_D CONTROL_E CONTROL_F CONTROL_H KEY_BTAB CONTROL_I KEY_TAB
         KEY_ENTER KEY_ESC KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_q KEY_Tilde KEY_BSPACE
@@ -63,19 +63,19 @@ sub COL () { 1 }
 sub MIN () { 0 }
 sub MAX () { 1 }
 
-sub UP                     () { "\e[A" }
-sub RIGHT                  () { "\e[C" }
-sub LEFT                   () { "\e[D" }
+#sub UP                     () { "\e[A" }
+#sub RIGHT                  () { "\e[C" }
+#sub LEFT                   () { "\e[D" }
 sub LF                     () { "\n" }
 sub CR                     () { "\r" }
 
 sub BEEP                   () { "\a" }
-sub CLEAR_SCREEN           () { "\e[2J\e[1;1H" }
-sub CLEAR_TO_END_OF_SCREEN () { "\e[0J" }
-sub RESET                  () { "\e[0m" }
-sub BOLD                   () { "\e[1m" }
-sub UNDERLINE              () { "\e[4m" }
-sub REVERSE                () { "\e[7m" }
+#sub CLEAR_SCREEN           () { "\e[H\e[J" }
+#sub CLEAR_TO_END_OF_SCREEN () { "\e[0J" }
+#sub RESET                  () { "\e[0m" }
+#sub BOLD                   () { "\e[1m" }
+#sub UNDERLINE              () { "\e[4m" }
+#sub REVERSE                () { "\e[7m" }
 
 sub HIDE_CURSOR            () { "\e[?25l" }
 sub SHOW_CURSOR            () { "\e[?25h" }
