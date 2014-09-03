@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.115   2014-09-03
+        - Stable release - no changes.
+
 1.114_04   2014-08-24
         - Bugfix in reset screen.
 

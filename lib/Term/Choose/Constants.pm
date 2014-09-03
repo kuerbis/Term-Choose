@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.010000;
 
-our $VERSION = '1.114_04';
+our $VERSION = '1.115';
 
 use Exporter qw( import );
 
