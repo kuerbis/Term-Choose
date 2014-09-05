@@ -1,4 +1,4 @@
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 use Test::More;
@@ -27,7 +27,8 @@ my $new1  = Term::Choose->new( { order => 1, layout => 2, mouse => 3 } ); # ?
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}}, undef ) {
         my $exception = exception { $new1->config( { $opt => $val } ) };
-        ok( ! defined $exception, "\$new->config( { $opt => " . ( $val // 'undef' ) . " } )"  );
+        my $value = defined $val ? $val : 'undef';
+        ok( ! defined $exception, "\$new->config( { $opt => $value } )"  );
     }
 }
 

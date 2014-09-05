@@ -1,4 +1,4 @@
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 use Test::More;
@@ -51,7 +51,8 @@ my $key = Data_Test_Choose::key_seq();
 
             $exp->send( @{$key}{@$pressed_keys}, $key->{ENTER} );
             my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
-            my $result = $exp->match() // '';
+            my $result = $exp->match();
+            $result = '' if ! defined $result;
 
             ok( $expected eq $result, "'@{$ref->{used_keys}}' OK: " . sprintf( "%10.10s - %10.10s", $expected, $result ) );
         }
@@ -83,7 +84,8 @@ for my $type ( @types ) {
 
             $exp->send( @{$key}{@$pressed_keys} );
             my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
-            my $result = $exp->match() // '';
+            my $result = $exp->match();
+            $result = '' if ! defined $result;
 
             ok( $ret, 'matched something' );
             ok( $result eq $expected, "expected: '$expected', got: '$result'" );
@@ -113,11 +115,12 @@ for my $type ( @types ) {
 
         for my $ref ( @$a_ref ) {
             my $pressed_keys = $ref->{used_keys};
-            my $expected     = $ref->{expected_w81} // $ref->{expected};
+            my $expected     = defined $ref->{expected_w81} ? $ref->{expected_w81} : $ref->{expected};
 
             $exp->send( @{$key}{@$pressed_keys} );
             my $ret = $exp->expect( $timeout, [ qr/<.+>/ ] );
-            my $result = $exp->match() // '';
+            my $result = $exp->match();
+            $result = '' if ! defined $result;
 
             ok( $ret, 'matched something' );
             ok( $result eq $expected, "expected: '$expected', got: '$result'" );

@@ -3,9 +3,9 @@ Term::Choose::Linux;
 
 use warnings;
 use strict;
-use 5.010000;
+use 5.008000;
 
-our $VERSION = '1.115';
+our $VERSION = '1.115_01';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 

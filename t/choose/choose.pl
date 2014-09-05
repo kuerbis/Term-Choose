@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
-use 5.010000;
+use 5.008000;
 
 use Term::Choose qw( choose );
 
@@ -20,5 +20,5 @@ for my $ref ( @$a_ref ) {
         $list,
         $opt
     );
-   say "<@choice>";
+   print "<@choice>\n";
 }

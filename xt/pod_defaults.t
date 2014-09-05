@@ -20,8 +20,8 @@ my %option_default;
 
 open $fh, '<', $file or die $!;
 while ( my $line = <$fh> ) {
-    if ( $line =~ /^sub __set_defaults {/ .. $line =~ /^}/ ) {
-        if ( $line =~ m|^\s+#?\s*\$self->{(\w+)}\s+//=\s(.*);| ) {
+    if ( $line =~ /^sub __undef_to_defaults {/ .. $line =~ /^}/ ) {
+        if ( $line =~ m|^\s+#?\s*\$self->{(\w+)}\s+=\s(\S+)| ) {
             my $op = $1;
             next if $op eq 'prompt';
             next if $op ~~ @deprecated;

@@ -1,7 +1,7 @@
 package # hide
 Data_Test_Arguments;
 
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 

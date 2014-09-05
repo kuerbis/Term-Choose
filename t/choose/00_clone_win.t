@@ -1,4 +1,4 @@
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 use Test::More;
@@ -42,7 +42,8 @@ $exp->send( "\r" );
 $ret = $exp->expect( 2, [ qr/<.+>/ ] );
 ok( $ret, 'matched something' );
 
-my $result = $exp->match() // '';
+my $result = $exp->match();
+$result = '' if ! defined $result;
 ok( $result eq $expected, qq[expected: "$expected", got: "$result"] );
 
 $exp->hard_close();

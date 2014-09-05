@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 
@@ -45,4 +45,4 @@ my $mixed_options_2 = Data_Test_Arguments::mixed_invalid_2();
 eval { $new->choose( [], $mixed_options_1 ); 1 } and die '$new->choose( <<< );';
 
 
-say "<End_mc_ia>";
+print "<End_mc_ia>\n";

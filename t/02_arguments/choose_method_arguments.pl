@@ -1,5 +1,5 @@
 #!/usr/bin/env perl
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 
@@ -29,4 +29,4 @@ my $mixed_options_2 = Data_Test_Arguments::mixed_options_2();
 $new->choose( [], $mixed_options_1 );
 
 
-say "<End_mc_va>";
+print "<End_mc_va>\n";

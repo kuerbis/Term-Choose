@@ -29,7 +29,7 @@ my $c = 0;
 
 open my $fh2, '<', $file or die $!;
 while ( my $line = <$fh2> ) {
-    if ( $line =~ /^sub __set_defaults/ .. $line =~ /^\}/ ) {
+    if ( $line =~ /^sub __undef_to_defaults/ .. $line =~ /^\}/ ) {
         $c++ if $line =~ /^\s*\$self->{pad}/;
         if ( $line =~ /^\s*\$self->{pad_one_row}/ ) {
             $pad_before_pad_one_row = 1 if $c;

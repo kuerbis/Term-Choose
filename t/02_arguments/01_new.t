@@ -1,4 +1,4 @@
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 use Test::More;
@@ -29,7 +29,8 @@ my $valid_values = Data_Test_Arguments::valid_values();
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}}, undef ) {
         my $exception = exception { $new{$n++} = Term::Choose->new( { $opt => $val } ) };
-        ok( ! defined $exception, "\$new = Term::Choose->new( { $opt => " . ( $val // 'undef' ) . " } )" );
+        my $value = defined $val ? $val : 'undef';
+        ok( ! defined $exception, "\$new = Term::Choose->new( { $opt => $value } )" );
     }
 }
 

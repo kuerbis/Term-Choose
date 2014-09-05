@@ -2,9 +2,9 @@ package Term::Choose;
 
 use warnings;
 use strict;
-use 5.010000;
+use 5.008000;
 
-our $VERSION = '1.115';
+our $VERSION = '1.115_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -40,7 +40,7 @@ sub new {
     my $self = bless {}, $class;
     if ( defined $opt ) {
         croak "new: the (optional) argument must be a HASH reference" if ref $opt ne 'HASH';
-        $self->__validate_options( $opt );
+        $self->__validate_and_add_options( $opt );
     }
     $self->{plugin} = $Plugin_Package->new();
     return $self;
@@ -53,34 +53,34 @@ sub DESTROY {
 }
 
 
-sub __set_defaults {
+sub __undef_to_defaults {
     my ( $self ) = @_;
     my $prompt = defined $self->{wantarray} ? 'Your choice:' : 'Close with ENTER';
-    $self->{prompt}           //= $prompt;
-    $self->{beep}             //= 0;
-    $self->{clear_screen}     //= 0;
-    #$self->{default}         //= undef;
-    $self->{empty}            //= '<empty>';
-    $self->{hide_cursor}      //= 1;
-    $self->{index}            //= 0;
-    $self->{justify}          //= 0;
-    $self->{keep}             //= 5;
-    $self->{layout}           //= 1;
-    #$self->{lf}              //= undef;
-    #$self->{ll}              //= undef;
-    #$self->{max_height}      //= undef;
-    #$self->{max_width}       //= undef;
-    $self->{mouse}            //= 0;
-    #$self->{no_spacebar}     //= undef;
-    $self->{order}            //= 1;
-    $self->{pad}              //= 2;
-    $self->{pad_one_row}      //= $self->{pad};
-    $self->{page}             //= 1;
-    $self->{undef}            //= '<undef>';
+    $self->{prompt}       = $prompt      if ! defined $self->{prompt};
+    $self->{beep}         = 0            if ! defined $self->{beep};
+    $self->{clear_screen} = 0            if ! defined $self->{clear_screen};
+    #$self->{default}     = undef        if ! defined $self->{default};
+    $self->{empty}        = '<empty>'    if ! defined $self->{empty};
+    $self->{hide_cursor}  = 1            if ! defined $self->{hide_cursor};
+    $self->{index}        = 0            if ! defined $self->{index};
+    $self->{justify}      = 0            if ! defined $self->{justify};
+    $self->{keep}         = 5            if ! defined $self->{keep};
+    $self->{layout}       = 1            if ! defined $self->{layout};
+    #$self->{lf}          = undef        if ! defined $self->{lf};
+    #$self->{ll}          = undef        if ! defined $self->{ll};
+    #$self->{max_height}  = undef        if ! defined $self->{max_height};
+    #$self->{max_width}   = undef        if ! defined $self->{max_width};
+    $self->{mouse}        = 0            if ! defined $self->{mouse};
+    #$self->{no_spacebar} = undef        if ! defined $self->{no_spacebar};
+    $self->{order}        = 1            if ! defined $self->{order};
+    $self->{pad}          = 2            if ! defined $self->{pad};
+    $self->{pad_one_row}  = $self->{pad} if ! defined $self->{pad_one_row};
+    $self->{page}         = 1            if ! defined $self->{page};
+    $self->{undef}        = '<undef>'    if ! defined $self->{undef};
 }
 
 
-sub __validate_options {
+sub __validate_and_add_options {
     my ( $self, $opt ) = @_;
     return if ! defined $opt;
     my $valid = {
@@ -182,7 +182,7 @@ sub config {
     croak "config: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1;
     if ( defined $opt ) {
         croak "config: the argument must be a HASH reference" if ref $opt ne 'HASH';
-        $self->__validate_options( $opt );
+        $self->__validate_and_add_options( $opt );
     }
 }
 
@@ -198,7 +198,7 @@ sub choose {
     if ( defined $opt ) {
         croak "choose: the (optional) second argument must be a HASH reference" if ref $opt ne 'HASH';
         $self->{backup_opt} = { map{ $_ => $self->{$_} } keys %$opt };
-        $self->__validate_options( $opt );
+        $self->__validate_and_add_options( $opt );
     }
     if ( ! @$orig_list_ref ) {
         return;
@@ -207,7 +207,7 @@ sub choose {
     local $, = undef;
     local $| = 1;
     $self->{wantarray} = wantarray;
-    $self->__set_defaults();
+    $self->__undef_to_defaults();
     $self->{orig_list} = $orig_list_ref;
     $self->__copy_orig_list();
     $self->__length_longest();
@@ -957,7 +957,7 @@ sub __wr_cell {
 sub __unicode_sprintf {
     my ( $self, $idx ) = @_;
     my $unicode;
-    my $str_length = $self->{length}[$idx] // $self->{length_longest};
+    my $str_length = defined $self->{length}[$idx] ? $self->{length}[$idx] : $self->{length_longest};
     if ( $str_length > $self->{avail_col_width} ) {
         my $gcs = Unicode::GCString->new( $self->{list}[$idx] );
         $unicode = $self->__unicode_trim( $gcs, $self->{avail_col_width} );
@@ -1079,7 +1079,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.115
+Version 1.115_01
 
 =cut
 
@@ -1087,22 +1087,20 @@ Version 1.115
 
 Functional interface:
 
-    use 5.10.1;
     use Term::Choose qw( choose );
 
     my $array_ref = [ qw( one two three four five ) ];
 
     my $choice = choose( $array_ref );                            # single choice
-    say $choice;
+    print "$choice\n";
 
     my @choices = choose( [ 1 .. 100 ], { justify => 1 } );       # multiple choice
-    say "@choices";
+    print "@choices\n";
 
     choose( [ 'Press ENTER to continue' ], { prompt => '' } );    # no choice
 
 Object-oriented interface:
 
-    use 5.10.1;
     use Term::Choose;
 
     my $array_ref = [ qw( one two three four five ) ];
@@ -1110,11 +1108,11 @@ Object-oriented interface:
     my $new = Term::Choose->new();
 
     my $choice = $new->choose( $array_ref );                       # single choice
-    say $choice;
+    print "$choice\n";
 
     $new->config( { justify => 1 } );
     my @choices = $new->choose( [ 1 .. 100 ] );                    # multiple choice
-    say "@choices";
+    print "@choices\n";
 
     my $stopp = Term::Choose->new( { prompt => '' } );
     $stopp->choose( [ 'Press ENTER to continue' ] );               # no choice
@@ -1622,7 +1620,7 @@ I<undef> or an empty list in list context.
 
 =head2 Perl version
 
-Requires Perl version 5.10.0 or greater.
+Requires Perl version 5.8.0 or greater.
 
 =head2 Modules
 

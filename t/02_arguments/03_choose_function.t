@@ -1,4 +1,4 @@
-use 5.010000;
+use 5.008000;
 use warnings;
 use strict;
 use Test::More;
@@ -32,7 +32,8 @@ my $expected = '<End_fc_va>';
 my $ret = $exp->expect( 2, [ qr/(?:<End|choose).+/ ] );
 
 ok( $ret, 'matched something' );
-my $result = $exp->match() // '';
+my $result = $exp->match();
+$result = '' if ! defined $result;
 ok( $result =~ $expected, "expected: '$expected', got: '$result'" );
 
 $exp->hard_close();
