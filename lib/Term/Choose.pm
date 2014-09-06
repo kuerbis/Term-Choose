@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008000;
 
-our $VERSION = '1.115_01';
+our $VERSION = '1.116';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1079,7 +1079,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.115_01
+Version 1.116
 
 =cut
 
