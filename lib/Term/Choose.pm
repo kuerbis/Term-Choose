@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008000;
 
-our $VERSION = '1.116';
+our $VERSION = '1.116_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -68,6 +68,7 @@ sub __undef_to_defaults {
     $self->{layout}       = 1            if ! defined $self->{layout};
     #$self->{lf}          = undef        if ! defined $self->{lf};
     #$self->{ll}          = undef        if ! defined $self->{ll};
+    #$self->{mark}        = undef        if ! defined $self->{mark};
     #$self->{max_height}  = undef        if ! defined $self->{max_height};
     #$self->{max_width}   = undef        if ! defined $self->{max_width};
     $self->{mouse}        = 0            if ! defined $self->{mouse};
@@ -95,6 +96,7 @@ sub __validate_and_add_options {
         layout          => '[ 0 1 2 3 ]',
         lf              => 'ARRAY',
         ll              => '[ 1-9 ][ 0-9 ]*',
+        mark            => 'ARRAY',
         max_height      => '[ 1-9 ][ 0-9 ]*',
         max_width       => '[ 1-9 ][ 0-9 ]*',
         mouse           => '[ 0 1 2 3 4 ]',
@@ -122,7 +124,7 @@ sub __validate_and_add_options {
                 /^[0-9]+\z/ or croak "$sub: option '$key' : $_ is an invalid array element";
             }
         }
-        elsif ( $key eq 'no_spacebar' ) {
+        elsif ( $key eq 'no_spacebar' || $key eq 'mark' ) {
             if ( ref $opt->{$key} ne 'ARRAY' ) {
                 croak "$sub: option '$key' : the passed value has to be an ARRAY reference.";
             }
@@ -229,6 +231,9 @@ sub choose {
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
+            if ( $self->{wantarray} && @{$self->{marked}} ) {
+                $self->__marked_to_mark();
+            }
             print CR;
             my $up = $self->{i_row} + $self->{nr_prompt_lines};
             $self->{plugin}->__up( $up ) if $up;
@@ -540,7 +545,7 @@ sub choose {
                         $self->{marked}[$i][$j] = $self->{marked}[$i][$j] ? 0 : 1;
                     }
                 }
-                $self->__unmark_no_spacebar() if $self->{no_spacebar};
+                $self->__idx_to_marked( $self->{no_spacebar}, 0 ) if defined $self->{no_spacebar};
                 $self->__wr_screen();
             }
         }
@@ -551,27 +556,27 @@ sub choose {
 }
 
 
-sub __unmark_no_spacebar {
-    my ( $self ) = @_;
+sub __idx_to_marked {
+    my ( $self, $list_of_indexes, $boolean ) = @_;
     if ( $self->{layout} == 3 ) {
-        for my $idx ( @{$self->{no_spacebar}} ) {
-            $self->{marked}[$idx][0] = 0;
+        for my $idx ( @$list_of_indexes ) {
+            $self->{marked}[$idx][0] = $boolean;
         }
         return;
     }
     my ( $row, $col );
     my $cols_per_row = $#{$self->{rc2idx}[0]};
     if ( $self->{order} == 0 ) {
-        for my $idx ( @{$self->{no_spacebar}} ) {
+        for my $idx ( @$list_of_indexes ) {
             $row = int( $idx / $cols_per_row );
             $col = $idx % $cols_per_row;
-            $self->{marked}[$row][$col] = 0;
+            $self->{marked}[$row][$col] = $boolean;
         }
     }
     elsif ( $self->{order} == 1 ) {
         my $rows_per_col = @{$self->{rc2idx}};
         my $full = $rows_per_col * ( $self->{rest} || $cols_per_row );
-        for my $idx ( @{$self->{no_spacebar}} ) {
+        for my $idx ( @$list_of_indexes ) {
             if ( $idx <= $full ) {
                 $row = $idx % $rows_per_col;
                 $col = int( $idx / $rows_per_col );
@@ -581,7 +586,31 @@ sub __unmark_no_spacebar {
                 $row = ( $idx - $full ) % $rows_per_col_short;
                 $col = int( ( $idx - $self->{rest} ) / $rows_per_col_short );
             }
-            $self->{marked}[$row][$col] = 0;
+            $self->{marked}[$row][$col] = $boolean;
+        }
+    }
+}
+
+
+sub __marked_to_mark {
+    my ( $self ) = @_;
+    $self->{mark} = [];
+    if ( $self->{order} == 1 ) {
+        for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
+            for my $row ( 0 .. $#{$self->{rc2idx}} ) {
+                if ( $self->{marked}[$row][$col] ) {
+                    push @{$self->{mark}}, $self->{rc2idx}[$row][$col];
+                }
+            }
+        }
+    }
+    else {
+        for my $row ( 0 .. $#{$self->{rc2idx}} ) {
+            for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
+                if ( $self->{marked}[$row][$col] ) {
+                    push @{$self->{mark}}, $self->{rc2idx}[$row][$col];
+                }
+            }
         }
     }
 }
@@ -670,10 +699,15 @@ sub __write_first_screen {
     }
     $self->__size_and_layout();
     $self->__prepare_page_number() if $self->{page};
+    if ( $self->{wantarray} ) {
+        $self->{marked} = [];
+        if ( defined $self->{mark} ) {
+            $self->__idx_to_marked( $self->{mark}, 1 );
+        }
+    }
     $self->{avail_height_idx} = $self->{avail_height} - 1;
     $self->{p_begin}    = 0;
     $self->{p_end}      = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
-    $self->{marked}     = [];
     $self->{row_on_top} = 0;
     $self->{i_row}      = 0;
     $self->{i_col}      = 0;
@@ -1079,7 +1113,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.116
+Version 1.116_01
 
 =cut
 
@@ -1223,8 +1257,7 @@ If the first argument refers to an empty array, C<choose> returns nothing.
 
 If the items of the list don't fit on the screen, the user can scroll to the next (previous) page(s).
 
-If the window size is changed, then as soon as the user enters a keystroke C<choose> rewrites the screen. In list
-context marked items are reset.
+If the window size is changed, then as soon as the user enters a keystroke C<choose> rewrites the screen.
 
 C<choose> returns C<undef> or an empty list in list context if the C<q> key (or C<Ctrl-D>) is pressed.
 
@@ -1491,6 +1524,14 @@ Allowed values: 1 or greater
 
 (default: undefined)
 
+=head2 mark
+
+I<mark> expects as its value a reference to an array. The elements of the array are list indexes. C<choose> preselects
+the list-elements correlating to these indexes. This option has only meaning in list context.
+
+(default: undefined)
+
+
 =head2 max_height
 
 If defined sets the maximal number of rows used for printing list items.
@@ -1541,7 +1582,9 @@ of L<Win32::Console>.
 =head2 no_spacebar
 
 I<no_spacebar> expects as its value a reference to an array. The elements of the array are indexes of choices which
-should not be markable with the C<SpaceBar> or with the right mouse key.
+should not be markable with the C<SpaceBar> or with the right mouse key. This option has only meaning in list context.
+If an element is preselected with the option I<mark> and also marked as not selectable with the option I<no_spacebar>,
+the user can not remove the preselection of this element.
 
 (default: undefined)
 

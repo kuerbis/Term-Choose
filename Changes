@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.116_01   2014-10-30
+        - New option "mark".
+        - Don't reset the marked items if the screen is resized.
+        - Update documentation.
+
 1.116   2014-09-06
         - Stable release - no changes.
 
