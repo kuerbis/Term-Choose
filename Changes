@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.116_02   2014-11-02
+        - Keep the cursor position when the screen is resized.
+        - Code refactoring.
+
 1.116_01   2014-10-30
         - New option "mark".
         - Don't reset the marked items if the screen is resized.

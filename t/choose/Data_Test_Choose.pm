@@ -195,6 +195,8 @@ my $keys = {
 my $list = {
     long    => [ 0 .. 1999 ],
     short   => [ 0 .. 99 ],
+    long_test_index  => [ map { s/^\d/chr( $& + 97 )/e; $_ } 0 .. 1999 ],
+    short_test_index => [ map { s/^\d/chr( $& + 97 )/e; $_ } 0 .. 99 ],
     ll      => [ (
             "In"            . '.' x 7,
             "scalar"        . '.' x 3,
@@ -240,7 +242,7 @@ my $options = [
     { prompt => 'abc 12345678 def' x 50, default => 10, empty =>' ', undef => '--', beep => 1,
       no_spacebar => [ 11 .. 2000 ], lf => [ 0, 4 ], keep => 16 },
     { max_height => 20, max_width => 60, layout => 0, mark => [ 0, 10, 100 ] },
-    { max_height => 20, max_width => 60, layout => 1, mark => [ 0, 10, 100 ] },
+    { max_height => 20, max_width => 60, layout => 1, mark => [ 0, 10, 100 ], index => 1 },
     { max_height => 20, max_width => 60, layout => 2, mark => [ 0, 10, 35, 100, 1979 ], no_spacebar => [ 35, 1066, 1979 ] },
     { max_height => 20, max_width => 60, layout => 3, mark => [ 0, 10, 100 ] },
 ];
@@ -315,7 +317,7 @@ my $long = [
         expected  => "<0 10 100 1066 1126 1315 1324 1799 1857 1859 1863 1866 1917 1979 1999>",
         options   => $options->[$c_opt++],
     },
-    {   list      => $list->{long},
+    {   list      => $list->{long_test_index},
         used_keys => $keys->{long},
         expected  => "<0 10 100 1066 1126 1315 1324 1799 1857 1859 1863 1866 1917 1979 1999>",
         options   => $options->[$c_opt++],
@@ -400,7 +402,7 @@ my $short = [
         expected  => "<0 7 12 67 93 99>",
         options   => $options->[$c_opt++],
     },
-    {   list      => $list->{short},
+    {   list      => $list->{short_test_index},
         used_keys => $keys->{short},
         expected  => "<0 10 41 44 47 50 91 99>",
         options   => $options->[$c_opt++],
@@ -443,13 +445,13 @@ my $pad_one_row = [
 
 sub return_test_data {
     my $type = shift;
-       if ( $type eq 'simple'                ) { return $simple; }
-    elsif ( $type eq 'hide_cursor'           ) { return $hide_cursor; }
-    elsif ( $type eq 'seq_test'              ) { return $seq_test; }
-    elsif ( $type eq 'long'                  ) { return $long; }
-    elsif ( $type eq 'short'                 ) { return $short; }
-    elsif ( $type eq 'option_ll'             ) { return $option_ll; }
-    elsif ( $type eq 'pad_one_row'           ) { return $pad_one_row; }
+       if ( $type eq 'simple'      ) { return $simple; }
+    elsif ( $type eq 'hide_cursor' ) { return $hide_cursor; }
+    elsif ( $type eq 'seq_test'    ) { return $seq_test; }
+    elsif ( $type eq 'long'        ) { return $long; }
+    elsif ( $type eq 'short'       ) { return $short; }
+    elsif ( $type eq 'option_ll'   ) { return $option_ll; }
+    elsif ( $type eq 'pad_one_row' ) { return $pad_one_row; }
 
 }
 

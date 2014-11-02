@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008000;
 
-our $VERSION = '1.116_01';
+our $VERSION = '1.116_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -231,8 +231,9 @@ sub choose {
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             $self->{list} = $self->__copy_orig_list();
+            $self->{default} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
             if ( $self->{wantarray} && @{$self->{marked}} ) {
-                $self->__marked_to_mark();
+                $self->{mark} = $self->__marked_to_idx();
             }
             print CR;
             my $up = $self->{i_row} + $self->{nr_prompt_lines};
@@ -483,28 +484,11 @@ sub choose {
                 return;
             }
             elsif ( $self->{wantarray} ) {
-                if ( $self->{order} == 1 ) {
-                    for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
-                        for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-                            if ( $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL] ) {
-                                my $i = $self->{rc2idx}[$row][$col];
-                                push @chosen, $self->{index} ? $i : $self->{orig_list}[$i];
-                            }
-                        }
-                    }
-                }
-                else {
-                    for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-                        for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                            if ( $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL] ) {
-                                my $i = $self->{rc2idx}[$row][$col];
-                                push @chosen, $self->{index} ? $i : $self->{orig_list}[$i];
-                            }
-                        }
-                    }
-                }
+                $self->{marked}[$self->{pos}[ROW]][$self->{pos}[COL]] = 1;
+                my $chosen = $self->__marked_to_idx();
+                my $index = $self->{index};
                 $self->__reset_term( 1 );
-                return @chosen;
+                return $index ? @$chosen : map { $self->{orig_list}[$_] } @$chosen;
             }
             else {
                 my $i = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
@@ -592,14 +576,14 @@ sub __idx_to_marked {
 }
 
 
-sub __marked_to_mark {
+sub __marked_to_idx {
     my ( $self ) = @_;
-    $self->{mark} = [];
+    my $idx = [];
     if ( $self->{order} == 1 ) {
         for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
             for my $row ( 0 .. $#{$self->{rc2idx}} ) {
                 if ( $self->{marked}[$row][$col] ) {
-                    push @{$self->{mark}}, $self->{rc2idx}[$row][$col];
+                    push @$idx, $self->{rc2idx}[$row][$col];
                 }
             }
         }
@@ -608,11 +592,12 @@ sub __marked_to_mark {
         for my $row ( 0 .. $#{$self->{rc2idx}} ) {
             for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
                 if ( $self->{marked}[$row][$col] ) {
-                    push @{$self->{mark}}, $self->{rc2idx}[$row][$col];
+                    push @$idx, $self->{rc2idx}[$row][$col];
                 }
             }
         }
     }
+    return $idx;
 }
 
 
@@ -1113,7 +1098,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.116_01
+Version 1.116_02
 
 =cut
 
@@ -1691,7 +1676,7 @@ L<Win32::Console>
 
 =back
 
-are required. Else
+is required. Else
 
 =over
 
