@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008000;
 
-our $VERSION = '1.116_02';
+our $VERSION = '1.116_03';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -662,7 +662,9 @@ sub __write_first_screen {
     my ( $self ) = @_;
     ( $self->{term_width}, $self->{term_height} ) = $self->{plugin}->__get_term_size();
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
-    $self->{max_width} += WIDTH_CURSOR if defined $self->{max_width};
+    if ( defined $self->{max_width} ) {
+        $self->{max_width} += WIDTH_CURSOR;
+    }
     if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
         $self->{avail_width} = $self->{max_width};
     }
@@ -670,7 +672,9 @@ sub __write_first_screen {
         $self->{avail_width}  = MAX_COL_MOUSE_1003 if $self->{avail_width}  > MAX_COL_MOUSE_1003;
         $self->{avail_height} = MAX_ROW_MOUSE_1003 if $self->{avail_height} > MAX_ROW_MOUSE_1003;
     }
-    $self->{avail_width} = 1 if $self->{avail_width} < 1;
+    if ( $self->{avail_width} < 1 ) {
+        $self->{avail_width} = 1;
+    }
     $self->__prepare_promptline();
     $self->{tail} = $self->{page} ? 1 : 0;
     $self->{avail_height} -= $self->{nr_prompt_lines} + $self->{tail};
@@ -683,12 +687,8 @@ sub __write_first_screen {
         $self->{avail_height} = $self->{max_height};
     }
     $self->__size_and_layout();
-    $self->__prepare_page_number() if $self->{page};
-    if ( $self->{wantarray} ) {
-        $self->{marked} = [];
-        if ( defined $self->{mark} ) {
-            $self->__idx_to_marked( $self->{mark}, 1 );
-        }
+    if ( $self->{page} ) {
+        $self->__prepare_page_number();
     }
     $self->{avail_height_idx} = $self->{avail_height} - 1;
     $self->{p_begin}    = 0;
@@ -697,11 +697,23 @@ sub __write_first_screen {
     $self->{i_row}      = 0;
     $self->{i_col}      = 0;
     $self->{pos}        = [ 0, 0 ];
-    $self->__set_default_cell() if defined $self->{default} && $self->{default} <= $#{$self->{list}};
-    $self->{plugin}->__clear_screen() if $self->{clear_screen};
-    print $self->{prompt_copy} if $self->{prompt} ne '';
+    $self->{marked}     = [];
+    if ( $self->{wantarray} && defined $self->{mark} ) {
+        $self->__idx_to_marked( $self->{mark}, 1 );
+    }
+    if ( defined $self->{default} && $self->{default} <= $#{$self->{list}} ) {
+        $self->__set_default_cell();
+    }
+    if ( $self->{clear_screen} ) {
+        $self->{plugin}->__clear_screen();
+    }
+    if ( $self->{prompt} ne '' ) {
+        print $self->{prompt_copy};
+    }
     $self->__wr_screen();
-    $self->{plugin}->__get_cursor_position() if $self->{mouse};
+    if ( $self->{mouse} ) {
+        $self->{plugin}->__get_cursor_position();
+    }
     $self->{cursor_row} = $self->{i_row};
 }
 
@@ -1098,7 +1110,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.116_02
+Version 1.116_03
 
 =cut
 
