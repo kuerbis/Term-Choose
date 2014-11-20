@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.117   2014-11-20
+        - Stable release.
+        - Make tests which use "Expect" optional.
+
 1.116_03   2014-11-03
         - Bugfix "marked".
 
