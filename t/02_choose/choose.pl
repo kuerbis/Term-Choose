@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use warnings;
 use strict;
-use 5.008000;
+use 5.008003;
 
 use Term::Choose qw( choose );
 

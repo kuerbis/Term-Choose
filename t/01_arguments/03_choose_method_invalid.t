@@ -1,4 +1,4 @@
-use 5.008000;
+use 5.008003;
 use warnings;
 use strict;
 use Test::More;
@@ -14,10 +14,9 @@ BEGIN {
     #}
 }
 
-
 eval "use Expect";
 if ( $@ ) {
-    plan skip_all => "Expect required for $0.";
+    plan skip_all => "'Expect' with suitable 'IO::Pty' version required for $0.";
 }
 
 my $exp;
@@ -28,7 +27,7 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose_function_invalid_arguments.pl';
+    my $script      = catfile $RealBin, 'choose_method_invalid_arguments.pl';
     my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
@@ -38,8 +37,8 @@ eval {
 or plan skip_all => $@;
 
 
-my $expected = '<End_fc_ia>';
-my $ret = $exp->expect( 2, [ qr/(?:<End|choose).+/ ] );
+my $expected = '<End_mc_ia>';
+my $ret = $exp->expect( 2, [ qr/.+/ ] );
 
 ok( $ret, 'matched something' );
 my $result = $exp->match();

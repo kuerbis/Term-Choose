@@ -1,11 +1,10 @@
-use 5.008000;
+use 5.008003;
 use warnings;
 use strict;
 use ExtUtils::MakeMaker;
 
 
 my %prereqs_os_specific;
-my %test_prereqs_os_specific;
 
 if ( $^O eq 'MSWin32' ) {
     %prereqs_os_specific = (
@@ -16,15 +15,12 @@ else {
     %prereqs_os_specific = (
         'Term::ReadKey'  => 0,
     );
-    %test_prereqs_os_specific = (
-        'Term::ReadKey'  => 0,
-    );
 }
 
 
 WriteMakefile(
     PL_FILES         => {},
-    MIN_PERL_VERSION => '5.008000',
+    MIN_PERL_VERSION => '5.008003',
     LICENSE          => 'perl',
     META_MERGE => {
         'meta-spec' => { version => 2 },
@@ -42,9 +38,10 @@ WriteMakefile(
     VERSION_FROM     => 'lib/Term/Choose.pm',
     EXE_FILES        => [],
     BUILD_REQUIRES   => {
-        'Test::More'        => 0,
-        'Test::Fatal'       => 0,  ###
-        %test_prereqs_os_specific, ###
+        'File::Spec::Functions' => 0,
+        'FindBin'               => 0,
+        'Test::More'            => 0,
+        'Test::Fatal'           => 0,
     },
     PREREQ_PM => {
         'strict'            => 0,

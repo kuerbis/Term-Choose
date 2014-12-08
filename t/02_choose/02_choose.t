@@ -1,4 +1,4 @@
-use 5.008000;
+use 5.008003;
 use warnings;
 use strict;
 use Test::More;
@@ -16,7 +16,7 @@ BEGIN {
 
 eval "use Expect";
 if ( $@ ) {
-    plan skip_all => "Expect required for $0.";
+    plan skip_all => "'Expect' with suitable 'IO::Pty' version required for $0.";
 }
 
 use lib $RealBin;

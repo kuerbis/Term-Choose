@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.118   2014-12-08
+        - Perl minimum version: "5.8.3".
+        - Update build requirements.
+
 1.117   2014-11-20
         - Stable release.
         - Make tests which use "Expect" optional.
