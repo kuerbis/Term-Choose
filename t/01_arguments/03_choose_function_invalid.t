@@ -17,7 +17,7 @@ BEGIN {
 
 eval "use Expect";
 if ( $@ ) {
-    plan skip_all => "'Expect' with suitable 'IO::Pty' version required for $0.";
+    plan skip_all => $@;
 }
 
 my $exp;

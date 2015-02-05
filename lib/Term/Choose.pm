@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.118';
+our $VERSION = '1.119';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1110,7 +1110,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.118
+Version 1.119
 
 =cut
 
@@ -1777,7 +1777,7 @@ L<stackoverflow|http://stackoverflow.com> for the help.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2012-2014 Matthäus Kiem.
+Copyright (C) 2012-2015 Matthäus Kiem.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
 details, see the full text of the licenses in the file LICENSE.
