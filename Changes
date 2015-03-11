@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.120   2015-03-11
+        - Bugfix in Win32 "__clear_screen".
+
 1.119   2015-02-05
         - use constant.
         - Update year copyright.
