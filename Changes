@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.200   2015-03-27
+        - "Ctrl-SpaceBar": all if cursor on first row else current page.
+
 1.120   2015-03-11
         - Bugfix in Win32 "__clear_screen".
 

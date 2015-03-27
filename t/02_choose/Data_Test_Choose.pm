@@ -115,8 +115,9 @@ my $seq_test = [
     { list => $k_list, used_keys => [ qw( PAGE_UP ) ],      expected => "<721>",      options => $k_options, },
     { list => $k_list, used_keys => [ qw( CONTROL_B ) ],    expected => "<721>",      options => $k_options, },
     { list => $k_list, used_keys => [ qw( SPACE ) ],        expected => "<1007>",     options => $k_options, },
-    { list => $k_list, used_keys => [ qw( CONTROL_Space ) ],expected => "<@$k_list>", options => $k_options, },
-    { list => $k_list, used_keys => [ qw( CONTROL_at ) ],    expected => "<@$k_list>", options => $k_options, },
+
+    { list => $k_list, used_keys => [ qw( CONTROL_Space ) ],expected => "<@{[858..1143]}>", options =>    $k_options                , },
+    { list => $k_list, used_keys => [ qw( CONTROL_at ) ],   expected => "<@$k_list>",       options => { %$k_options, default => 0 }, },
 ];
 
 ##############################################################################################################
