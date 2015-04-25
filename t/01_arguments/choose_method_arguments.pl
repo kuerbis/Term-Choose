@@ -22,11 +22,8 @@ for my $opt ( sort keys %$valid_values ) {
     }
 }
 
-my $mixed_options_1 = Data_Test_Arguments::mixed_options_1();
-$new->choose( [], $mixed_options_1 );
-
-my $mixed_options_2 = Data_Test_Arguments::mixed_options_2();
-$new->choose( [], $mixed_options_1 );
+$new->choose( [], Data_Test_Arguments::mixed_options_1() );
+$new->choose( [], Data_Test_Arguments::mixed_options_2() );
 
 
 print "<End_mc_va>\n";

@@ -15,6 +15,7 @@ t/01_arguments/02_config_invalid.t
 t/01_arguments/03_choose_function.t
 t/01_arguments/03_choose_function_invalid.t
 t/01_arguments/03_choose_method.t
+t/01_arguments/03_choose_method_B.t
 t/01_arguments/03_choose_method_invalid.t
 t/01_arguments/choose_function_arguments.pl
 t/01_arguments/choose_function_invalid_arguments.pl

@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.200_01   2015-04-25
+        - One new new test and one test modified.
+
 1.200   2015-03-27
         - "Ctrl-SpaceBar": all if cursor on first row else current page.
 
