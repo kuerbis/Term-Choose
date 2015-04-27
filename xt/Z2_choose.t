@@ -20,13 +20,13 @@ if ( $@ ) {
 }
 
 use lib $RealBin;
-use Data_Test_Choose;
+use Z_Data_Test_Choose;
 
 
 my $command = $^X;
 my $timeout = 5;
-my $choose_pl = catfile $RealBin, 'choose.pl';
-my $key = Data_Test_Choose::key_seq();
+my $choose_pl = catfile $RealBin, 'Z_choose.pl';
+my $key = Z_Data_Test_Choose::key_seq();
 
 {
     my $type = 'seq_test';
@@ -46,7 +46,7 @@ my $key = Data_Test_Choose::key_seq();
     or plan skip_all => $@;
 
     subtest 'seq_test', sub {
-        my $a_ref = Data_Test_Choose::return_test_data( $type );
+        my $a_ref = Z_Data_Test_Choose::return_test_data( $type );
 
         for my $ref ( @$a_ref ) {
             my $pressed_keys = $ref->{used_keys};
@@ -71,7 +71,7 @@ my $cols = 80;
 
 
 for my $type ( @types ) {
-    my $a_ref = Data_Test_Choose::return_test_data( $type );
+    my $a_ref = Z_Data_Test_Choose::return_test_data( $type );
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {
@@ -106,7 +106,7 @@ $cols = 81;
 
 
 for my $type ( @types ) {
-    my $a_ref = Data_Test_Choose::return_test_data( $type );
+    my $a_ref = Z_Data_Test_Choose::return_test_data( $type );
     my @parameters = ( $choose_pl, $type );
 
     subtest 'choose ' . $type, sub {

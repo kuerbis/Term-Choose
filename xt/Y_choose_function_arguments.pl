@@ -7,24 +7,21 @@ use Term::Choose qw( choose );
 
 use FindBin qw( $RealBin );
 use lib $RealBin;
-use Data_Test_Arguments;
+use Y_Data_Test_Arguments;
 
 
 choose( [] );
 choose( [], {} );
 
-my $valid_values = Data_Test_Arguments::valid_values();
+my $valid_values = Y_Data_Test_Arguments::valid_values();
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}}, undef ) {
         choose( [], { $opt => $val } );
     }
 }
 
-my $mixed_options_1 = Data_Test_Arguments::mixed_options_1();
-choose( [], $mixed_options_1 );
-
-my $mixed_options_2 = Data_Test_Arguments::mixed_options_2();
-choose( [], $mixed_options_1 );
+choose( [], Y_Data_Test_Arguments::mixed_options_1() );
+choose( [], Y_Data_Test_Arguments::mixed_options_2() );
 
 
 print "<End_fc_va>\n";

@@ -14,15 +14,11 @@ BEGIN {
     #}
 }
 
+
 eval "use Expect";
 if ( $@ ) {
     plan skip_all => $@;
 }
-
-use lib $RealBin;
-use Data_Test_Choose;
-
-my $type = 'hide_cursor';
 
 my $exp;
 eval {
@@ -32,8 +28,8 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose.pl';
-    my @parameters  = ( $script, $type );
+    my $script      = catfile $RealBin, 'Y_choose_method_arguments.pl';
+    my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
     $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
@@ -42,19 +38,8 @@ eval {
 or plan skip_all => $@;
 
 
-
-my $a_ref = Data_Test_Choose::return_test_data( $type );
-my $ref = shift @$a_ref;
-
-my $expected = $ref->{expected};
-my $ret = $exp->expect( 2,
-    [ 'Your choice: ' => sub {
-            $exp->send( "\r" );
-            'exp_continue';
-        }
-    ],
-    [ $expected => sub {} ],
-);
+my $expected = '<End_mc_va>';
+my $ret = $exp->expect( 2, [ qr/.+/ ] );
 
 ok( $ret, 'matched something' );
 my $result = $exp->match();

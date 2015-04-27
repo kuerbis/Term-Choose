@@ -7,7 +7,7 @@ use Term::Choose;
 
 use FindBin qw( $RealBin );
 use lib $RealBin;
-use Data_Test_Arguments;
+use Y_Data_Test_Arguments;
 
 
 my $new = Term::Choose->new();
@@ -31,18 +31,15 @@ eval { $new->choose( [], 'b'   ); 1 } and die '$new->choose( [], "b" );';
 eval { $new->choose( [], { hello => 1, world => 2 } ); 1 } and die '$new->choose( [], { hello => 1, world => 2 } );';
 
 
-my $valid_values = Data_Test_Arguments::invalid_values();
+my $valid_values = Y_Data_Test_Arguments::invalid_values();
 for my $opt ( sort keys %$valid_values ) {
     for my $val ( @{$valid_values->{$opt}} ) {
         eval { $new->choose( [], { $opt => $val } ); 1 } and die "\$new->choose( { $opt => $val } );";
     }
 }
 
-my $mixed_options_1 = Data_Test_Arguments::mixed_invalid_1();
-eval { $new->choose( [], $mixed_options_1 ); 1 } and die '$new->choose( >>> );';
-
-my $mixed_options_2 = Data_Test_Arguments::mixed_invalid_2();
-eval { $new->choose( [], $mixed_options_1 ); 1 } and die '$new->choose( <<< );';
+eval { $new->choose( [], Y_Data_Test_Arguments::mixed_invalid_1() ); 1 } and die '$new->choose( >>> );';
+eval { $new->choose( [], Y_Data_Test_Arguments::mixed_invalid_2() ); 1 } and die '$new->choose( <<< );';
 
 
 print "<End_mc_ia>\n";

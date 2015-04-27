@@ -5,7 +5,7 @@ use Test::More;
 use Term::Choose;
 use FindBin qw( $RealBin );
 use lib $RealBin;
-use Data_Test_Arguments;
+use Y_Data_Test_Arguments;
 
 my $new = Term::Choose->new();
 my @error;
@@ -14,14 +14,14 @@ if (
     eval {
         $new->choose( [] );
         $new->choose( [], {} );
-        my $valid_values = Data_Test_Arguments::valid_values();
+        my $valid_values = Y_Data_Test_Arguments::valid_values();
         for my $opt ( sort keys %$valid_values ) {
             for my $val ( @{$valid_values->{$opt}}, undef ) {
                 $new->choose( [], { $opt => $val } );
             }
         }
-        $new->choose( [], Data_Test_Arguments::mixed_options_1() );
-        $new->choose( [], Data_Test_Arguments::mixed_options_2() );
+        $new->choose( [], Y_Data_Test_Arguments::mixed_options_1() );
+        $new->choose( [], Y_Data_Test_Arguments::mixed_options_2() );
         1;
     }
 ) {

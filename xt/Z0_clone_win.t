@@ -20,7 +20,7 @@ if ( $@ ) {
 }
 
 use lib $RealBin;
-use Data_Test_Choose;
+use Z_Data_Test_Choose;
 
 my $type = 'simple';
 
@@ -32,7 +32,7 @@ eval {
     $exp->slave->clone_winsize_from( \*STDIN );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose.pl';
+    my $script      = catfile $RealBin, 'Z_choose.pl';
     my @parameters  = ( $script, $type );
 
     -r $script or die "$script is NOT readable";
@@ -42,7 +42,7 @@ eval {
 or plan skip_all => $@;
 
 
-my $a_ref = Data_Test_Choose::return_test_data( $type );
+my $a_ref = Z_Data_Test_Choose::return_test_data( $type );
 my $ref = shift @$a_ref;
 
 my $ret = $exp->expect( 2, [ qr/Your choice: .*/ ] );

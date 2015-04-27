@@ -27,7 +27,7 @@ eval {
     $exp->slave->set_winsize( 24, 80, undef, undef );
 
     my $command     = $^X;
-    my $script      = catfile $RealBin, 'choose_method_invalid_arguments.pl';
+    my $script      = catfile $RealBin, 'Y_choose_method_invalid_arguments.pl';
     my @parameters  = ( $script );
 
     -r $script or die "$script is NOT readable";
