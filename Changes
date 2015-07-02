@@ -1,8 +1,11 @@
 Revision history for Term::Choose
 
 
+1.202   2015-07-02
+        - Removed redundent documentation.
+
 1.201   2015-04-27
-        - Moved "Expect"-tests in the "xt"-folder.
+        - Moved "Expect"-tests to the "xt"-folder.
 
 1.200_01   2015-04-25
         - One new test and one test modified.

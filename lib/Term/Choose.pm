@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.201';
+our $VERSION = '1.202';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1124,7 +1124,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.201
+Version 1.202
 
 =cut
 
@@ -1676,44 +1676,6 @@ I<undef> or an empty list in list context.
 =head2 Perl version
 
 Requires Perl version 5.8.3 or greater.
-
-=head2 Modules
-
-Used modules not provided as core modules:
-
-=over
-
-=item
-
-L<Text::LineFold>
-
-=item
-
-L<Unicode::GCString>
-
-=back
-
-Additionally, if the OS is MSWin32
-
-=over
-
-=item
-
-L<Win32::Console>
-
-=back
-
-is required. Else
-
-=over
-
-=item
-
-L<Term::ReadKey>
-
-=back
-
-is additionally required.
 
 =head2 Decoded strings
 

@@ -34,7 +34,6 @@ xt/whitespaces.t
 xt/Y3_choose_function.t
 xt/Y3_choose_function_invalid.t
 xt/Y3_choose_method.t
-xt/Y3_choose_method_B.t
 xt/Y3_choose_method_invalid.t
 xt/Y_choose_function_arguments.pl
 xt/Y_choose_function_invalid_arguments.pl

@@ -11,10 +11,16 @@ my $test_env = 0;
 
 open my $fh1, '<', $file or die $!;
 while ( my $line = <$fh1> ) {
+    if ( $line =~ /\$\s*SIG\s*{\s*__WARN__\s*}/ ) {
+        $test_env++;
+    }
     if ( $line =~ /^\s*use\s+warnings\s+FATAL/s ) {
         $test_env++;
     }
     if ( $line =~ /(?:^\s*|\s+)use\s+Log::Log4perl/ ) {
+        $test_env++;
+    }
+    if ( $line =~ /(?:^\s*|\s+)use\s+Data::Dumper/ ) {
         $test_env++;
     }
 }
@@ -30,8 +36,8 @@ my $c = 0;
 open my $fh2, '<', $file or die $!;
 while ( my $line = <$fh2> ) {
     if ( $line =~ /^sub __undef_to_defaults/ .. $line =~ /^\}/ ) {
-        $c++ if $line =~ /^\s*\$self->{pad}/;
-        if ( $line =~ /^\s*\$self->{pad_one_row}/ ) {
+        $c++ if $line =~ /^\s*\$self->\{pad\}/;
+        if ( $line =~ /^\s*\$self->\{pad_one_row\}/ ) {
             $pad_before_pad_one_row = 1 if $c;
             last;
         }
