@@ -11,6 +11,7 @@ our @EXPORT_OK = qw( choose );
 use Carp qw( croak carp );
 use Text::LineFold;
 use Unicode::GCString;
+use Text::ANSI::WideUtil qw(ta_mbtrunc);
 
 use Term::Choose::Constants qw( :choose );
 
@@ -644,7 +645,7 @@ sub __copy_orig_list {
                 $copy = sprintf "%s(0x%x)", ref $copy, $copy;
             }
             $copy =~ s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
-            $copy =~ s/\p{C}//g;
+            $copy =~ s/\p{C}/$&=~m|\e| && $&/eg;  # remove \p{C} but keep \e
             $copy;
         } @{$self->{orig_list}} ];
     }
@@ -662,7 +663,7 @@ sub __length_longest {
         my $len = [];
         my $longest = 0;
         for my $i ( 0 .. $#$list ) {
-            my $gcs = Unicode::GCString->new( $list->[$i] );
+            my $gcs = Unicode::GCString->new(__strip_ansi_color($list->[$i]));
             $len->[$i] = $gcs->columns();
             $longest = $len->[$i] if $len->[$i] > $longest;
         }
@@ -740,7 +741,8 @@ sub __prepare_promptline {
     }
     $self->{prompt} =~ s/[^\n\P{Space}]/ /g;
     $self->{prompt} =~ s/[^\n\P{C}]//g;
-    my $gcs_prompt = Unicode::GCString->new( $self->{prompt} );
+    my $gcs_prompt
+      = Unicode::GCString->new(__strip_ansi_color($self->{prompt}));
     if ( $self->{prompt} !~ /\n/ && $gcs_prompt->columns() <= $self->{avail_width} ) {
         $self->{nr_prompt_lines} = 1;
         $self->{prompt_copy} = $self->{prompt} . "\n\r";
@@ -778,7 +780,7 @@ sub __size_and_layout {
         for my $idx ( 0 .. $#{$self->{list}} ) {
             $all_in_first_row .= $self->{list}[$idx];
             $all_in_first_row .= ' ' x $self->{pad_one_row} if $idx < $#{$self->{list}};
-            my $gcs_first_row = Unicode::GCString->new( $all_in_first_row );
+            my $gcs_first_row = Unicode::GCString->new( __strip_ansi_color($all_in_first_row) );
             if ( $gcs_first_row->columns() > $self->{avail_width} ) {
                 $all_in_first_row = '';
                 last;
@@ -797,7 +799,8 @@ sub __size_and_layout {
         else {
             for my $idx ( 0 .. $#{$self->{list}} ) {
                 my $gcs_element = Unicode::GCString->new( $self->{list}[$idx] );
-                if ( $gcs_element->columns > $self->{avail_width} ) {
+                my $gcs_count = Unicode::GCString->new( __strip_ansi_color($self->{list}[$idx]) );
+                if ( $gcs_count->columns > $self->{avail_width} ) {
                     $self->{list}[$idx] = $self->__unicode_trim( $gcs_element, $self->{avail_width} - 3 ) . '...';
                 }
                 $self->{rc2idx}[$idx][0] = $idx;
@@ -860,6 +863,9 @@ sub __size_and_layout {
 sub __unicode_trim {
     my ( $self, $gcs, $len ) = @_;
     return '' if $len <= 0; #
+
+    return ta_mbtrunc($gcs, $len - 1);
+
     my $pos = $gcs->pos;
     $gcs->pos( 0 );
     my $cols = 0;
@@ -976,7 +982,11 @@ sub __wr_cell {
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
-                my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$cl]] );
+                my $gcs_element = Unicode::GCString->new(
+                    __strip_ansi_color(
+                        $self->{list}[ $self->{rc2idx}[$row][$cl] ]
+                    )
+                );
                 $lngth += $gcs_element->columns();
                 $lngth += $self->{pad_one_row};
             }
@@ -985,7 +995,8 @@ sub __wr_cell {
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->{list}[$self->{rc2idx}[$row][$col]];
-        my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
+        my $gcs_element = Unicode::GCString->new(
+            __strip_ansi_color($self->{list}[ $self->{rc2idx}[$row][$col] ]));
         $self->{i_col} += $gcs_element->columns();
     }
     else {
@@ -1003,6 +1014,7 @@ sub __unicode_sprintf {
     my ( $self, $idx ) = @_;
     my $unicode;
     my $str_length = defined $self->{length}[$idx] ? $self->{length}[$idx] : $self->{length_longest};
+
     if ( $str_length > $self->{avail_col_width} ) {
         my $gcs = Unicode::GCString->new( $self->{list}[$idx] );
         $unicode = $self->__unicode_trim( $gcs, $self->{avail_col_width} );
@@ -1046,7 +1058,11 @@ sub __mouse_info_to_key {
         if ( $row == $mouse_row ) {
             my $end_last_col = 0;
             COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
+                my $gcs_element = Unicode::GCString->new(
+                    __strip_ansi_color(
+                        $self->{list}[ $self->{rc2idx}[$row][$col] ]
+                    )
+                );
                 my $end_this_col = $end_last_col + $gcs_element->columns() + $self->{pad_one_row};
                 if ( $col == 0 ) {
                     $end_this_col -= int( $self->{pad_one_row} / 2 );
@@ -1107,6 +1123,12 @@ sub __mouse_info_to_key {
     return $return_char;
 }
 
+sub __strip_ansi_color
+{
+    my ( $str ) = @_;
+
+    return $str =~ s{ \e\[ [\d;]* m }{}xmsgr;
+}
 
 
 1;
