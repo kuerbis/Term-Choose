@@ -644,7 +644,7 @@ sub __copy_orig_list {
                 $copy = sprintf "%s(0x%x)", ref $copy, $copy;
             }
             $copy =~ s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
-            $copy =~ s/\p{C}//g;
+            $copy =~ s/\p{C}/$&=~m|\e| && $&/eg;  # remove \p{C} but keep \e
             $copy;
         } @{$self->{orig_list}} ];
     }
@@ -662,7 +662,8 @@ sub __length_longest {
         my $len = [];
         my $longest = 0;
         for my $i ( 0 .. $#$list ) {
-            my $gcs = Unicode::GCString->new( $list->[$i] );
+            my $gcs = Unicode::GCString->new(
+                $list->[$i] =~ s{ \e\[ [\d;]* m }{}xmsgr );
             $len->[$i] = $gcs->columns();
             $longest = $len->[$i] if $len->[$i] > $longest;
         }
