@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.204';
+our $VERSION = '1.205';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -666,7 +666,7 @@ sub __length_longest {
         my $len = [];
         my $longest = 0;
         for my $i ( 0 .. $#$list ) {
-            $len->[$i] = _print_columns( $list->[$i] );
+            $len->[$i] = $self->__print_columns( $list->[$i] );
             $longest = $len->[$i] if $len->[$i] > $longest;
         }
         $self->{length_longest} = $longest;
@@ -746,7 +746,7 @@ sub __prepare_promptline {
     }
     $self->{prompt} =~ s/[^\n\P{Space}]/ /g;
     $self->{prompt} =~ s/[^\n\P{C}]//g;
-    if ( $self->{prompt} !~ /\n/ && _print_columns( $self->{prompt} ) <= $self->{avail_width} ) {
+    if ( $self->{prompt} !~ /\n/ && $self->__print_columns( $self->{prompt} ) <= $self->{avail_width} ) {
         $self->{nr_prompt_lines} = 1;
         $self->{prompt_copy} = $self->{prompt} . "\n\r";
     }
@@ -783,7 +783,7 @@ sub __size_and_layout {
         for my $idx ( 0 .. $#{$self->{list}} ) {
             $all_in_first_row .= $self->{list}[$idx];
             $all_in_first_row .= ' ' x $self->{pad_one_row} if $idx < $#{$self->{list}};
-            if ( _print_columns( $all_in_first_row ) > $self->{avail_width} ) {
+            if ( $self->__print_columns( $all_in_first_row ) > $self->{avail_width} ) {
                 $all_in_first_row = '';
                 last;
             }
@@ -800,7 +800,7 @@ sub __size_and_layout {
         }
         else {
             for my $idx ( 0 .. $#{$self->{list}} ) {
-                if ( _print_columns( $self->{list}[$idx] ) > $self->{avail_width} ) {
+                if ( $self->__print_columns( $self->{list}[$idx] ) > $self->{avail_width} ) {
                     $self->{list}[$idx] = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_width} - 3 ) . '...';
                 }
                 $self->{rc2idx}[$idx][0] = $idx;
@@ -860,8 +860,9 @@ sub __size_and_layout {
 }
 
 
-sub _print_columns {
-    Unicode::GCString->new( $_[0] )->columns();
+sub __print_columns {
+    #my $self = $_[0];
+    Unicode::GCString->new( $_[1] )->columns();
 }
 
 
@@ -985,7 +986,7 @@ sub __wr_cell {
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
-                $lngth += _print_columns( $self->{list}[$self->{rc2idx}[$row][$cl]] );
+                $lngth += $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$cl]] );
                 $lngth += $self->{pad_one_row};
             }
         }
@@ -993,7 +994,7 @@ sub __wr_cell {
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->{list}[$self->{rc2idx}[$row][$col]];
-        $self->{i_col} += _print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] );
+        $self->{i_col} += $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] );
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
@@ -1052,7 +1053,7 @@ sub __mouse_info_to_key {
         if ( $row == $mouse_row ) {
             my $end_last_col = 0;
             COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                my $end_this_col = $end_last_col + _print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] ) + $self->{pad_one_row};
+                my $end_this_col = $end_last_col + $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] ) + $self->{pad_one_row};
                 if ( $col == 0 ) {
                     $end_this_col -= int( $self->{pad_one_row} / 2 );
                 }
@@ -1129,7 +1130,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.204
+Version 1.205
 
 =cut
 

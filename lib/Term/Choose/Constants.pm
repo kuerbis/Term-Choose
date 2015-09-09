@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.204';
+our $VERSION = '1.205';
 
 use Exporter qw( import );
 
@@ -66,10 +66,6 @@ use constant {
 };
 
 use constant {
-    #UP    => "\e[A",
-    #RIGHT => "\e[C",
-    #LEFT  => "\e[D",
-
     LF => "\n",
     CR => "\r",
 
