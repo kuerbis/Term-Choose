@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.203';
+our $VERSION = '1.204';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -191,8 +191,13 @@ sub config {
 
 sub choose {
     if ( ref $_[0] ne 'Term::Choose' ) {
-        return Term::Choose->new()->choose( @_ );
+        return Term::Choose->new()->__choose( @_ );
     }
+    my $self = shift;
+    return $self->__choose( @_ );
+}
+
+sub __choose {
     my $self = shift;
     my ( $orig_list_ref, $opt ) = @_;
     croak "choose: called with " . @_ . " arguments - 1 or 2 arguments expected" if @_ < 1 || @_ > 2;
@@ -661,8 +666,7 @@ sub __length_longest {
         my $len = [];
         my $longest = 0;
         for my $i ( 0 .. $#$list ) {
-            my $gcs = Unicode::GCString->new( $list->[$i] );
-            $len->[$i] = $gcs->columns();
+            $len->[$i] = _print_columns( $list->[$i] );
             $longest = $len->[$i] if $len->[$i] > $longest;
         }
         $self->{length_longest} = $longest;
@@ -675,9 +679,6 @@ sub __write_first_screen {
     my ( $self ) = @_;
     ( $self->{term_width}, $self->{term_height} ) = $self->{plugin}->__get_term_size();
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
-    #if ( defined $self->{max_width} ) {
-    #    $self->{max_width} += WIDTH_CURSOR;
-    #}
     if ( $self->{length_longest} > $self->{avail_width} && $^O ne 'MSWin32' ) {
         $self->{avail_width} += WIDTH_CURSOR;
         # + WIDTH_CURSOR: use also the last terminal column if there is only one print-column;
@@ -745,8 +746,7 @@ sub __prepare_promptline {
     }
     $self->{prompt} =~ s/[^\n\P{Space}]/ /g;
     $self->{prompt} =~ s/[^\n\P{C}]//g;
-    my $gcs_prompt = Unicode::GCString->new( $self->{prompt} );
-    if ( $self->{prompt} !~ /\n/ && $gcs_prompt->columns() <= $self->{avail_width} ) {
+    if ( $self->{prompt} !~ /\n/ && _print_columns( $self->{prompt} ) <= $self->{avail_width} ) {
         $self->{nr_prompt_lines} = 1;
         $self->{prompt_copy} = $self->{prompt} . "\n\r";
     }
@@ -783,8 +783,7 @@ sub __size_and_layout {
         for my $idx ( 0 .. $#{$self->{list}} ) {
             $all_in_first_row .= $self->{list}[$idx];
             $all_in_first_row .= ' ' x $self->{pad_one_row} if $idx < $#{$self->{list}};
-            my $gcs_first_row = Unicode::GCString->new( $all_in_first_row );
-            if ( $gcs_first_row->columns() > $self->{avail_width} ) {
+            if ( _print_columns( $all_in_first_row ) > $self->{avail_width} ) {
                 $all_in_first_row = '';
                 last;
             }
@@ -801,16 +800,14 @@ sub __size_and_layout {
         }
         else {
             for my $idx ( 0 .. $#{$self->{list}} ) {
-                my $gcs_element = Unicode::GCString->new( $self->{list}[$idx] );
-                if ( $gcs_element->columns > $self->{avail_width} ) {
-                    $self->{list}[$idx] = $self->__unicode_trim( $gcs_element, $self->{avail_width} - 3 ) . '...';
+                if ( _print_columns( $self->{list}[$idx] ) > $self->{avail_width} ) {
+                    $self->{list}[$idx] = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_width} - 3 ) . '...';
                 }
                 $self->{rc2idx}[$idx][0] = $idx;
             }
         }
     }
     else {
-        #my $tmp_avail_width = $self->{avail_width} + $self->{pad} - WIDTH_CURSOR;
         my $tmp_avail_width = $self->{avail_width} + $self->{pad};
         # auto_format
         if ( $self->{layout} == 1 || $self->{layout} == 2 ) {
@@ -863,9 +860,15 @@ sub __size_and_layout {
 }
 
 
+sub _print_columns {
+    Unicode::GCString->new( $_[0] )->columns();
+}
+
+
 sub __unicode_trim {
-    my ( $self, $gcs, $len ) = @_;
+    my ( $self, $str, $len ) = @_;
     return '' if $len <= 0; #
+    my $gcs = Unicode::GCString->new( $str );
     my $pos = $gcs->pos;
     $gcs->pos( 0 );
     my $cols = 0;
@@ -982,8 +985,7 @@ sub __wr_cell {
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
-                my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$cl]] );
-                $lngth += $gcs_element->columns();
+                $lngth += _print_columns( $self->{list}[$self->{rc2idx}[$row][$cl]] );
                 $lngth += $self->{pad_one_row};
             }
         }
@@ -991,8 +993,7 @@ sub __wr_cell {
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
         print $self->{list}[$self->{rc2idx}[$row][$col]];
-        my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
-        $self->{i_col} += $gcs_element->columns();
+        $self->{i_col} += _print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] );
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
@@ -1010,8 +1011,7 @@ sub __unicode_sprintf {
     my $unicode;
     my $str_length = defined $self->{length}[$idx] ? $self->{length}[$idx] : $self->{length_longest};
     if ( $str_length > $self->{avail_col_width} ) {
-        my $gcs = Unicode::GCString->new( $self->{list}[$idx] );
-        $unicode = $self->__unicode_trim( $gcs, $self->{avail_col_width} );
+        $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} );
     }
     elsif ( $str_length < $self->{avail_col_width} ) {
         if ( $self->{justify} == 0 ) {
@@ -1052,8 +1052,7 @@ sub __mouse_info_to_key {
         if ( $row == $mouse_row ) {
             my $end_last_col = 0;
             COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                my $gcs_element = Unicode::GCString->new( $self->{list}[$self->{rc2idx}[$row][$col]] );
-                my $end_this_col = $end_last_col + $gcs_element->columns() + $self->{pad_one_row};
+                my $end_this_col = $end_last_col + _print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] ) + $self->{pad_one_row};
                 if ( $col == 0 ) {
                     $end_this_col -= int( $self->{pad_one_row} / 2 );
                 }
@@ -1130,7 +1129,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.203
+Version 1.204
 
 =cut
 

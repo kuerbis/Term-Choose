@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.204   2015-09-09
+        - Code refactoring.
+
 1.203   2015-09-09
         - Reserve one space for the (hidden) terminal cursor: Terminalwidth - 1.
 
