@@ -676,14 +676,14 @@ sub __write_first_screen {
     my ( $self ) = @_;
     ( $self->{term_width}, $self->{term_height} ) = $self->{plugin}->__get_term_size();
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
-    if ( defined $self->{max_width} ) {
-        $self->{max_width} += WIDTH_CURSOR;
-    }
+    #if ( defined $self->{max_width} ) {
+    #    $self->{max_width} += WIDTH_CURSOR;
+    #}
     if ( $self->{length_longest} > $self->{avail_width} && $^O ne 'MSWin32' ) {
-        $self->{avail_width}++;
-        # $self->{avail_width}++: use also the last terminal column if there is only one print-column;
-        #                         with only one print-column the output doesn't get messed up if an item
-        #                         reaches the right edge of the terminal on an non-MSWin32-OS
+        $self->{avail_width} += WIDTH_CURSOR;
+        # + WIDTH_CURSOR: use also the last terminal column if there is only one print-column;
+        #                 with only one print-column the output doesn't get messed up if an item
+        #                 reaches the right edge of the terminal on a non-MSWin32-OS
     }
     if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
         $self->{avail_width} = $self->{max_width};
@@ -811,7 +811,8 @@ sub __size_and_layout {
         }
     }
     else {
-        my $tmp_avail_width = $self->{avail_width} + $self->{pad} - WIDTH_CURSOR;
+        #my $tmp_avail_width = $self->{avail_width} + $self->{pad} - WIDTH_CURSOR;
+        my $tmp_avail_width = $self->{avail_width} + $self->{pad};
         # auto_format
         if ( $self->{layout} == 1 || $self->{layout} == 2 ) {
             my $tmc = int( @{$self->{list}} / $self->{avail_height} );

@@ -218,10 +218,10 @@ sub __reset_mode {
 sub __get_term_size {
     #my ( $self ) = @_;
     my ( $width, $height ) = ( GetTerminalSize() )[ 0, 1 ];
-    return $width - 1, $height;
-    # $width - 1: don't let items reach the right edge of the terminal;
-    #             selecting an item which reaches the right edge of the terminal
-    #             messes up the output - maybe because the (hidden) terminal-cursor needs a space
+    return $width - WIDTH_CURSOR, $height;
+    # $width - WIDTH_CURSOR: don't let items reach the right edge of the terminal;
+    #                        selecting an item which reaches the right edge of the terminal
+    #                        messes up the output - maybe because the (hidden) terminal-cursor needs a space
 }
 
 
