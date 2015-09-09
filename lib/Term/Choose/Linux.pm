@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.202';
+our $VERSION = '1.203';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -24,7 +24,7 @@ sub __get_key_OS {
     return if ! defined $c1;
     if ( $c1 eq "\e" ) {
         my $c2 = ReadKey( 0.10 );
-           if ( ! defined $c2 ) { return KEY_ESC; } # unused
+        if    ( ! defined $c2 ) { return KEY_ESC; } # unused
         #elsif ( $c3 eq 'A' ) { return VK_UP; }     vt 52
         #elsif ( $c3 eq 'B' ) { return VK_DOWN; }
         #elsif ( $c3 eq 'C' ) { return VK_RIGHT; }
@@ -32,7 +32,7 @@ sub __get_key_OS {
         #elsif ( $c3 eq 'H' ) { return VK_HOME; }
          elsif ( $c2 eq 'O' ) {
             my $c3 = ReadKey( 0 );
-               if ( $c3 eq 'A' ) { return VK_UP; }
+            if    ( $c3 eq 'A' ) { return VK_UP; }
             elsif ( $c3 eq 'B' ) { return VK_DOWN; }
             elsif ( $c3 eq 'C' ) { return VK_RIGHT; }
             elsif ( $c3 eq 'D' ) { return VK_LEFT; }
@@ -45,7 +45,7 @@ sub __get_key_OS {
         }
         elsif ( $c2 eq '[' ) {
             my $c3 = ReadKey( 0 );
-               if ( $c3 eq 'A' ) { return VK_UP; }
+            if    ( $c3 eq 'A' ) { return VK_UP; }
             elsif ( $c3 eq 'B' ) { return VK_DOWN; }
             elsif ( $c3 eq 'C' ) { return VK_RIGHT; }
             elsif ( $c3 eq 'D' ) { return VK_LEFT; }
@@ -55,7 +55,7 @@ sub __get_key_OS {
             elsif ( $c3 =~ /^[0-9]$/ ) {
                 my $c4 = ReadKey( 0 );
                 if ( $c4 eq '~' ) {
-                       if ( $c3 eq '2' ) { return VK_INSERT; } # unused
+                    if    ( $c3 eq '2' ) { return VK_INSERT; } # unused
                     elsif ( $c3 eq '3' ) { return VK_DELETE; } # unused
                     elsif ( $c3 eq '5' ) { return VK_PAGE_UP; }
                     elsif ( $c3 eq '6' ) { return VK_PAGE_DOWN; }
@@ -217,7 +217,11 @@ sub __reset_mode {
 
 sub __get_term_size {
     #my ( $self ) = @_;
-    return( ( GetTerminalSize() )[ 0, 1 ] );
+    my ( $width, $height ) = ( GetTerminalSize() )[ 0, 1 ];
+    return $width - 1, $height;
+    # $width - 1: don't let items reach the right edge of the terminal;
+    #             selecting an item which reaches the right edge of the terminal
+    #             messes up the output - maybe because the (hidden) terminal-cursor needs a space
 }
 
 

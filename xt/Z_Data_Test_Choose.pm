@@ -395,7 +395,7 @@ my $short = [
     {   list      => $list->{short},
         used_keys => $keys->{short},
         expected  => "<0 7 93>",
-        expected_w81 => "<0 10 93>",
+        expected_w81 => "<0 7 93>", # "<0 10 93>",
         options   => $options->[$c_opt++],
     },
     {   list      => $list->{short},

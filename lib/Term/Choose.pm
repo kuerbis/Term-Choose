@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.202';
+our $VERSION = '1.203';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -15,9 +15,9 @@ use Unicode::GCString;
 use Term::Choose::Constants qw( :choose );
 
 no warnings 'utf8';
-#use warnings FATAL => qw( all );
 #use Log::Log4perl qw( get_logger );
-#my $log = get_logger( 'Term::Choose' );
+# #Log::Log4perl::init() called in main::
+#my $log = get_logger( __PACKAGE__ );
 
 my $Plugin_Package;
 
@@ -478,7 +478,7 @@ sub choose {
             exit 1;
         }
         elsif ( $key == KEY_ENTER ) {
-            my @chosen;
+            #my @chosen; # ###
             if ( ! defined $self->{wantarray} ) {
                 $self->__reset_term( 1 );
                 return;
@@ -678,6 +678,12 @@ sub __write_first_screen {
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
     if ( defined $self->{max_width} ) {
         $self->{max_width} += WIDTH_CURSOR;
+    }
+    if ( $self->{length_longest} > $self->{avail_width} && $^O ne 'MSWin32' ) {
+        $self->{avail_width}++;
+        # $self->{avail_width}++: use also the last terminal column if there is only one print-column;
+        #                         with only one print-column the output doesn't get messed up if an item
+        #                         reaches the right edge of the terminal on an non-MSWin32-OS
     }
     if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
         $self->{avail_width} = $self->{max_width};
@@ -1124,7 +1130,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.202
+Version 1.203
 
 =cut
 
@@ -1552,7 +1558,7 @@ If the available height is less than I<max_height> I<max_height> is set to the a
 
 Height in this context means print rows.
 
-I<max_height> overwrites I<keep> if I<max_height> is set and less than I<keep>.
+I<max_height> overwrites I<keep> if I<max_height> is set to a value less than I<keep>.
 
 Allowed values: 1 or greater
 

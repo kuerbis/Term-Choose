@@ -1,8 +1,11 @@
 Revision history for Term::Choose
 
 
+1.203   2015-09-09
+        - Reserve one space for the (hidden) terminal cursor: Terminalwidth - 1.
+
 1.202   2015-07-02
-        - Removed redundent documentation.
+        - Removed redundant documentation.
 
 1.201   2015-04-27
         - Moved "Expect"-tests to the "xt"-folder.
