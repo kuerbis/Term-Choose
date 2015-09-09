@@ -478,7 +478,6 @@ sub choose {
             exit 1;
         }
         elsif ( $key == KEY_ENTER ) {
-            #my @chosen; # ###
             if ( ! defined $self->{wantarray} ) {
                 $self->__reset_term( 1 );
                 return;
