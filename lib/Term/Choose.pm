@@ -12,7 +12,8 @@ use Carp qw( croak carp );
 use Text::LineFold;
 use Unicode::GCString;
 use Text::ANSI::WideUtil qw(ta_mbtrunc);
-
+use Parse::ANSIColor::Tiny;
+use Term::ANSIColor qw(colored);
 use Term::Choose::Constants qw( :choose );
 
 no warnings 'utf8';
@@ -978,6 +979,8 @@ sub __wr_screen {
 
 sub __wr_cell {
     my( $self, $row, $col ) = @_;
+    my( $wrap, $str) = ("", "");
+    open TRAPSTDOUT, '>', \$wrap || die "can't open TRAPSTDOUT: $!";
     if ( $#{$self->{rc2idx}} == 0 ) {
         my $lngth = 0;
         if ( $col > 0 ) {
@@ -992,20 +995,40 @@ sub __wr_cell {
             }
         }
         $self->__goto( $row - $self->{row_on_top}, $lngth );
+        select TRAPSTDOUT;
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
-        print $self->{list}[$self->{rc2idx}[$row][$col]];
+        select STDOUT;
+        $str = $self->{list}[$self->{rc2idx}[$row][$col]];
         my $gcs_element = Unicode::GCString->new(
             __strip_ansi_color($self->{list}[ $self->{rc2idx}[$row][$col] ]));
         $self->{i_col} += $gcs_element->columns();
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
+        select TRAPSTDOUT;
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
-        print $self->__unicode_sprintf( $self->{rc2idx}[$row][$col] );
+        select STDOUT;
+        $str = $self->__unicode_sprintf( $self->{rc2idx}[$row][$col] );
         $self->{i_col} += $self->{length_longest};
     }
+    select STDOUT;
+    close TRAPSTDOUT;
+
+    my $ansi   = Parse::ANSIColor::Tiny->new();
+    my @codes  = ($wrap =~ m{ \e\[ ([\d;]*) m }xg);
+    my @attr   = $ansi->identify(@codes ? @codes : "");
+    my $marked = $ansi->parse($str);
+    if ($attr[0] ne "clear") {
+        foreach my $ele (@$marked) {
+            $ele->[0] = [ $ansi->normalize(@{ $ele->[0] }, @attr) ];
+        }
+    }
+    print join("",
+        map { @{ $_->[0] } ? Term::ANSIColor::colored(@$_) : $_->[1] }
+          @$marked);
+
     $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
 }
 
