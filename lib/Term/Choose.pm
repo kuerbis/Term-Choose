@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.205';
+our $VERSION = '1.205_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -81,10 +81,8 @@ sub __undef_to_defaults {
 }
 
 
-sub __validate_and_add_options {
-    my ( $self, $opt ) = @_;
-    return if ! defined $opt;
-    my $valid = {
+sub __valid_options {
+    return {
         beep            => '[ 0 1 ]',
         clear_screen    => '[ 0 1 ]',
         default         => '[ 0-9 ]+',
@@ -108,6 +106,13 @@ sub __validate_and_add_options {
         prompt          => '',
         undef           => '',
     };
+};
+
+
+sub __validate_and_add_options {
+    my ( $self, $opt ) = @_;
+    return if ! defined $opt;
+    my $valid = $self->__valid_options();
     my $sub =  ( caller( 1 ) )[3];
     $sub =~ s/^.+::([^:]+)\z/$1/;
     for my $key ( keys %$opt ) {
@@ -793,18 +798,8 @@ sub __size_and_layout {
         $self->{rc2idx}[0] = [ 0 .. $#{$self->{list}} ];
     }
     elsif ( $self->{layout} == 3 ) {
-        if ( $self->{length_longest} <= $self->{avail_width} ) {
-            for my $idx ( 0 .. $#{$self->{list}} ) {
-                $self->{rc2idx}[$idx][0] = $idx;
-            }
-        }
-        else {
-            for my $idx ( 0 .. $#{$self->{list}} ) {
-                if ( $self->__print_columns( $self->{list}[$idx] ) > $self->{avail_width} ) {
-                    $self->{list}[$idx] = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_width} - 3 ) . '...';
-                }
-                $self->{rc2idx}[$idx][0] = $idx;
-            }
+        for my $idx ( 0 .. $#{$self->{list}} ) {
+            $self->{rc2idx}[$idx][0] = $idx;
         }
     }
     else {
@@ -863,26 +858,6 @@ sub __size_and_layout {
 sub __print_columns {
     #my $self = $_[0];
     Unicode::GCString->new( $_[1] )->columns();
-}
-
-
-sub __unicode_trim {
-    my ( $self, $str, $len ) = @_;
-    return '' if $len <= 0; #
-    my $gcs = Unicode::GCString->new( $str );
-    my $pos = $gcs->pos;
-    $gcs->pos( 0 );
-    my $cols = 0;
-    my $gc;
-    while ( defined( $gc = $gcs->next ) ) {
-        if ( $len < ( $cols += $gc->columns ) ) {
-            my $ret = $gcs->substr( 0, $gcs->pos - 1 );
-            $gcs->pos( $pos );
-            return $ret->as_string;
-        }
-    }
-    $gcs->pos( $pos );
-    return $gcs->as_string;
 }
 
 
@@ -1007,12 +982,31 @@ sub __wr_cell {
 }
 
 
+sub __unicode_trim {
+    my ( $self, $str, $len ) = @_;
+    my $gcs = Unicode::GCString->new( $str );
+    my $pos = $gcs->pos;
+    $gcs->pos( 0 );
+    my $cols = 0;
+    my $gc;
+    while ( defined( $gc = $gcs->next ) ) {
+        if ( $len < ( $cols += $gc->columns ) ) {
+            my $ret = $gcs->substr( 0, $gcs->pos - 1 );
+            $gcs->pos( $pos );
+            return $ret->as_string;
+        }
+    }
+    $gcs->pos( $pos );
+    return $gcs->as_string;
+}
+
+
 sub __unicode_sprintf {
     my ( $self, $idx ) = @_;
     my $unicode;
     my $str_length = defined $self->{length}[$idx] ? $self->{length}[$idx] : $self->{length_longest};
     if ( $str_length > $self->{avail_col_width} ) {
-        $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} );
+        $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} - 3 ) . '...';
     }
     elsif ( $str_length < $self->{avail_col_width} ) {
         if ( $self->{justify} == 0 ) {
@@ -1130,7 +1124,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.205
+Version 1.205_01
 
 =cut
 

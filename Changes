@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.205_01   2015-09-18
+        - Code refactoring.
+
 1.205   2015-09-09
         - Code refactoring.
 
