@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.205_01';
+our $VERSION = '1.205_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -114,35 +114,36 @@ sub __validate_and_add_options {
     return if ! defined $opt;
     my $valid = $self->__valid_options();
     my $sub =  ( caller( 1 ) )[3];
-    $sub =~ s/^.+::([^:]+)\z/$1/;
+    $sub =~ s/^.+::(?:__)?([^:]+)\z/$1/;
+    $sub .= ' -';
     for my $key ( keys %$opt ) {
         if ( ! exists $valid->{$key} ) {
-            croak "$sub: '$key' is not a valid option name";
+            croak "$sub '$key' is not a valid option name";
         }
         next if ! defined $opt->{$key};
         if ( $key eq 'lf' ) {
             if ( ! ( ref $opt->{$key} eq 'ARRAY' && @{$opt->{$key}} <= 2 ) ) {
-                croak "$sub: option '$key' : the passed value has to be an ARRAY reference.";
+                croak "$sub $key: the passed value has to be an ARRAY reference.";
             }
             no warnings 'uninitialized';
             for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub: option '$key' : $_ is an invalid array element";
+                /^[0-9]+\z/ or croak "$sub $key: $_ is an invalid array element";
             }
         }
         elsif ( $key eq 'no_spacebar' || $key eq 'mark' ) {
             if ( ref $opt->{$key} ne 'ARRAY' ) {
-                croak "$sub: option '$key' : the passed value has to be an ARRAY reference.";
+                croak "$sub $key: the passed value has to be an ARRAY reference.";
             }
             no warnings 'uninitialized';
             for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub: option '$key' : $_ is an invalid array element";
+                /^[0-9]+\z/ or croak "$sub $key: $_ is an invalid array element";
             }
         }
         elsif ( $valid->{$key} eq '' && ref $opt->{$key} ne '' ) {
-            croak "$sub: option '$key' : references are not valid values.";
+            croak "$sub $key: references are not valid values.";
         }
         elsif ( length $valid->{$key} && $opt->{$key} !~ m/^$valid->{$key}\z/x ) {
-            croak "$sub: option '$key' : '$opt->{$key}' is not a valid value.";
+            croak "$sub $key: '$opt->{$key}' is not a valid value.";
         }
         $self->{$key} = $opt->{$key};
     }
@@ -662,12 +663,12 @@ sub __copy_orig_list {
 
 sub __length_longest {
     my ( $self ) = @_;
+    my $list = $self->{list};
     if ( $self->{ll} ) {
         $self->{length_longest} = $self->{ll};
-        $self->{length} = [];
+        $self->{length} = [ ( $self->{length_longest} ) x @$list ];
     }
     else {
-        my $list = $self->{list};
         my $len = [];
         my $longest = 0;
         for my $i ( 0 .. $#$list ) {
@@ -861,30 +862,6 @@ sub __print_columns {
 }
 
 
-sub __prepare_page_number {
-    my ( $self ) = @_;
-    $self->{pp} = int( $#{$self->{rc2idx}} / ( $self->{avail_height} + $self->{tail} ) ) + 1;
-    if ( $self->{pp} > 1 ) {
-        $self->{pp} = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
-        $self->{width_pp} = length $self->{pp};
-        $self->{pp_printf_fmt} = "--- Page %0*d/%d ---";
-        $self->{pp_printf_type} = 0;
-        if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
-            $self->{pp_printf_fmt} = "%0*d/%d";
-            if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
-                $self->{width_pp} = $self->{avail_width} if $self->{width_pp} > $self->{avail_width};
-                $self->{pp_printf_fmt} = "%0*.*s";
-                $self->{pp_printf_type} = 1;
-            }
-        }
-    }
-    else {
-        $self->{avail_height} += $self->{tail};
-        $self->{tail} = 0;
-    }
-}
-
-
 sub __set_default_cell {
     my ( $self ) = @_;
     $self->{tmp_pos} = [ 0, 0 ];
@@ -931,20 +908,52 @@ sub __goto {
 }
 
 
+sub __prepare_page_number {
+    my ( $self ) = @_;
+    $self->{pp} = int( $#{$self->{rc2idx}} / ( $self->{avail_height} + $self->{tail} ) ) + 1;
+    if ( $self->{pp} > 1 ) {
+        $self->{pp} = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
+        $self->{width_pp} = length $self->{pp};
+        $self->{pp_printf_fmt} = "--- Page %0*d/%d ---";
+        $self->{pp_printf_type} = 0;
+        if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
+            $self->{pp_printf_fmt} = "%0*d/%d";
+            if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
+                if ( $self->{width_pp} > $self->{avail_width} ) {
+                    $self->{width_pp} = $self->{avail_width};
+                }
+                $self->{pp_printf_fmt} = "%0*.*s";
+                $self->{pp_printf_type} = 1;
+            }
+        }
+    }
+    else {
+        $self->{avail_height} += $self->{tail};
+        $self->{tail} = 0;
+    }
+}
+
+
 sub __wr_screen {
     my ( $self ) = @_;
     $self->__goto( 0, 0 );
     $self->{plugin}->__clear_to_end_of_screen();
     if ( $self->{page} && $self->{pp} > 1 ) {
         $self->__goto( $self->{avail_height_idx} + $self->{tail}, 0 );
+        my $page_number;
         if ( $self->{pp_printf_type} == 0 ) {
-            printf $self->{pp_printf_fmt}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1, $self->{pp};
-            $self->{i_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1, $self->{pp};
+            $page_number = sprintf $self->{pp_printf_fmt},
+                                   $self->{width_pp},
+                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1,
+                                   $self->{pp};
         }
         elsif ( $self->{pp_printf_type} == 1 ) {
-            printf $self->{pp_printf_fmt}, $self->{width_pp}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
-            $self->{i_col} += length sprintf $self->{pp_printf_fmt}, $self->{width_pp}, $self->{width_pp}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
+            $page_number = sprintf $self->{pp_printf_fmt},
+                                   $self->{width_pp}, $self->{width_pp},
+                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1;
         }
+        print $page_number;
+        $self->{i_col} += length $page_number;
      }
     for my $row ( $self->{p_begin} .. $self->{p_end} ) {
         for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
@@ -957,28 +966,32 @@ sub __wr_screen {
 
 sub __wr_cell {
     my( $self, $row, $col ) = @_;
+    my $idx            = $self->{rc2idx}[$row][$col];
+    my $is_selected    = $self->{marked}[$row][$col];
+    my $is_current_pos = $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
     if ( $#{$self->{rc2idx}} == 0 ) {
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
-                $lngth += $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$cl]] );
+                my $i = $self->{rc2idx}[$row][$cl];
+                $lngth += $self->__print_columns( $self->{list}[$i] );
                 $lngth += $self->{pad_one_row};
             }
         }
         $self->__goto( $row - $self->{row_on_top}, $lngth );
-        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
-        $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
-        print $self->{list}[$self->{rc2idx}[$row][$col]];
-        $self->{i_col} += $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] );
+        $self->{plugin}->__bold_underline() if $is_selected;
+        $self->{plugin}->__reverse()        if $is_current_pos;
+        print $self->{list}[$idx];
+        $self->{i_col} += $self->__print_columns( $self->{list}[$idx] );
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
-        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
-        $self->{plugin}->__reverse()        if $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
-        print $self->__unicode_sprintf( $self->{rc2idx}[$row][$col] );
+        $self->{plugin}->__bold_underline() if $is_selected;
+        $self->{plugin}->__reverse()        if $is_current_pos;
+        print $self->__unicode_sprintf( $idx );
         $self->{i_col} += $self->{length_longest};
     }
-    $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
+    $self->{plugin}->__reset() if $is_selected || $is_current_pos;
 }
 
 
@@ -1004,9 +1017,14 @@ sub __unicode_trim {
 sub __unicode_sprintf {
     my ( $self, $idx ) = @_;
     my $unicode;
-    my $str_length = defined $self->{length}[$idx] ? $self->{length}[$idx] : $self->{length_longest};
+    my $str_length = $self->{length}[$idx];
     if ( $str_length > $self->{avail_col_width} ) {
-        $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} - 3 ) . '...';
+        if ( $self->{avail_col_width} > 3 ) {
+            $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} - 3 ) . '...';
+        }
+        else {
+            $unicode = $self->__unicode_trim( $self->{list}[$idx], $self->{avail_col_width} );
+        }
     }
     elsif ( $str_length < $self->{avail_col_width} ) {
         if ( $self->{justify} == 0 ) {
@@ -1047,7 +1065,8 @@ sub __mouse_info_to_key {
         if ( $row == $mouse_row ) {
             my $end_last_col = 0;
             COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                my $end_this_col = $end_last_col + $self->__print_columns( $self->{list}[$self->{rc2idx}[$row][$col]] ) + $self->{pad_one_row};
+                my $idx = $self->{rc2idx}[$row][$col];
+                my $end_this_col = $end_last_col + $self->__print_columns( $self->{list}[$idx] ) + $self->{pad_one_row};
                 if ( $col == 0 ) {
                     $end_this_col -= int( $self->{pad_one_row} / 2 );
                 }
@@ -1124,7 +1143,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.205_01
+Version 1.205_02
 
 =cut
 

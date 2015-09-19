@@ -14,15 +14,16 @@ my $exception;
 my $new = Term::Choose->new();
 
 
+my $regex = /config - /;
 
 $exception = exception { $new->config( {}, {} ) };
-ok( $exception =~ /config:/, "\$new->config( {}, {} ) => $exception" );
+ok( $exception =~ $regex, "\$new->config( {}, {} ) => $exception" );
 
 $exception = exception { $new->config( 'a' ) };
-ok( $exception =~ /config:/, "\$new->config( 'a' ) => $exception" );
+ok( $exception =~ $regex, "\$new->config( 'a' ) => $exception" );
 
 $exception = exception { $new->config( { hello => 1, world => 2 } ) };
-ok( $exception =~ /config:/, "\$new->config( { hello => 1, world => 2 } ) => $exception" );
+ok( $exception =~ $regex, "\$new->config( { hello => 1, world => 2 } ) => $exception" );
 
 
 my $invalid_values = Data_Test_Arguments::invalid_values();
@@ -30,19 +31,19 @@ my $invalid_values = Data_Test_Arguments::invalid_values();
 for my $opt ( sort keys %$invalid_values ) {
     for my $val ( @{$invalid_values->{$opt}} ) {
         my $exception = exception { $new->config( { $opt => $val }  ) };
-        ok( $exception =~ /config:/, "\$new->config( { $opt => $val } ) => $exception" );
+        ok( $exception =~ $regex, "\$new->config( { $opt => $val } ) => $exception" );
     }
 }
 
 
 my $mixed_invalid_1 = Data_Test_Arguments::mixed_invalid_1();
 $exception = exception { $new->config( $mixed_invalid_1  ) };
-ok( $exception =~ /config:/, "\$new->config( { >>> } ) => $exception" );
+ok( $exception =~ $regex, "\$new->config( { >>> } ) => $exception" );
 
 
 my $mixed_invalid_2 = Data_Test_Arguments::mixed_invalid_2();
 $exception = exception { $new->config( $mixed_invalid_2 ) };
-ok( $exception =~ /config:/, "\$new->config( { <<< } ) => $exception" );
+ok( $exception =~ $regex, "\$new->config( { <<< } ) => $exception" );
 
 
 

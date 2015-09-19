@@ -26,6 +26,8 @@ my $choices = [ '', 0, undef, 1, 2, 3, 'aa' .. 'zz', '☻☮☺', "\x{263a}\x{26
 
 my $d;
 
+my $begin_errormessage = /^choose -/;
+
 my $int = {
     beep         => '[ 0 1 ]',
     clear_screen => '[ 0 1 ]',
@@ -52,7 +54,7 @@ my @wrong = ( -1, 2, 2 .. 10, 999999, '01', '', 'a', { 1, 1 }, [ 1 ], {}, [], [ 
 for my $opt ( sort keys %$int ) {
     for my $val ( grep { ! /^$int->{$opt}\z/x } @wrong ) {
         my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
-        ok( $exception =~ /choose:/ );
+        ok( $exception =~ $begin_errormessage );
     }
 }
 
@@ -68,7 +70,7 @@ my @wrong_string = ( { 1, 1 }, [ 1 ], {}, [], [ 2 ] );
 for my $opt ( sort keys %$string ) {
     for my $val ( grep { ref } @wrong_string ) {
         my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
-        ok( $exception =~ /choose:/ );
+        ok( $exception =~ $begin_errormessage );
     }
 }
 
@@ -81,7 +83,7 @@ my @val_lf = ( -2, -1, 0, 1, '', 'a', { 1, 1 }, {}  );
 for my $opt ( sort keys %$lf ) {
     for my $val ( @val_lf ) {
         my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
-        ok( $exception =~ /choose:/ );
+        ok( $exception =~ $begin_errormessage );
     }
 }
 
@@ -94,7 +96,7 @@ my @val_no_spacebar = ( -2, -1, 0, 1, '', 'a', { 1, 1 }, {}  );
 for my $opt ( sort keys %$no_spacebar ) {
     for my $val ( @val_no_spacebar ) {
         my $exception = exception { $d = choose( $choices, { $opt => $val } ) };
-        ok( $exception =~ /choose:/ );
+        ok( $exception =~ $begin_errormessage );
     }
 }
 
@@ -103,13 +105,13 @@ my $exception = exception { $d = choose( $choices, {
     beep  => -1, clear_screen => 2, hide_cursor => 3, index => 4, justify => '@', layout => 5, mouse => {},
     order => 1, page => 0, keep => -1, ll => -1, max_height => 0, max_width => 0, default => [],
     pad => 'a', pad_one_row => 'b', empty => [], prompt => {}, undef => [], lf => 4, no_spacebar => 4 } ) };
-ok( $exception =~ /choose:/ );
+ok( $exception =~ $begin_errormessage );
 
 $exception = exception { $d = choose( [ 'aaa' .. 'zzz' ], {
     no_spacebar => 'a', lf => 'b', undef => [], prompt => {}, empty => {}, pad_one_row => 'c', pad => 'd',
     default => 'e', max_width => -1, max_height => -2, ll => -4, keep => -5, page => -6, order => -7,
     mouse => 'k', layout => 'e', justify => [], index => {}, hide_cursor => -1,  clear_screen => [], beep  => 10 } ) };
-ok( $exception =~ /choose:/ );
+ok( $exception =~ $begin_errormessage );
 
 
 done_testing();
