@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.205_03   2015-09-22
+        - Bugfix "i_col".
+        - Code refactoring.
+
 1.205_02   2015-09-19
         - Code refactoring.
 

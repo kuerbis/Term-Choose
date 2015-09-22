@@ -14,7 +14,7 @@ my $exception;
 my $new = Term::Choose->new();
 
 
-my $regex = /config - /;
+my $regex = qr/^config:/;
 
 $exception = exception { $new->config( {}, {} ) };
 ok( $exception =~ $regex, "\$new->config( {}, {} ) => $exception" );

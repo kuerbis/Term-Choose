@@ -12,7 +12,7 @@ use Data_Test_Arguments;
 
 my $exception;
 
-my $regex = /new - /;
+my $regex = qr/^new:/;
 
 $exception = exception { my $new = Term::Choose->new( {}, {} ) };
 ok( $exception =~ $regex, "\$new = Term::Choose->new( {}, {} ) => $exception" );

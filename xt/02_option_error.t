@@ -26,7 +26,7 @@ my $choices = [ '', 0, undef, 1, 2, 3, 'aa' .. 'zz', '☻☮☺', "\x{263a}\x{26
 
 my $d;
 
-my $begin_errormessage = /^choose -/;
+my $begin_errormessage = qr/^choose:/;
 
 my $int = {
     beep         => '[ 0 1 ]',

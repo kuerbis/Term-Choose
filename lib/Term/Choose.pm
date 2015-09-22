@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.205_02';
+our $VERSION = '1.205_03';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -115,7 +115,7 @@ sub __validate_and_add_options {
     my $valid = $self->__valid_options();
     my $sub =  ( caller( 1 ) )[3];
     $sub =~ s/^.+::(?:__)?([^:]+)\z/$1/;
-    $sub .= ' -';
+    $sub .= ':';
     for my $key ( keys %$opt ) {
         if ( ! exists $valid->{$key} ) {
             croak "$sub '$key' is not a valid option name";
@@ -123,27 +123,27 @@ sub __validate_and_add_options {
         next if ! defined $opt->{$key};
         if ( $key eq 'lf' ) {
             if ( ! ( ref $opt->{$key} eq 'ARRAY' && @{$opt->{$key}} <= 2 ) ) {
-                croak "$sub $key: the passed value has to be an ARRAY reference.";
+                croak "$sub $key => the passed value has to be an ARRAY reference.";
             }
             no warnings 'uninitialized';
             for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub $key: $_ is an invalid array element";
+                /^[0-9]+\z/ or croak "$sub $key => $_ is an invalid array element";
             }
         }
         elsif ( $key eq 'no_spacebar' || $key eq 'mark' ) {
             if ( ref $opt->{$key} ne 'ARRAY' ) {
-                croak "$sub $key: the passed value has to be an ARRAY reference.";
+                croak "$sub $key => the passed value has to be an ARRAY reference.";
             }
             no warnings 'uninitialized';
             for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub $key: $_ is an invalid array element";
+                /^[0-9]+\z/ or croak "$sub $key => $_ is an invalid array element";
             }
         }
         elsif ( $valid->{$key} eq '' && ref $opt->{$key} ne '' ) {
-            croak "$sub $key: references are not valid values.";
+            croak "$sub $key => references are not valid values.";
         }
         elsif ( length $valid->{$key} && $opt->{$key} !~ m/^$valid->{$key}\z/x ) {
-            croak "$sub $key: '$opt->{$key}' is not a valid value.";
+            croak "$sub $key => '$opt->{$key}' is not a valid value.";
         }
         $self->{$key} = $opt->{$key};
     }
@@ -914,16 +914,21 @@ sub __prepare_page_number {
     if ( $self->{pp} > 1 ) {
         $self->{pp} = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
         $self->{width_pp} = length $self->{pp};
-        $self->{pp_printf_fmt} = "--- Page %0*d/%d ---";
-        $self->{pp_printf_type} = 0;
-        if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
-            $self->{pp_printf_fmt} = "%0*d/%d";
-            if ( length sprintf( $self->{pp_printf_fmt}, $self->{width_pp}, $self->{pp}, $self->{pp} ) > $self->{avail_width} ) {
+        $self->{footer_fmt_short} = 0;
+        $self->{footer_fmt} = "--- Page %0*d/%d ---";
+        my $len_footer = length sprintf $self->{footer_fmt},
+                                        $self->{width_pp}, $self->{pp},
+                                        $self->{pp};
+        if ( $len_footer > $self->{avail_width} ) {
+            $self->{footer_fmt} = "%0*d/%d";
+            my $len_footer = length sprintf $self->{footer_fmt},
+                                            $self->{width_pp}, $self->{pp},
+                                            $self->{pp};
+            if (  $len_footer > $self->{avail_width} ) {
                 if ( $self->{width_pp} > $self->{avail_width} ) {
                     $self->{width_pp} = $self->{avail_width};
                 }
-                $self->{pp_printf_fmt} = "%0*.*s";
-                $self->{pp_printf_type} = 1;
+                $self->{footer_fmt_short} = "%0*.*s";
             }
         }
     }
@@ -941,16 +946,16 @@ sub __wr_screen {
     if ( $self->{page} && $self->{pp} > 1 ) {
         $self->__goto( $self->{avail_height_idx} + $self->{tail}, 0 );
         my $page_number;
-        if ( $self->{pp_printf_type} == 0 ) {
-            $page_number = sprintf $self->{pp_printf_fmt},
+        if ( $self->{footer_fmt_short} ) {
+            $page_number = sprintf $self->{footer_fmt_short},
+                                   $self->{width_pp}, $self->{width_pp},
+                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1;
+        }
+        else {
+            $page_number = sprintf $self->{footer_fmt},
                                    $self->{width_pp},
                                    int( $self->{row_on_top} / $self->{avail_height} ) + 1,
                                    $self->{pp};
-        }
-        elsif ( $self->{pp_printf_type} == 1 ) {
-            $page_number = sprintf $self->{pp_printf_fmt},
-                                   $self->{width_pp}, $self->{width_pp},
-                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1;
         }
         print $page_number;
         $self->{i_col} += length $page_number;
@@ -966,9 +971,8 @@ sub __wr_screen {
 
 sub __wr_cell {
     my( $self, $row, $col ) = @_;
-    my $idx            = $self->{rc2idx}[$row][$col];
-    my $is_selected    = $self->{marked}[$row][$col];
     my $is_current_pos = $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
+    my $idx = $self->{rc2idx}[$row][$col];
     if ( $#{$self->{rc2idx}} == 0 ) {
         my $lngth = 0;
         if ( $col > 0 ) {
@@ -979,19 +983,20 @@ sub __wr_cell {
             }
         }
         $self->__goto( $row - $self->{row_on_top}, $lngth );
-        $self->{plugin}->__bold_underline() if $is_selected;
+        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $is_current_pos;
         print $self->{list}[$idx];
         $self->{i_col} += $self->__print_columns( $self->{list}[$idx] );
     }
     else {
         $self->__goto( $row - $self->{row_on_top}, $col * $self->{col_width} );
-        $self->{plugin}->__bold_underline() if $is_selected;
+        $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $is_current_pos;
         print $self->__unicode_sprintf( $idx );
-        $self->{i_col} += $self->{length_longest};
+        #$self->{i_col} += $self->{length_longest};
+        $self->{i_col} += $self->{avail_col_width};
     }
-    $self->{plugin}->__reset() if $is_selected || $is_current_pos;
+    $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $is_current_pos;
 }
 
 
@@ -1143,7 +1148,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.205_02
+Version 1.205_03
 
 =cut
 
@@ -1710,41 +1715,15 @@ It is required a terminal that uses a monospaced font which supports the printed
 
 =head2 Escape sequences
 
-The following ANSI escape sequences are used:
+It is required a terminal that supports ANSI escape sequences.
 
-    "\e[A"      Cursor Up
-
-    "\e[C"      Cursor Forward
-
-    "\e[D"      Cursor Back
-
-    "\e[0J"     Clear to End of Screen (Erase Data)
-
-    "\e[0m"     Normal/Reset
-
-    "\e[1m"     Bold
-
-    "\e[4m"     Underline
-
-    "\e[7m"     Inverse
-
-If the option "hide_cursor" is enabled:
+If the option "hide_cursor" is enabled, it is also required the support for the following escape sequences:
 
     "\e[?25l"   Hide Cursor
 
     "\e[?25h"   Show Cursor
 
-If the option "clear_screen" is enabled:
-
-    "\e[2J"     Clear Screen (Erase Data)
-
-    "\e[1;1H"   Go to Top Left (Cursor Position)
-
-If the OS is MSWin32 L<Win32::Console> is used, to emulate these escape sequences.
-
 If a I<mouse> mode is enabled
-
-    "\e[6n"    Get Cursor Position (Device Status Report)
 
     "\e[?1003h", "\e[?1005h", "\e[?1006h"   Enable Mouse Tracking
 
@@ -1752,7 +1731,7 @@ If a I<mouse> mode is enabled
 
 are used to enable/disable the different I<mouse> modes.
 
-To read key and mouse events with an MSWin32 OS L<Win32::Console> is used instead.
+If the OS is MSWin32 L<Win32::Console> is used, to emulate the behavior of the escape sequences.
 
 =head1 SUPPORT
 
