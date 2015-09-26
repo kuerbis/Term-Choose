@@ -20,8 +20,8 @@ my %option_default;
 
 open $fh, '<', $file or die $!;
 while ( my $line = <$fh> ) {
-    if ( $line =~ /^sub __undef_to_defaults \{/ .. $line =~ /^\}/ ) {
-        if ( $line =~ m|^\s+#?\s*\$self->\{(\w+)\}\s+=\s(\S+)| ) {
+    if ( $line =~ /^sub __defaults \{/ .. $line =~ /^\}/ ) {
+        if ( $line =~ m|^\s+#?\s*(\w+)\s+=>\s(\S+),| ) {
             my $op = $1;
             next if $op eq 'prompt';
             next if $op ~~ @deprecated;
@@ -94,7 +94,7 @@ for my $key ( sort keys %option_default ) {
     next if $key ~~ @deprecated;
     if ( $key eq 'pad_one_row' ) {
         my $por = 0;
-        if ( $option_default{$key} eq '$self->{pad}' and $pod_default{$key} eq 'value of the option I<pad>' ) {
+        if ( $pod_default{$key} eq 'value of the option I<pad>' ) {
             $por = 1;
         }
         is( $por, '1', "option $key: default value in pod OK" );

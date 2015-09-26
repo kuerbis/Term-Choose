@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.205_03';
+our $VERSION = '1.205_04';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -53,31 +53,43 @@ sub DESTROY {
 }
 
 
-sub __undef_to_defaults {
+sub __defaults {
     my ( $self ) = @_;
     my $prompt = defined $self->{wantarray} ? 'Your choice:' : 'Close with ENTER';
-    $self->{prompt}       = $prompt      if ! defined $self->{prompt};
-    $self->{beep}         = 0            if ! defined $self->{beep};
-    $self->{clear_screen} = 0            if ! defined $self->{clear_screen};
-    #$self->{default}     = undef        if ! defined $self->{default};
-    $self->{empty}        = '<empty>'    if ! defined $self->{empty};
-    $self->{hide_cursor}  = 1            if ! defined $self->{hide_cursor};
-    $self->{index}        = 0            if ! defined $self->{index};
-    $self->{justify}      = 0            if ! defined $self->{justify};
-    $self->{keep}         = 5            if ! defined $self->{keep};
-    $self->{layout}       = 1            if ! defined $self->{layout};
-    #$self->{lf}          = undef        if ! defined $self->{lf};
-    #$self->{ll}          = undef        if ! defined $self->{ll};
-    #$self->{mark}        = undef        if ! defined $self->{mark};
-    #$self->{max_height}  = undef        if ! defined $self->{max_height};
-    #$self->{max_width}   = undef        if ! defined $self->{max_width};
-    $self->{mouse}        = 0            if ! defined $self->{mouse};
-    #$self->{no_spacebar} = undef        if ! defined $self->{no_spacebar};
-    $self->{order}        = 1            if ! defined $self->{order};
-    $self->{pad}          = 2            if ! defined $self->{pad};
+    return {
+        prompt       => $prompt,
+        beep         => 0,
+        clear_screen => 0,
+        #default     => undef,
+        empty        => '<empty>',
+        hide_cursor  => 1,
+        index        => 0,
+        justify      => 0,
+        keep         => 5,
+        layout       => 1,
+        #lf          => undef,
+        #ll          => undef,
+        #mark        => undef,
+        #max_height  => undef,
+        #max_width   => undef,
+        mouse        => 0,
+        #no_spacebar => undef,
+        order        => 1,
+        pad          => 2,
+        #pad_one_row => pad,
+        page         => 1,
+        undef        => '<undef>',
+    };
+}
+
+
+sub __undef_to_defaults {
+    my ( $self ) = @_;
+    my $defaults = $self->__defaults();
+    for my $option ( keys %$defaults ) {
+        $self->{$option} = $defaults->{$option} if ! defined $self->{$option};
+    }
     $self->{pad_one_row}  = $self->{pad} if ! defined $self->{pad_one_row};
-    $self->{page}         = 1            if ! defined $self->{page};
-    $self->{undef}        = '<undef>'    if ! defined $self->{undef};
 }
 
 
@@ -993,7 +1005,6 @@ sub __wr_cell {
         $self->{plugin}->__bold_underline() if $self->{marked}[$row][$col];
         $self->{plugin}->__reverse()        if $is_current_pos;
         print $self->__unicode_sprintf( $idx );
-        #$self->{i_col} += $self->{length_longest};
         $self->{i_col} += $self->{avail_col_width};
     }
     $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $is_current_pos;
@@ -1148,7 +1159,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.205_03
+Version 1.205_04
 
 =cut
 
