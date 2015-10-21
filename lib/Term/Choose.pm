@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.207';
+our $VERSION = '1.208';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1159,7 +1159,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.207
+Version 1.208
 
 =cut
 
@@ -1379,6 +1379,9 @@ The following should be without meaning if you comply with the requirements.
 Characters which match the Unicode character property C<Other> are removed.
 
     $element =~ s/\p{C}//g;
+
+C<ESC> characters are removed by this substitution so it is not possible to color the output with ANSI escape sequences.
+For colored output see L<Term::Choose_HAE>.
 
 =item *
 

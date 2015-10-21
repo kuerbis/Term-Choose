@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.208   2015-10-21
+        - Update documentation.
+
 1.207   2015-10-05
         - Make "Term::Choose::Constants" visible, so it is available for "Term::Choose_HAE".
 
