@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.208';
+our $VERSION = '1.209';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -97,26 +97,26 @@ sub __valid_options {
     return {
         beep            => '[ 0 1 ]',
         clear_screen    => '[ 0 1 ]',
-        default         => '[ 0-9 ]+',
-        empty           => '',
         hide_cursor     => '[ 0 1 ]',
         index           => '[ 0 1 ]',
+        order           => '[ 0 1 ]',
+        page            => '[ 0 1 ]',
         justify         => '[ 0 1 2 ]',
-        keep            => '[ 1-9 ][ 0-9 ]*',
         layout          => '[ 0 1 2 3 ]',
-        lf              => 'ARRAY',
+        mouse           => '[ 0 1 2 3 4 ]',
+        keep            => '[ 1-9 ][ 0-9 ]*',
         ll              => '[ 1-9 ][ 0-9 ]*',
-        mark            => 'ARRAY',
         max_height      => '[ 1-9 ][ 0-9 ]*',
         max_width       => '[ 1-9 ][ 0-9 ]*',
-        mouse           => '[ 0 1 2 3 4 ]',
-        no_spacebar     => 'ARRAY',
-        order           => '[ 0 1 ]',
+        default         => '[ 0-9 ]+',
         pad             => '[ 0-9 ]+',
         pad_one_row     => '[ 0-9 ]+',
-        page            => '[ 0 1 ]',
-        prompt          => '',
-        undef           => '',
+        lf              => 'ARRAY',
+        mark            => 'ARRAY',
+        no_spacebar     => 'ARRAY',
+        empty           => 'Str',
+        prompt          => 'Str',
+        undef           => 'Str',
     };
 };
 
@@ -133,28 +133,29 @@ sub __validate_and_add_options {
             croak "$sub '$key' is not a valid option name";
         }
         next if ! defined $opt->{$key};
-        if ( $key eq 'lf' ) {
-            if ( ! ( ref $opt->{$key} eq 'ARRAY' && @{$opt->{$key}} <= 2 ) ) {
-                croak "$sub $key => the passed value has to be an ARRAY reference.";
+        if ( $valid->{$key} eq 'ARRAY' ) {
+            croak "$sub $key => the passed value has to be an ARRAY reference." if ref $opt->{$key} ne 'ARRAY';
+            {
+                no warnings 'uninitialized';
+                for ( @{$opt->{$key}} ) {
+                    /^[0-9]+\z/ or croak "$sub $key => $_ is an invalid array element";
+                }
             }
-            no warnings 'uninitialized';
-            for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub $key => $_ is an invalid array element";
+            if ( $key eq 'lf' ) {
+                croak "$sub $key => too many array elements." if @{$opt->{$key}} > 2;
+            }
+            else {
+                if ( defined $self->{orig_list} ) {
+                    for ( @{$opt->{$key}} ) {
+                        croak "$sub $key => $_ out of range." if $_ > $#{$self->{orig_list}};
+                    }
+                }
             }
         }
-        elsif ( $key eq 'no_spacebar' || $key eq 'mark' ) {
-            if ( ref $opt->{$key} ne 'ARRAY' ) {
-                croak "$sub $key => the passed value has to be an ARRAY reference.";
-            }
-            no warnings 'uninitialized';
-            for ( @{$opt->{$key}} ) {
-                /^[0-9]+\z/ or croak "$sub $key => $_ is an invalid array element";
-            }
+        elsif ( $valid->{$key} eq 'Str' ) {
+            croak "$sub $key => references are not valid values." if ref $opt->{$key} ne '';
         }
-        elsif ( $valid->{$key} eq '' && ref $opt->{$key} ne '' ) {
-            croak "$sub $key => references are not valid values.";
-        }
-        elsif ( length $valid->{$key} && $opt->{$key} !~ m/^$valid->{$key}\z/x ) {
+        elsif ( $opt->{$key} !~ m/^$valid->{$key}\z/x ) {
             croak "$sub $key => '$opt->{$key}' is not a valid value.";
         }
         $self->{$key} = $opt->{$key};
@@ -231,9 +232,9 @@ sub __choose {
     local $\ = undef;
     local $, = undef;
     local $| = 1;
+    $self->{orig_list} = $orig_list_ref;
     $self->{wantarray} = wantarray;
     $self->__undef_to_defaults();
-    $self->{orig_list} = $orig_list_ref;
     $self->__copy_orig_list();
     $self->__length_longest();
     $self->{col_width} = $self->{length_longest} + $self->{pad};
@@ -244,7 +245,7 @@ sub __choose {
     $self->__init_term();
     $self->__write_first_screen();
 
-    while ( 1 ) {
+    GET_KEY: while ( 1 ) {
         my $key = $self->__get_key();
         if ( ! defined $key ) {
             $self->__reset_term( 1 );
@@ -253,7 +254,7 @@ sub __choose {
         }
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
-            $self->{list} = $self->__copy_orig_list();
+            $self->__copy_orig_list();
             $self->{default} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
             if ( $self->{wantarray} && @{$self->{marked}} ) {
                 $self->{mark} = $self->__marked_to_idx();
@@ -263,10 +264,10 @@ sub __choose {
             $self->{plugin}->__up( $up ) if $up;
             $self->{plugin}->__clear_to_end_of_screen();
             $self->__write_first_screen();
-            next;
+            next GET_KEY;
         }
-        next if $key == NEXT_get_key;
-        next if $key == KEY_Tilde;
+        next GET_KEY if $key == NEXT_get_key;
+        next GET_KEY if $key == KEY_Tilde;
 
         # $self->{rc2idx} holds the new list (AoA) formated in "__size_and_layout" appropirate to the chosen layout.
         # $self->{rc2idx} does not hold the values dircetly but the respective list indexes from the original list.
@@ -283,8 +284,8 @@ sub __choose {
         # or the index of the last column in the first row would be $#{$self->{rc2idx}[0]}.
 
         if ( $key == KEY_j || $key == VK_DOWN ) {
-            if ( $#{$self->{rc2idx}} == 0 || ! (    $self->{rc2idx}[$self->{pos}[ROW]+1]
-                                                 && $self->{rc2idx}[$self->{pos}[ROW]+1][$self->{pos}[COL]] )
+            if (     ! $self->{rc2idx}[$self->{pos}[ROW]+1]
+                  || ! $self->{rc2idx}[$self->{pos}[ROW]+1][$self->{pos}[COL]]
             ) {
                 $self->__beep();
             }
@@ -595,15 +596,15 @@ sub __idx_to_marked {
     }
     elsif ( $self->{order} == 1 ) {
         my $rows_per_col = @{$self->{rc2idx}};
-        my $full = $rows_per_col * ( $self->{rest} || $cols_per_row );
+        my $end_last_full_col = $rows_per_col * ( $self->{rest} || $cols_per_row );
         for my $idx ( @$list_of_indexes ) {
-            if ( $idx <= $full ) {
+            if ( $idx <= $end_last_full_col ) {
                 $row = $idx % $rows_per_col;
                 $col = int( $idx / $rows_per_col );
             }
             else {
                 my $rows_per_col_short = $rows_per_col - 1;
-                $row = ( $idx - $full ) % $rows_per_col_short;
+                $row = ( $idx - $end_last_full_col ) % $rows_per_col_short;
                 $col = int( ( $idx - $self->{rest} ) / $rows_per_col_short );
             }
             $self->{marked}[$row][$col] = $boolean;
@@ -645,30 +646,24 @@ sub __beep {
 
 sub __copy_orig_list {
     my ( $self ) = @_;
+    $self->{list} = [ @{$self->{orig_list}} ];
     if ( $self->{ll} ) {
-        $self->{list} = [ map {
-            my $copy = $_;
-            if ( ! $copy ) {
-                $copy = $self->{undef} if ! defined $copy;
-                $copy = $self->{empty} if $copy eq '';
-            }
-            $copy;
-        } @{$self->{orig_list}} ];
+        for ( @{$self->{list}} ) {
+            $_ = $self->{undef} if ! defined $_;
+        }
     }
     else {
-        $self->{list} = [ map {
-            my $copy = $_;
-            if ( ! $copy ) {
-                $copy = $self->{undef} if ! defined $copy;
-                $copy = $self->{empty} if $copy eq '';
+        for ( @{$self->{list}} ) {
+            if ( ! $_ ) {
+                $_ = $self->{undef} if ! defined $_;
+                $_ = $self->{empty} if $_ eq '';
             }
-            if ( ref $copy ) {
-                $copy = sprintf "%s(0x%x)", ref $copy, $copy;
+            if ( ref ) {
+                $_ = sprintf "%s(0x%x)", ref $_, $_;
             }
-            $copy =~ s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
-            $copy =~ s/\p{C}//g;
-            $copy;
-        } @{$self->{orig_list}} ];
+            s/\p{Space}/ /g;  # replace, but don't squash sequences of spaces
+            s/\p{C}//g;
+        }
     }
 }
 
@@ -714,8 +709,8 @@ sub __write_first_screen {
         $self->{avail_width} = 1;
     }
     $self->__prepare_promptline();
-    $self->{tail} = $self->{page} ? 1 : 0;
-    $self->{avail_height} -= $self->{nr_prompt_lines} + $self->{tail};
+    $self->{pp_row} = $self->{page} ? 1 : 0;
+    $self->{avail_height} -= $self->{nr_prompt_lines} + $self->{pp_row};
     if ( $self->{avail_height} < $self->{keep} ) {
         my $height = ( $self->{plugin}->__get_term_size() )[1];
         $self->{avail_height} = $height >= $self->{keep} ? $self->{keep} : $height;
@@ -922,31 +917,21 @@ sub __goto {
 
 sub __prepare_page_number {
     my ( $self ) = @_;
-    $self->{pp} = int( $#{$self->{rc2idx}} / ( $self->{avail_height} + $self->{tail} ) ) + 1;
-    if ( $self->{pp} > 1 ) {
-        $self->{pp} = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
-        $self->{width_pp} = length $self->{pp};
-        $self->{footer_fmt_short} = 0;
-        $self->{footer_fmt} = "--- Page %0*d/%d ---";
-        my $len_footer = length sprintf $self->{footer_fmt},
-                                        $self->{width_pp}, $self->{pp},
-                                        $self->{pp};
-        if ( $len_footer > $self->{avail_width} ) {
-            $self->{footer_fmt} = "%0*d/%d";
-            my $len_footer = length sprintf $self->{footer_fmt},
-                                            $self->{width_pp}, $self->{pp},
-                                            $self->{pp};
-            if (  $len_footer > $self->{avail_width} ) {
-                if ( $self->{width_pp} > $self->{avail_width} ) {
-                    $self->{width_pp} = $self->{avail_width};
-                }
-                $self->{footer_fmt_short} = "%0*.*s";
+    if ( $#{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) {
+        my $total_pp = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
+        my $total_pp_w = length $total_pp;
+        $self->{footer_fmt} = '--- Page %0' . $total_pp_w . 'd/' . $total_pp . ' ---';
+        if ( length( sprintf $self->{footer_fmt}, $total_pp ) > $self->{avail_width} ) {
+            $self->{footer_fmt} = '%0' . $total_pp_w . 'd/' . $total_pp;
+            if ( length( sprintf $self->{footer_fmt}, $total_pp ) > $self->{avail_width} ) {
+                $total_pp_w = $self->{avail_width} if $total_pp_w > $self->{avail_width};
+                $self->{footer_fmt} = '%0' . $total_pp_w . '.' . $total_pp_w . 's';
             }
         }
     }
     else {
-        $self->{avail_height} += $self->{tail};
-        $self->{tail} = 0;
+        $self->{avail_height} += $self->{pp_row};
+        $self->{pp_row} = 0;
     }
 }
 
@@ -955,22 +940,11 @@ sub __wr_screen {
     my ( $self ) = @_;
     $self->__goto( 0, 0 );
     $self->{plugin}->__clear_to_end_of_screen();
-    if ( $self->{page} && $self->{pp} > 1 ) {
-        $self->__goto( $self->{avail_height_idx} + $self->{tail}, 0 );
-        my $page_number;
-        if ( $self->{footer_fmt_short} ) {
-            $page_number = sprintf $self->{footer_fmt_short},
-                                   $self->{width_pp}, $self->{width_pp},
-                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1;
-        }
-        else {
-            $page_number = sprintf $self->{footer_fmt},
-                                   $self->{width_pp},
-                                   int( $self->{row_on_top} / $self->{avail_height} ) + 1,
-                                   $self->{pp};
-        }
-        print $page_number;
-        $self->{i_col} += length $page_number;
+    if ( $self->{pp_row} ) {
+        $self->__goto( $self->{avail_height_idx} + $self->{pp_row}, 0 );
+        my $pp_line = sprintf $self->{footer_fmt}, int( $self->{row_on_top} / $self->{avail_height} ) + 1;
+        print $pp_line;
+        $self->{i_col} += length $pp_line;
      }
     for my $row ( $self->{p_begin} .. $self->{p_end} ) {
         for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
@@ -985,7 +959,7 @@ sub __wr_cell {
     my( $self, $row, $col ) = @_;
     my $is_current_pos = $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
     my $idx = $self->{rc2idx}[$row][$col];
-    if ( $#{$self->{rc2idx}} == 0 ) {
+    if ( $#{$self->{rc2idx}} == 0 && $#{$self->{rc2idx}[0]} > 0 ) {
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
@@ -1159,7 +1133,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.208
+Version 1.209
 
 =cut
 
@@ -1274,14 +1248,14 @@ See also the following section L<USAGE AND RETURN VALUES>.
 
 =over
 
-=item
+=item *
 
 If C<choose> is called in a I<scalar context>, the user can choose an item by using the L</Keys to move around> and
 confirming with C<Return>.
 
 C<choose> then returns the chosen item.
 
-=item
+=item *
 
 If C<choose> is called in an I<list context>, the user can also mark an item with the C<SpaceBar>.
 
@@ -1291,7 +1265,7 @@ In I<list context> C<Ctrl-SpaceBar> (or C<Ctrl-@>) inverts the choices: marked i
 marked. If the cursor is on the first row, C<Ctrl-SpaceBar> inverts the choices for the whole list else C<Ctrl-SpaceBar>
 inverts the choices for the current page.
 
-=item
+=item *
 
 If C<choose> is called in an I<void context>, the user can move around but mark nothing; the output shown by C<choose>
 can be closed with C<Return>.
@@ -1474,7 +1448,7 @@ From broad to narrow: 0 > 1 > 2 > 3
 
 =over
 
-=item
+=item *
 
 0 - layout off
 
@@ -1487,7 +1461,7 @@ From broad to narrow: 0 > 1 > 2 > 3
  |                      |   |                      |   |                      |   | .. .. .. .. .. .. .. |
  '----------------------'   '----------------------'   '----------------------'   '----------------------'
 
-=item
+=item *
 
 1 - layout "H" (default)
 
@@ -1500,7 +1474,7 @@ From broad to narrow: 0 > 1 > 2 > 3
  |                      |   |                      |   |                      |   | .. .. .. .. .. .. .. |
  '----------------------'   '----------------------'   '----------------------'   '----------------------'
 
-=item
+=item *
 
 2 - layout "V"
 
@@ -1513,7 +1487,7 @@ From broad to narrow: 0 > 1 > 2 > 3
  |                      |   |                      |   |                      |   | .. .. .. .. .. .. .. |
  '----------------------'   '----------------------'   '----------------------'   '----------------------'
 
-=item
+=item *
 
 3 - all in a single column
 
@@ -1547,8 +1521,7 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 =head2 ll
 
-If all elements have the same length and this length is known before calling C<choose> the length can be passed with
-this option.
+If all elements have the same length the length can be passed with this option.
 
 If I<ll> is set, then C<choose> doesn't calculate the length of the longest element itself but uses the value passed
 with this option.
@@ -1557,14 +1530,12 @@ I<length> refers here to the number of print columns the element will use on the
 
 A way to determine the number of print columns is the use of C<columns> from L<Unicode::GCString>.
 
-The length of undefined elements and elements with an empty string depends on the value of the option I<undef>
-respective on the value of the option I<empty>.
+The length of undefined elements depends on the value of the option I<undef>.
 
-If the option I<ll> is set the replacements described in L</Modifications for the output> are not applied.
-
-If elements contain unsupported characters the output might break if the width (number of print columns) of the
-replacement character does not correspond to the width of the replaced character - for example when a unsupported
-non-spacing character is replaced by a replacement character with a normal width.
+If the option I<ll> is set, only undefined values are replaced. The replacements described in L</Modifications for the
+output> are not applied. If elements contain unsupported characters the output might break if the width (number of print
+columns) of the replacement character does not correspond to the width of the replaced character - for example when a
+unsupported non-spacing character is replaced by a replacement character with a normal width.
 
 If I<ll> is set to a value less than the length of the elements the output could break.
 
@@ -1766,7 +1737,7 @@ L<stackoverflow|http://stackoverflow.com> for the help.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2012-2015 Matthäus Kiem.
+Copyright (C) 2012-2016 Matthäus Kiem.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
 details, see the full text of the licenses in the file LICENSE.

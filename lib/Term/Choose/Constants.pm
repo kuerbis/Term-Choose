@@ -4,12 +4,12 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.208';
+our $VERSION = '1.209';
 
 use Exporter qw( import );
 
 our @EXPORT_OK = qw(
-        ROW COL MIN MAX
+        ROW COL
         LF CR
         HIDE_CURSOR SHOW_CURSOR WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
@@ -27,7 +27,7 @@ our @EXPORT_OK = qw(
 
 our %EXPORT_TAGS = (
     choose => [ qw(
-        ROW COL MIN MAX
+        ROW COL
         LF CR
         WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
@@ -60,8 +60,6 @@ our %EXPORT_TAGS = (
 use constant {
     ROW => 0,
     COL => 1,
-    MIN => 0,
-    MAX => 1,
 };
 
 use constant {

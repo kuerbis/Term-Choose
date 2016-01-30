@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.208';
+our $VERSION = '1.209';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 
@@ -52,7 +52,7 @@ sub __get_key_OS {
             elsif ( $c3 eq 'F' ) { return VK_END; }
             elsif ( $c3 eq 'H' ) { return VK_HOME; }
             elsif ( $c3 eq 'Z' ) { return KEY_BTAB; }
-            elsif ( $c3 =~ /^[0-9]$/ ) {
+            elsif ( $c3 =~ m/^[0-9]$/ ) {
                 my $c4 = ReadKey( 0 );
                 if ( $c4 eq '~' ) {
                     if    ( $c3 eq '2' ) { return VK_INSERT; } # unused
@@ -63,7 +63,7 @@ sub __get_key_OS {
                         return NEXT_get_key;
                     }
                 }
-                elsif ( $c4 =~ /^[;0-9]$/ ) { # response to "\e[6n"
+                elsif ( $c4 =~ m/^[;0-9]$/ ) { # response to "\e[6n"
                     my $abs_curs_y = $c3;
                     my $ry = $c4;
                     while ( $ry =~ m/^[0-9]$/ ) {
@@ -114,7 +114,7 @@ sub __get_key_OS {
                 while ( ( $m3 = ReadKey( 0 ) ) =~ m/^[0-9]$/ ) {
                     $y .= $m3;
                 }
-                return NEXT_get_key if $m3 !~ /^[mM]$/;
+                return NEXT_get_key if $m3 !~ m/^[mM]$/;
                 my $button_released = $m3 eq 'm' ? 1 : 0;
                 return NEXT_get_key if $button_released;
                 my $button = $self->__mouse_event_to_button( $event_type );
