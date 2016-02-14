@@ -1,6 +1,7 @@
 Changes
 lib/Term/Choose.pm
 lib/Term/Choose/Constants.pm
+lib/Term/Choose/LineFold.pm
 lib/Term/Choose/Linux.pm
 lib/Term/Choose/Win32.pm
 LICENSE

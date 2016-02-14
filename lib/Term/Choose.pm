@@ -4,15 +4,14 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209';
+our $VERSION = '1.209_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
 use Carp qw( croak carp );
-use Text::LineFold;
-use Unicode::GCString;
 
 use Term::Choose::Constants qw( :choose );
+use Term::Choose::LineFold  qw( line_fold print_columns cut_to_printwidth );
 
 no warnings 'utf8';
 #use Log::Log4perl qw( get_logger );
@@ -229,14 +228,14 @@ sub __choose {
     if ( ! @$orig_list_ref ) {
         return;
     }
+    $self->{orig_list} = $orig_list_ref;
     local $\ = undef;
     local $, = undef;
     local $| = 1;
-    $self->{orig_list} = $orig_list_ref;
     $self->{wantarray} = wantarray;
     $self->__undef_to_defaults();
     $self->__copy_orig_list();
-    $self->__length_longest();
+    $self->__length_longest(); #
     $self->{col_width} = $self->{length_longest} + $self->{pad};
     local $SIG{'INT'} = sub {
         # my $signame = shift;
@@ -511,7 +510,7 @@ sub __choose {
                 my $chosen = $self->__marked_to_idx();
                 my $index = $self->{index};
                 $self->__reset_term( 1 );
-                return $index ? @$chosen : map { $self->{orig_list}[$_] } @$chosen;
+                return $index ? @$chosen : @{$self->{orig_list}}[@$chosen];
             }
             else {
                 my $i = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
@@ -649,7 +648,7 @@ sub __copy_orig_list {
     $self->{list} = [ @{$self->{orig_list}} ];
     if ( $self->{ll} ) {
         for ( @{$self->{list}} ) {
-            $_ = $self->{undef} if ! defined $_;
+            $_ = $self->{undef} if ! defined $_; # undef ?
         }
     }
     else {
@@ -712,9 +711,7 @@ sub __write_first_screen {
     $self->{pp_row} = $self->{page} ? 1 : 0;
     $self->{avail_height} -= $self->{nr_prompt_lines} + $self->{pp_row};
     if ( $self->{avail_height} < $self->{keep} ) {
-        my $height = ( $self->{plugin}->__get_term_size() )[1];
-        $self->{avail_height} = $height >= $self->{keep} ? $self->{keep} : $height;
-        $self->{avail_height} = 1 if $self->{avail_height} < 1;
+        $self->{avail_height} = $self->{term_height} >= $self->{keep} ? $self->{keep} : $self->{term_height};
     }
     if ( $self->{max_height} && $self->{max_height} < $self->{avail_height} ) {
         $self->{avail_height} = $self->{max_height};
@@ -757,27 +754,11 @@ sub __prepare_promptline {
         $self->{nr_prompt_lines} = 0;
         return;
     }
-    $self->{prompt} =~ s/[^\n\P{Space}]/ /g;
-    $self->{prompt} =~ s/[^\n\P{C}]//g;
-    if ( $self->{prompt} !~ /\n/ && $self->__print_columns( $self->{prompt} ) <= $self->{avail_width} ) {
-        $self->{nr_prompt_lines} = 1;
-        $self->{prompt_copy} = $self->{prompt} . "\n\r";
-    }
-    else {
-        my $line_fold = Text::LineFold->new(
-            Charset=> 'utf-8',
-            ColMax => $self->{avail_width},
-            OutputCharset => '_UNICODE_',
-            Urgent => 'FORCE'
-        );
-        if ( defined $self->{lf} ) {
-            $self->{prompt_copy} = $line_fold->fold( ' ' x $self->{lf}[0], ' ' x $self->{lf}[1], $self->{prompt} );
-        }
-        else {
-            $self->{prompt_copy} = $line_fold->fold( $self->{prompt}, 'PLAIN' );
-        }
-        $self->{nr_prompt_lines} = $self->{prompt_copy} =~ s/\n/\n\r/g;
-    }
+    my $init   = $self->{lf}[0] ? $self->{lf}[0] : 0;
+    my $subseq = $self->{lf}[1] ? $self->{lf}[1] : 0;
+    $self->{prompt_copy} = line_fold( $self->{prompt}, $self->{avail_width}, ' ' x $init, ' ' x $subseq );
+    $self->{prompt_copy} .= "\n\r";
+    $self->{nr_prompt_lines} = $self->{prompt_copy} =~ s/\n/\n\r/g;
 }
 
 
@@ -786,7 +767,7 @@ sub __size_and_layout {
     $self->{rc2idx} = [];
     if ( $self->{length_longest} > $self->{avail_width} ) {
         $self->{avail_col_width} = $self->{avail_width};
-        $self->{layout} = 3;
+        $self->{layout} = 3;    # ###
     }
     else {
         $self->{avail_col_width} = $self->{length_longest};
@@ -863,33 +844,27 @@ sub __size_and_layout {
 }
 
 
-sub __print_columns {
-    #my $self = $_[0];
-    Unicode::GCString->new( $_[1] )->columns();
-}
-
-
 sub __set_default_cell {
     my ( $self ) = @_;
-    $self->{tmp_pos} = [ 0, 0 ];
+    my $tmp_pos = [ 0, 0 ];
     LOOP: for my $i ( 0 .. $#{$self->{rc2idx}} ) {
         # if ( $self->{default} ~~ @{$self->{rc2idx}[$i]} ) {
             for my $j ( 0 .. $#{$self->{rc2idx}[$i]} ) {
                 if ( $self->{default} == $self->{rc2idx}[$i][$j] ) {
-                    $self->{tmp_pos} = [ $i, $j ];
+                    $tmp_pos = [ $i, $j ];
                     last LOOP;
                 }
             }
         # }
     }
-    while ( $self->{tmp_pos}[ROW] > $self->{p_end} ) {
+    while ( $tmp_pos->[ROW] > $self->{p_end} ) {
         $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
         $self->{pos}[ROW] = $self->{row_on_top};
         $self->{p_begin} = $self->{row_on_top};
         $self->{p_end} = $self->{p_begin} + $self->{avail_height} - 1;
         $self->{p_end} = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
     }
-    $self->{pos} = $self->{tmp_pos};
+    $self->{pos} = $tmp_pos;
 }
 
 
@@ -985,24 +960,15 @@ sub __wr_cell {
 }
 
 
-sub __unicode_trim {
-    my ( $self, $str, $len ) = @_;
-    my $gcs = Unicode::GCString->new( $str );
-    my $pos = $gcs->pos;
-    $gcs->pos( 0 );
-    my $cols = 0;
-    my $gc;
-    while ( defined( $gc = $gcs->next ) ) {
-        if ( $len < ( $cols += $gc->columns ) ) {
-            my $ret = $gcs->substr( 0, $gcs->pos - 1 );
-            $gcs->pos( $pos );
-            return $ret->as_string;
-        }
-    }
-    $gcs->pos( $pos );
-    return $gcs->as_string;
+sub __print_columns {
+    #my $self = $_[0];
+    print_columns( $_[1] );
 }
 
+sub __unicode_trim {
+    #my $self = $_[0];
+    cut_to_printwidth( $_[1], $_[2] );
+}
 
 sub __unicode_sprintf {
     my ( $self, $idx ) = @_;
@@ -1133,7 +1099,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.209
+Version 1.209_01
 
 =cut
 
@@ -1521,7 +1487,8 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 =head2 ll
 
-If all elements have the same length the length can be passed with this option.
+If all elements have the same length and this length is known before calling C<choose> the length can be passed with
+this option.
 
 If I<ll> is set, then C<choose> doesn't calculate the length of the longest element itself but uses the value passed
 with this option.

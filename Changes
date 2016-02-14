@@ -1,10 +1,13 @@
 Revision history for Term::Choose
 
 
+1.209_01   2016-02-14
+        - New module "Term::Choose::Line::LineFold".
+
 1.209   2016-01-30
         - "mark" and "no_spacebar" - indexes out of range: now dies with an appropriate error message.
         - Bugfix: with only one row a string can still be to long if there is only one string.
-        - If the option "ll" is enabled: empty strings are no longer replaced (should only matter if all passed strings are empty).
+        - If the option "ll" is enabled: empty strings are no longer replaced.
         - Code refactoring
         - Code cleanup.
         - Update documentation.
