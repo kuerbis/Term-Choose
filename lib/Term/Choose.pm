@@ -1487,8 +1487,7 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 =head2 ll
 
-If all elements have the same length and this length is known before calling C<choose> the length can be passed with
-this option.
+If all elements have the same length the length can be passed with this option.
 
 If I<ll> is set, then C<choose> doesn't calculate the length of the longest element itself but uses the value passed
 with this option.

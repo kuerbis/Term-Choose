@@ -2,7 +2,7 @@ Revision history for Term::Choose
 
 
 1.209_01   2016-02-14
-        - New module "Term::Choose::Line::LineFold".
+        - New module "Term::Choose::LineLineFold".
 
 1.209   2016-01-30
         - "mark" and "no_spacebar" - indexes out of range: now dies with an appropriate error message.
