@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.209_02   2016-02-15
+        - Bugfix in "line_fold" - handle trailing newlines.
+
 1.209_01   2016-02-14
         - New module "Term::Choose::LineLineFold".
 

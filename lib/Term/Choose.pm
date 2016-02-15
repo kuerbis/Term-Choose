@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209_01';
+our $VERSION = '1.209_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -959,6 +959,8 @@ sub __wr_cell {
     $self->{plugin}->__reset() if $self->{marked}[$row][$col] || $is_current_pos;
 }
 
+# Term::Choose_HAE overwrites __valid_options, __defaults, choose,
+# __copy_orig_list, __wr_cell, __print_columns, __unicode_trim
 
 sub __print_columns {
     #my $self = $_[0];
@@ -1099,7 +1101,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.209_01
+Version 1.209_02
 
 =cut
 
@@ -1696,7 +1698,7 @@ Matthäus Kiem <cuer2s@gmail.com>
 
 =head1 CREDITS
 
-Based on and inspired by the C<choose> function from the L<Term::Clui> module.
+Based on the C<choose> function from the L<Term::Clui> module.
 
 Thanks to the L<Perl-Community.de|http://www.perl-community.de> and the people form
 L<stackoverflow|http://stackoverflow.com> for the help.

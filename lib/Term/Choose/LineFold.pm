@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209_01';
+our $VERSION = '1.209_02';
 
 use Exporter qw( import );
 
@@ -97,6 +97,10 @@ sub line_fold {
     if ( $string !~ /\n/ && print_columns( $init_tab . $string ) <= $avail_width ) {
         return $init_tab . $string;
     }
+    my $trailer = '';
+    if ( $string =~ /(\n+)\z/ ) {
+        $trailer = $1;
+    }
     my @paragraph;
 
     ROW: for my $row ( split "\n", $string ) {
@@ -148,7 +152,7 @@ sub line_fold {
         }
         push( @paragraph, join( "\n", @lines ) );
     }
-    return join( "\n", @paragraph );
+    return join( "\n", @paragraph ) . $trailer;
 }
 
 
