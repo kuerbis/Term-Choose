@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209_02';
+our $VERSION = '1.500';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -174,7 +174,7 @@ sub __reset_term {
         print CR;
         my $up = $self->{i_row} + $self->{nr_prompt_lines};
         $self->{plugin}->__up( $up ) if $up;
-        $self->{plugin}->__clear_to_end_of_screen();  ###
+        $self->{plugin}->__clear_to_end_of_screen();
     }
     if ( defined $self->{plugin} ) {
         $self->{plugin}->__reset_mode( $self->{mouse}, $self->{hide_cursor} );
@@ -648,7 +648,7 @@ sub __copy_orig_list {
     $self->{list} = [ @{$self->{orig_list}} ];
     if ( $self->{ll} ) {
         for ( @{$self->{list}} ) {
-            $_ = $self->{undef} if ! defined $_; # undef ?
+            $_ = $self->{undef} if ! defined $_;
         }
     }
     else {
@@ -848,14 +848,12 @@ sub __set_default_cell {
     my ( $self ) = @_;
     my $tmp_pos = [ 0, 0 ];
     LOOP: for my $i ( 0 .. $#{$self->{rc2idx}} ) {
-        # if ( $self->{default} ~~ @{$self->{rc2idx}[$i]} ) {
-            for my $j ( 0 .. $#{$self->{rc2idx}[$i]} ) {
-                if ( $self->{default} == $self->{rc2idx}[$i][$j] ) {
-                    $tmp_pos = [ $i, $j ];
-                    last LOOP;
-                }
+        for my $j ( 0 .. $#{$self->{rc2idx}[$i]} ) {
+            if ( $self->{default} == $self->{rc2idx}[$i][$j] ) {
+                $tmp_pos = [ $i, $j ];
+                last LOOP;
             }
-        # }
+        }
     }
     while ( $tmp_pos->[ROW] > $self->{p_end} ) {
         $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
@@ -1101,7 +1099,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.209_02
+Version 1.500
 
 =cut
 

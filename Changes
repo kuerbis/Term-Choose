@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.500   2016-02-21
+        - Update "line_fold".
+        - Bugfix in "cut_to_printwidth".
+
 1.209_02   2016-02-15
         - Bugfix in "line_fold" - handle trailing newlines.
 

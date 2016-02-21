@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209_02';
+our $VERSION = '1.500';
 
 use Exporter qw( import );
 
@@ -22,56 +22,56 @@ sub print_columns {
 
 
 sub cut_to_printwidth {
-    my ( $str, $avail_len, $rest ) = @_;
+    my ( $str, $avail_width, $rest ) = @_;
     my $gc_str = Unicode::GCString->new( $str );
-    if ( $gc_str->columns() <= $avail_len ) {
+    if ( $gc_str->columns() <= $avail_width ) {
         return $str if ! $rest;
         return $str, '';
     }
-    my $left = $gc_str->substr( 0, $avail_len );
-    my $left_w = Unicode::GCString->new( $left )->columns(); #
-    if ( $left_w == $avail_len ) {
-        return $left if ! $rest;
-        return $left, $gc_str->substr( $avail_len );
+    my $left = $gc_str->substr( 0, $avail_width );
+    my $left_w = $left->columns();
+    if ( $left_w == $avail_width ) {
+        return $left->as_string if ! $rest;
+        return $left->as_string, $gc_str->substr( $avail_width )->as_string;
     }
-    if ( $avail_len < 2 ) {
-        die "Terminal-width less than charakter-width."; # #
+    if ( $avail_width < 2 ) {
+        die "The terminal width is too small.";
     }
     my ( $nr_chars, $adjust );
-    if ( $left_w > $avail_len ) {
-        $nr_chars = int( $avail_len / 2 );
+    if ( $left_w > $avail_width ) {
+        $nr_chars = int( $avail_width / 2 );
         $adjust = int( ( $nr_chars + 1 ) / 2 );
-        #$nr_chars = int( $avail_len / 4 * 3 );
-        #$adjust = int( ( $avail_len + 7 ) / 8 );
+        #$nr_chars = int( $avail_width / 4 * 3 );
+        #$adjust = int( ( $avail_width + 7 ) / 8 );
     }
-    elsif ( $left_w < $avail_len ) {
-        $nr_chars = int( $avail_len + ( $gc_str->length() - $avail_len ) / 2 ); #
-        $adjust = int( ( $gc_str->length() - $nr_chars ) / 2 );
+    elsif ( $left_w < $avail_width ) {
+        $nr_chars = int( $avail_width + ( $gc_str->length() - $avail_width ) / 2 );
+        $adjust = int( ( $gc_str->length() - $nr_chars + 1 ) / 2 );
     }
 
     while ( 1 ) {
         $left = $gc_str->substr( 0, $nr_chars );
-        $left_w = Unicode::GCString->new( $left )->columns(); #
-        if ( $left_w + 1 == $avail_len ) {
+        $left_w = $left->columns();
+        if ( $left_w + 1 == $avail_width ) {
             my $len_next_char = $gc_str->substr( $nr_chars, 1 )->columns();
             if ( $len_next_char == 1 ) {
-                return $gc_str->substr( 0, $nr_chars + 1 ) if ! $rest;
-                return $gc_str->substr( 0, $nr_chars + 1 ), $gc_str->substr( $nr_chars + 1 );
+                return $gc_str->substr( 0, $nr_chars + 1 )->as_string if ! $rest;
+                return $gc_str->substr( 0, $nr_chars + 1 )->as_string, $gc_str->substr( $nr_chars + 1 )->as_string;
             }
             elsif ( $len_next_char == 2 ) {
-                return $left . ' ' if ! $rest;
-                return $left . ' ' , $gc_str->substr( $nr_chars );
+                return $left->as_string . ' ' if ! $rest;
+                return $left->as_string . ' ' , $gc_str->substr( $nr_chars )->as_string;
             }
         }
-        if ( $left_w > $avail_len ) {
+        if ( $left_w > $avail_width ) {
             $nr_chars = int( $nr_chars - $adjust );
         }
-        elsif ( $left_w < $avail_len ) { # else
+        elsif ( $left_w < $avail_width ) {
             $nr_chars = int( $nr_chars + $adjust );
         }
         else {
-            return $left if ! $rest;
-            return $left, $gc_str->substr( $nr_chars );
+            return $left->as_string if ! $rest;
+            return $left->as_string, $gc_str->substr( $nr_chars )->as_string;
         }
         $adjust = int( ( $adjust + 1 ) / 2 );
     }
@@ -116,7 +116,7 @@ sub line_fold {
                 $tab_and_word = $init_tab . $words[$i];
             }
             else {
-                ( my $tl_word = $words[$i] ) =~ s/^\s//;
+                ( my $tl_word = $words[$i] ) =~ s/^\s+//;
                 $tab_and_word = $subseq_tab . $tl_word;
             }
 
@@ -142,7 +142,7 @@ sub line_fold {
                 }
                 else {
                     push( @lines, $line );
-                    ( my $tl_word = $words[$i] ) =~ s/^\s//;
+                    ( my $tl_word = $words[$i] ) =~ s/^\s+//;
                     $line = $subseq_tab . $tl_word;
                 }
                 if ( $i == $#words ) {

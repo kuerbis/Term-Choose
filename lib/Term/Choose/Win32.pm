@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.209_02';
+our $VERSION = '1.500';
 
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
@@ -156,7 +156,7 @@ sub __clear_screen {
 
 sub __clear_to_end_of_screen {
     my ( $self ) = @_;
-    my ( $width, $height ) = $self->{output}->Size(); ###
+    my ( $width, $height ) = $self->{output}->Size();
     $self->__get_cursor_position();
     $self->{output}->FillAttr(
             $self->{bg_color} | $self->{bg_color},
