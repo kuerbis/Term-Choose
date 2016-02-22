@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.500';
+our $VERSION = '1.501';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -585,7 +585,7 @@ sub __idx_to_marked {
         return;
     }
     my ( $row, $col );
-    my $cols_per_row = $#{$self->{rc2idx}[0]};
+    my $cols_per_row = @{$self->{rc2idx}[0]};
     if ( $self->{order} == 0 ) {
         for my $idx ( @$list_of_indexes ) {
             $row = int( $idx / $cols_per_row );
@@ -1099,7 +1099,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.500
+Version 1.501
 
 =cut
 

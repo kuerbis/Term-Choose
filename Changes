@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.501   2016-02-22
+        - Bugfix in "idx_to_marked".
+
 1.500   2016-02-21
         - Update "line_fold".
         - Bugfix in "cut_to_printwidth".
