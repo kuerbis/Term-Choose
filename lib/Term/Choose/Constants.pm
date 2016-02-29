@@ -1,10 +1,11 @@
-package Term::Choose::Constants;
+package # hide from PAUSE
+Term::Choose::Constants;
 
 use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.501';
+our $VERSION = '1.502';
 
 use Exporter qw( import );
 

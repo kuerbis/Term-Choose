@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.501';
+our $VERSION = '1.502';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -855,13 +855,10 @@ sub __set_default_cell {
             }
         }
     }
-    while ( $tmp_pos->[ROW] > $self->{p_end} ) {
-        $self->{row_on_top} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
-        $self->{pos}[ROW] = $self->{row_on_top};
-        $self->{p_begin} = $self->{row_on_top};
-        $self->{p_end} = $self->{p_begin} + $self->{avail_height} - 1;
-        $self->{p_end} = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
-    }
+    $self->{row_on_top} = $self->{avail_height} * int( $tmp_pos->[ROW] / $self->{avail_height} );
+    $self->{p_begin} = $self->{row_on_top};
+    $self->{p_end} = $self->{p_begin} + $self->{avail_height} - 1;
+    $self->{p_end} = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
     $self->{pos} = $tmp_pos;
 }
 
@@ -1011,58 +1008,43 @@ sub __mouse_info_to_key {
         return VK_PAGE_DOWN;
     }
     my $abs_y_top_row = $abs_cursor_y - $self->{cursor_row};
-    return NEXT_get_key if $abs_mouse_y < $abs_y_top_row;
+    if ( $abs_mouse_y < $abs_y_top_row ) {
+        return NEXT_get_key;
+    }
     my $mouse_row = $abs_mouse_y - $abs_y_top_row;
     my $mouse_col = $abs_mouse_x;
-    my( $found_row, $found_col );
-    my $found = 0;
-    if ( $#{$self->{rc2idx}} == 0 ) {
-        my $row = 0;
-        if ( $row == $mouse_row ) {
-            my $end_last_col = 0;
-            COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                my $idx = $self->{rc2idx}[$row][$col];
-                my $end_this_col = $end_last_col + $self->__print_columns( $self->{list}[$idx] ) + $self->{pad_one_row};
-                if ( $col == 0 ) {
-                    $end_this_col -= int( $self->{pad_one_row} / 2 );
-                }
-                if ( $col == $#{$self->{rc2idx}[$row]} ) {
-                    $end_this_col = $self->{avail_width} if $end_this_col > $self->{avail_width};
-                }
-                if ( $end_last_col < $mouse_col && $end_this_col >= $mouse_col ) {
-                    $found = 1;
-                    $found_row = $row + $self->{row_on_top};
-                    $found_col = $col;
-                    last;
-                }
-                $end_last_col = $end_this_col;
-            }
-        }
+    if ( $mouse_row > $#{$self->{rc2idx}} ) {
+        return NEXT_get_key;
     }
-    else {
-        ROW: for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-            if ( $row == $mouse_row ) {
-                my $end_last_col = 0;
-                COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                    my $end_this_col = $end_last_col + $self->{col_width};
-                    if ( $col == 0 ) {
-                        $end_this_col -= int( $self->{pad} / 2 );
-                    }
-                    if ( $col == $#{$self->{rc2idx}[$row]} ) {
-                        $end_this_col = $self->{avail_width} if $end_this_col > $self->{avail_width};
-                    }
-                    if ( $end_last_col < $mouse_col && $end_this_col >= $mouse_col ) {
-                        $found = 1;
-                        $found_row = $row + $self->{row_on_top};
-                        $found_col = $col;
-                        last ROW;
-                    }
-                    $end_last_col = $end_this_col;
-                }
-            }
+    my $pad = $#{$self->{rc2idx}} == 0 ? $self->{pad_one_row} : $self->{pad};
+    my $matched_col;
+    my $end_last_col = 0;
+    my $row = $mouse_row + $self->{row_on_top};
+
+    COL: for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
+        my $end_this_col;
+        if ( $#{$self->{rc2idx}} == 0 ) {
+            my $idx = $self->{rc2idx}[$row][$col];
+            $end_this_col = $end_last_col + $self->__print_columns( $self->{list}[$idx] ) + $pad;
         }
+        else { #
+            $end_this_col = $end_last_col + $self->{col_width};
+        }
+        if ( $col == 0 ) {
+            $end_this_col -= int( $pad / 2 );
+        }
+        if ( $col == $#{$self->{rc2idx}[$row]} && $end_this_col > $self->{avail_width} ) {
+            $end_this_col = $self->{avail_width};
+        }
+        if ( $end_last_col < $mouse_col && $end_this_col >= $mouse_col ) {
+            $matched_col = $col;
+            last COL;
+        }
+        $end_last_col = $end_this_col;
     }
-    return NEXT_get_key if ! $found;
+    if ( ! defined $matched_col ) {
+        return NEXT_get_key;
+    }
     my $return_char = '';
     if ( $button == 1 ) {
         $return_char = KEY_ENTER;
@@ -1073,9 +1055,9 @@ sub __mouse_info_to_key {
     else {
         return NEXT_get_key;
     }
-    if ( $found_row != $self->{pos}[ROW] || $found_col != $self->{pos}[COL] ) {
+    if ( $row != $self->{pos}[ROW] || $matched_col != $self->{pos}[COL] ) {
         my $tmp = $self->{pos};
-        $self->{pos} = [ $found_row, $found_col ];
+        $self->{pos} = [ $row, $matched_col ];
         $self->__wr_cell( $tmp->[0], $tmp->[1] );
         $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
     }
@@ -1099,7 +1081,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.501
+Version 1.502
 
 =cut
 

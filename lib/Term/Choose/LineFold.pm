@@ -1,11 +1,10 @@
-package # hide from PAUSE
-Term::Choose::LineFold;
+package Term::Choose::LineFold;
 
 use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.501';
+our $VERSION = '1.502';
 
 use Exporter qw( import );
 

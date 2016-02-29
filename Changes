@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.502   2016-02-29
+        - Don't hide "Term::Choose::LineFold" from Pause [https://github.com/kuerbis/Term-Choose-Util/issues/2 stepht].
+        - Code refactoring.
+
 1.501   2016-02-22
         - Bugfix in "idx_to_marked".
 
