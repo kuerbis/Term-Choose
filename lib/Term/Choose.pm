@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.502';
+our $VERSION = '1.503';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1081,7 +1081,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.502
+Version 1.503
 
 =cut
 
@@ -1467,7 +1467,10 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 (default: undefined)
 
-=head2 ll
+=head2 ll ANNOUNCEMENT
+
+With the next release if I<ll> is set, C<choose> returns always the indexes of the chosen items regardless of how
+I<index> is set.
 
 If all elements have the same length the length can be passed with this option.
 
@@ -1499,7 +1502,6 @@ I<mark> expects as its value a reference to an array. The elements of the array 
 the list-elements correlating to these indexes. This option has only meaning in list context.
 
 (default: undefined)
-
 
 =head2 max_height
 
