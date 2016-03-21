@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.503';
+our $VERSION = '1.504';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -253,6 +253,9 @@ sub __choose {
         }
         my ( $new_width, $new_height ) = $self->{plugin}->__get_term_size();
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
+            if ( $self->{ll} ) {
+                return -1;
+            }
             $self->__copy_orig_list();
             $self->{default} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
             if ( $self->{wantarray} && @{$self->{marked}} ) {
@@ -501,6 +504,7 @@ sub __choose {
             exit 1;
         }
         elsif ( $key == KEY_ENTER ) {
+            my $index = $self->{index} || $self->{ll};
             if ( ! defined $self->{wantarray} ) {
                 $self->__reset_term( 1 );
                 return;
@@ -508,13 +512,12 @@ sub __choose {
             elsif ( $self->{wantarray} ) {
                 $self->{marked}[$self->{pos}[ROW]][$self->{pos}[COL]] = 1;
                 my $chosen = $self->__marked_to_idx();
-                my $index = $self->{index};
                 $self->__reset_term( 1 );
                 return $index ? @$chosen : @{$self->{orig_list}}[@$chosen];
             }
             else {
                 my $i = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
-                my $chosen = $self->{index} ? $i : $self->{orig_list}[$i];
+                my $chosen = $index ? $i : $self->{orig_list}[$i];
                 $self->__reset_term( 1 );
                 return $chosen;
             }
@@ -1081,7 +1084,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.503
+Version 1.504
 
 =cut
 
@@ -1467,12 +1470,9 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 
 (default: undefined)
 
-=head2 ll ANNOUNCEMENT
+=head2 ll UPDATE
 
-With the next release if I<ll> is set, C<choose> returns always the indexes of the chosen items regardless of how
-I<index> is set.
-
-If all elements have the same length the length can be passed with this option.
+If all elements have the same length, the length can be passed with this option.
 
 If I<ll> is set, then C<choose> doesn't calculate the length of the longest element itself but uses the value passed
 with this option.
@@ -1488,9 +1488,14 @@ output> are not applied. If elements contain unsupported characters the output m
 columns) of the replacement character does not correspond to the width of the replaced character - for example when a
 unsupported non-spacing character is replaced by a replacement character with a normal width.
 
-If I<ll> is set to a value less than the length of the elements the output could break.
+If I<ll> is set to a value less than the length of the elements, the output could break.
 
-If the value of I<ll> is greater than the screen width the elements will be trimmed to fit into the screen.
+If the value of I<ll> is greater than the screen width, the elements will be trimmed to fit into the screen.
+
+If I<ll> is set, C<choose> returns (in list or scalar context) always the indexes of the chosen items regardless of how
+I<index> is set.
+
+If I<ll> is set and the window size has changed, choose returns immediately C<-1>.
 
 Allowed values: 1 or greater
 

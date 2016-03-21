@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.504   2016-03-21
+        - If ll is set, choose returns always indexes.
+        - If ll is set and the window size has changed, choose returns immediately -1.
+
 1.503   2016-03-11
         - Announcement of future new behavior of the option "ll".
 

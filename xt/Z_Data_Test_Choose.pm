@@ -201,7 +201,7 @@ my $list = {
     ll      => [ (
             "In"            . '.' x 7,
             "scalar"        . '.' x 3,
-            "context"       . '.' x 4,
+            "context"       . '.' x 2,
             "returns"       . '.' x 2,
             "the"           . '.' x 6,
             "number"        . '.' x 3,
@@ -424,13 +424,13 @@ my $option_ll = [
     {
         list      => $list->{ll},
         used_keys => [ ( 'DOWN' ) x 3, 'SPACE', ( 'RIGHT' ) x 3, 'SPACE', 'HOME', 'ENTER'  ],
-        expected  => "<In....... returns.. so.......>",
+        expected  => "<0 3 30>",
         options   => { ll => 9, layout => 1 }
     },
     {
         list      => $list->{ll},
         used_keys => [  'END', 'SPACE', 'PAGE_UP', 'SPACE', ( 'UP' ) x 12, 'LEFT', 'ENTER'  ],
-        expected  => "<generated abcdefghi abcdefghi>",
+        expected  => "<9 21 43>",
         options   => { ll => 9, layout => 3 }
     },
 ];
