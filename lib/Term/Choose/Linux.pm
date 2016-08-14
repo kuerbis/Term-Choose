@@ -1,11 +1,10 @@
-package # hide from PAUSE
-Term::Choose::Linux;
+package Term::Choose::Linux;
 
 use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.504';
+our $VERSION = '1.505';
 
 use Term::ReadKey qw( GetTerminalSize ReadKey ReadMode );
 

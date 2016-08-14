@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.505   2016-08-14
+        - Don't hide "Term::Choose::Constants" on Pause [https://github.com/kuerbis/Term-Choose_HAE/issues/2 stesachse].
+
 1.504   2016-03-21
         - If ll is set, choose returns always indexes.
         - If ll is set and the window size has changed, choose returns immediately -1.
