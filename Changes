@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.506   2017-04-26
+        - Code refactoring.
+        - Update year copyright.
+
 1.505   2016-08-14
         - Don't hide "Term::Choose::Constants" on Pause [https://github.com/kuerbis/Term-Choose_HAE/issues/2 stesachse].
 
