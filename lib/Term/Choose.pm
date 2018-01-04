@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.507';
+our $VERSION = '1.508';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -14,9 +14,6 @@ use Term::Choose::Constants qw( :choose );
 use Term::Choose::LineFold  qw( line_fold print_columns cut_to_printwidth );
 
 no warnings 'utf8';
-#use Log::Log4perl qw( get_logger );
-# #Log::Log4perl::init() called in main::
-#my $log = get_logger( __PACKAGE__ );
 
 my $Plugin_Package;
 
@@ -759,18 +756,18 @@ sub __size_and_layout {
     else {
         $self->{avail_col_width} = $self->{length_longest};
     }
-    my $all_in_first_row;
+    $self->{all_in_first_row} = '';
     if ( $self->{layout} == 0 || $self->{layout} == 1 ) {
         for my $idx ( 0 .. $#{$self->{list}} ) {
-            $all_in_first_row .= $self->{list}[$idx];
-            $all_in_first_row .= ' ' x $self->{pad_one_row} if $idx < $#{$self->{list}};
-            if ( $self->__print_columns( $all_in_first_row ) > $self->{avail_width} ) {
-                $all_in_first_row = '';
+            $self->{all_in_first_row} .= $self->{list}[$idx];
+            $self->{all_in_first_row} .= ' ' x $self->{pad_one_row} if $idx < $#{$self->{list}};
+            if ( $self->__print_columns( $self->{all_in_first_row} ) > $self->{avail_width} ) {
+                $self->{all_in_first_row} = '';
                 last;
             }
         }
     }
-    if ( $all_in_first_row ) {
+    if ( $self->{all_in_first_row} ) {
         $self->{rc2idx}[0] = [ 0 .. $#{$self->{list}} ];
     }
     elsif ( $self->{layout} == 3 ) {
@@ -914,12 +911,13 @@ sub __wr_cell {
     my $is_current_pos = $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
     my $idx = $self->{rc2idx}[$row][$col];
     if ( $#{$self->{rc2idx}} == 0 && $#{$self->{rc2idx}[0]} > 0 ) {
+        my $pad = $self->{all_in_first_row} ? $self->{pad_one_row} : $self->{pad};
         my $lngth = 0;
         if ( $col > 0 ) {
             for my $cl ( 0 .. $col - 1 ) {
                 my $i = $self->{rc2idx}[$row][$cl];
                 $lngth += $self->__print_columns( $self->{list}[$i] );
-                $lngth += $self->{pad_one_row};
+                $lngth += $pad;
             }
         }
         $self->__goto( $row - $self->{p_begin}, $lngth );
@@ -1002,7 +1000,7 @@ sub __mouse_info_to_key {
     if ( $mouse_row > $#{$self->{rc2idx}} ) {
         return NEXT_get_key;
     }
-    my $pad = $#{$self->{rc2idx}} == 0 ? $self->{pad_one_row} : $self->{pad};
+    my $pad = $self->{all_in_first_row} ? $self->{pad_one_row} : $self->{pad};
     my $matched_col;
     my $end_last_col = 0;
     my $row = $mouse_row + $self->{p_begin};
@@ -1067,7 +1065,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.507
+Version 1.508
 
 =cut
 
@@ -1437,7 +1435,7 @@ From broad to narrow: 0 > 1 > 2 > 3
 
 =head2 lf
 
-If I<prompt> lines are folded the option I<lf> allows to insert spaces at beginning of the folded lines.
+If I<prompt> lines are folded the option I<lf> allows one to insert spaces at beginning of the folded lines.
 
 The option I<lf> expects a reference to an array with one or two elements:
 
@@ -1674,7 +1672,7 @@ L<stackoverflow|http://stackoverflow.com> for the help.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2012-2017 Matthäus Kiem.
+Copyright (C) 2012-2018 Matthäus Kiem.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
 details, see the full text of the licenses in the file LICENSE.

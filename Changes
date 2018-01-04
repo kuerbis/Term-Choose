@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.508   2018-01-04
+        - Improved language in POD [RT #123890 gregoa].
+        - Bugix in "all_in_one_row".
+
 1.507   2017-08-09
         - Refactoring `line_fold`.
 
