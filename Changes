@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.603   2018-07-14
+        - Make "Term::ReadKey" optional.
+        - "Term::Choose::Constants": new export tag 'screen'.
+
+
 1.602   2018-07-12
         - Refactoring table character-width.
 
