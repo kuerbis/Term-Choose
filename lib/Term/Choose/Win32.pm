@@ -122,7 +122,7 @@ sub __reset_mode {
     }
     if ( defined $self->{output} ) {
         $self->__reset;
-        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor == 1;
+        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor;
         #$self->{output}->Free();
         delete $self->{output}{handle}; # ?
     }
