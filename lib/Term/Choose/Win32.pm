@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.603';
+our $VERSION = '1.604';
 
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
@@ -122,7 +122,7 @@ sub __reset_mode {
     }
     if ( defined $self->{output} ) {
         $self->__reset;
-        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor;
+        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor == 1;
         #$self->{output}->Free();
         delete $self->{output}{handle}; # ?
     }
