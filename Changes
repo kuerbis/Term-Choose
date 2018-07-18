@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.606   2018-07-18
+        - No timeout for 'getc' - would require non-blocking read.
+
 1.605   2018-07-18
         - Bugfix "my $Term_ReadKey": don't assign a value.
         - Timeout for 'getc' with "Time::HiRes".

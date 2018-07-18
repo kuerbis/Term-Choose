@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.605';
+our $VERSION = '1.606';
 
 use Term::Choose::Constants qw( :screen :linux );
 
@@ -14,10 +14,10 @@ BEGIN {
     if ( eval { require Term::ReadKey; 1 } ) {
         $Term_ReadKey = 1;
     }
-    else {
-        require Time::HiRes;
-        Time::HiRes->import( 'time' );
-    }
+    #else {
+    #    require Time::HiRes;
+    #    Time::HiRes->import( 'time' );
+    #}
 }
 my $Stty = '';
 
@@ -33,14 +33,14 @@ sub _getc_wrapper {
         return Term::ReadKey::ReadKey( $timeout );
     }
     else {
-        if ( $timeout && $timeout > 0 ) { #
-            my $starttime = time;
-            my $endtime = $starttime + $timeout;
-            while ( time < $endtime ) { # This won't catch wraparound!
-                my $value = getc();
-                return $value if defined $value;
-            }
-        }
+        #if ( $timeout && $timeout > 0 ) { #
+        #    my $starttime = time;
+        #    my $endtime = $starttime + $timeout;
+        #    while ( time < $endtime ) {
+        #        my $value = getc();
+        #        return $value if defined $value;
+        #    }
+        #}
         return getc();
     }
 }

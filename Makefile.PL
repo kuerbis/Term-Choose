@@ -44,7 +44,6 @@ WriteMakefile(
         'warnings'          => 0,
         'Carp'              => 0,
         'Exporter'          => 0,
-        'Time::HiRes'       => 0,
         %prereqs_os_specific,
     },
     test  => {

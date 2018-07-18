@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.605';
+our $VERSION = '1.606';
 
 use Exporter qw( import );
 
@@ -345,7 +345,7 @@ sub table_char_width { [
  [0x0abe8, 0x0abe8, 0],
  [0x0abed, 0x0abed, 0],
  [0x0ac00, 0x0d7af, 2], #   Hangul Syllables                        Range: AC00–D7AF
- [0x0d7b0, 0x0d7ff, 1], #   Hangul Jamo Extended-B                  Range: D7B0–D7FF ###
+#[0x0d7b0, 0x0d7ff, 1], #   Hangul Jamo Extended-B                  Range: D7B0–D7FF ###
 #[0x0d800, 0x0dbff, 0], #*) High Surrogate Area                     Range: D800-DBFF    non_print
 #[0x0dc00, 0x0dfff, 0], #*) Low Surrogate Area                      Range: DC00-DFFF    non_print
                         #   Private Use Area                        Range: E000-F8FF    private
