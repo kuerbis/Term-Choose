@@ -1,8 +1,7 @@
 Revision history for Term::Choose
 
 
-1.606_01   2018-07-18
-        - 'getc' timeout.
+1.607   2018-07-18
         - Modified constant values.
 
 1.606   2018-07-18

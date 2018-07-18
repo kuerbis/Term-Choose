@@ -4,21 +4,15 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.606_01';
+our $VERSION = '1.607';
 
 use Term::Choose::Constants qw( :screen :linux );
-
-use Fcntl;
 
 
 my $Term_ReadKey; # declare but don't assign a value!
 BEGIN {
     if ( eval { require Term::ReadKey; 1 } ) {
         $Term_ReadKey = 1;
-    }
-    else {
-        require Time::HiRes;
-        Time::HiRes->import( 'time' );
     }
 }
 my $Stty = '';
@@ -35,21 +29,6 @@ sub _getc_wrapper {
         return Term::ReadKey::ReadKey( $timeout );
     }
     else {
-        my $flags = 0;
-        if ( $timeout && eval { fcntl( *STDIN, Fcntl::F_GETFL, $flags ); 1 } ) { # && $timeout > 0  # 1 or die
-            my $backup_flags = $flags;
-            $flags |= Fcntl::O_NONBLOCK;
-            fcntl( *STDIN, Fcntl::F_SETFL, $flags ) or die $!;
-            my $starttime = time;
-            my $endtime = $starttime + $timeout;
-            my $value;
-            while ( time < $endtime ) {
-                $value = getc();
-                last if defined $value;
-            }
-            fcntl( *STDIN, Fcntl::F_SETFL, $backup_flags ) or die $!;
-            return $value;
-        }
         return getc();
     }
 }
