@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.606';
+our $VERSION = '1.606_01';
 
 use Exporter qw( import );
 
@@ -41,7 +41,7 @@ our %EXPORT_TAGS = (
         NEXT_get_key
         CONTROL_A CONTROL_B CONTROL_D CONTROL_E CONTROL_F CONTROL_H KEY_BTAB KEY_TAB CONTROL_K CONTROL_U KEY_ENTER
         KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_BSPACE KEY_ESC
-        VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_DELETE
+        VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_INSERT VK_DELETE
     ) ],
     screen => [ qw(
         CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN CLEAR_TO_END_OF_LINE
@@ -135,16 +135,16 @@ use constant {
     KEY_Tilde     => 0x7e,
     KEY_BSPACE    => 0x7f,
 
-    VK_PAGE_UP    => 33,
-    VK_PAGE_DOWN  => 34,
-    VK_END        => 35,
-    VK_HOME       => 36,
-    VK_LEFT       => 37,
-    VK_UP         => 38,
-    VK_RIGHT      => 39,
-    VK_DOWN       => 40,
-    VK_INSERT     => 45,
-    VK_DELETE     => 46,
+    VK_PAGE_UP    => 333,
+    VK_PAGE_DOWN  => 334,
+    VK_END        => 335,
+    VK_HOME       => 336,
+    VK_LEFT       => 337,
+    VK_UP         => 338,
+    VK_RIGHT      => 339,
+    VK_DOWN       => 340,
+    VK_INSERT     => 345,
+    VK_DELETE     => 346,
 };
 
 

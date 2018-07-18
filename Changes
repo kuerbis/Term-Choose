@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.606_01   2018-07-18
+        - 'getc' timeout.
+        - Modified constant values.
+
 1.606   2018-07-18
         - No timeout for 'getc' - would require non-blocking read.
 

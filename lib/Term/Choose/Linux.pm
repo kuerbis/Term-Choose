@@ -4,9 +4,11 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.606';
+our $VERSION = '1.606_01';
 
 use Term::Choose::Constants qw( :screen :linux );
+
+use Fcntl;
 
 
 my $Term_ReadKey; # declare but don't assign a value!
@@ -14,10 +16,10 @@ BEGIN {
     if ( eval { require Term::ReadKey; 1 } ) {
         $Term_ReadKey = 1;
     }
-    #else {
-    #    require Time::HiRes;
-    #    Time::HiRes->import( 'time' );
-    #}
+    else {
+        require Time::HiRes;
+        Time::HiRes->import( 'time' );
+    }
 }
 my $Stty = '';
 
@@ -33,14 +35,21 @@ sub _getc_wrapper {
         return Term::ReadKey::ReadKey( $timeout );
     }
     else {
-        #if ( $timeout && $timeout > 0 ) { #
-        #    my $starttime = time;
-        #    my $endtime = $starttime + $timeout;
-        #    while ( time < $endtime ) {
-        #        my $value = getc();
-        #        return $value if defined $value;
-        #    }
-        #}
+        my $flags = 0;
+        if ( $timeout && eval { fcntl( *STDIN, Fcntl::F_GETFL, $flags ); 1 } ) { # && $timeout > 0  # 1 or die
+            my $backup_flags = $flags;
+            $flags |= Fcntl::O_NONBLOCK;
+            fcntl( *STDIN, Fcntl::F_SETFL, $flags ) or die $!;
+            my $starttime = time;
+            my $endtime = $starttime + $timeout;
+            my $value;
+            while ( time < $endtime ) {
+                $value = getc();
+                last if defined $value;
+            }
+            fcntl( *STDIN, Fcntl::F_SETFL, $backup_flags ) or die $!;
+            return $value;
+        }
         return getc();
     }
 }
@@ -83,8 +92,8 @@ sub __get_key_OS {
             elsif ( $c3 =~ m/^[0-9]$/ ) {
                 my $c4 = _getc_wrapper( 0 );
                 if ( $c4 eq '~' ) {
-                    if    ( $c3 eq '2' ) { return VK_INSERT; } # unused
-                    elsif ( $c3 eq '3' ) { return VK_DELETE; } # unused
+                    if    ( $c3 eq '2' ) { return VK_INSERT; }
+                    elsif ( $c3 eq '3' ) { return VK_DELETE; }
                     elsif ( $c3 eq '5' ) { return VK_PAGE_UP; }
                     elsif ( $c3 eq '6' ) { return VK_PAGE_DOWN; }
                     else {
