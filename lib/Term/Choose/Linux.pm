@@ -4,15 +4,19 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.604';
+our $VERSION = '1.605';
 
 use Term::Choose::Constants qw( :screen :linux );
 
 
-my $Term_ReadKey = 1;
+my $Term_ReadKey; # declare but don't assign a value!
 BEGIN {
-    if ( ! eval { require Term::ReadKey; 1 } ) {
-        $Term_ReadKey = 0;
+    if ( eval { require Term::ReadKey; 1 } ) {
+        $Term_ReadKey = 1;
+    }
+    else {
+        require Time::HiRes;
+        Time::HiRes->import( 'time' );
     }
 }
 my $Stty = '';
@@ -25,8 +29,20 @@ sub new {
 
 sub _getc_wrapper {
     my ( $timeout ) = @_;
-    return Term::ReadKey::ReadKey( $timeout ) if $Term_ReadKey;
-    return getc();
+    if ( $Term_ReadKey ) {
+        return Term::ReadKey::ReadKey( $timeout );
+    }
+    else {
+        if ( $timeout && $timeout > 0 ) { #
+            my $starttime = time;
+            my $endtime = $starttime + $timeout;
+            while ( time < $endtime ) { # This won't catch wraparound!
+                my $value = getc();
+                return $value if defined $value;
+            }
+        }
+        return getc();
+    }
 }
 
 
@@ -233,11 +249,13 @@ sub __reset_mode {
     if ( $Term_ReadKey ) {
         Term::ReadKey::ReadMode( 'restore' );
     }
-    elsif ( $Stty ) {
-        system( "stty $Stty" ) == 0 or die $?;
-    }
     else {
-        system( "stty sane" ) == 0 or die $?;
+        if ( $Stty ) {
+            system( "stty $Stty" ) == 0 or die $?;
+        }
+        else {
+            system( "stty sane" ) == 0 or die $?;
+        }
     }
 }
 
@@ -249,22 +267,13 @@ sub __get_term_size {
         ( $width, $height ) = ( Term::ReadKey::GetTerminalSize() )[ 0, 1 ];
     }
     else {
-        #if ( defined $ENV{COLUMNS} && defined $ENV{LINES} && $ENV{COLUMNS} > 1 && $ENV{LINES} > 1 ) {
-        #    $width  = $ENV{COLUMNS};
-        #    $height = $ENV{LINES};
-        #}
-        #else {
-            my $size = `stty size`;
-            if ( defined $size && $size =~ /(\d+)\s(\d+)/ ) {
-                $width  = $2;
-                $height = $1;
-            }
-        #}
+        my $size = `stty size`;
+        if ( defined $size && $size =~ /(\d+)\s(\d+)/ ) {
+            $width  = $2;
+            $height = $1;
+        }
     }
     return $width - WIDTH_CURSOR, $height;
-    # $width - WIDTH_CURSOR: don't let items reach the right edge of the terminal;
-    #                        selecting an item which reaches the right edge of the terminal
-    #                        messes up the output - maybe because the (hidden) terminal-cursor needs a space
 }
 
 
@@ -324,6 +333,13 @@ sub __right {
     #my ( $self ) = @_;
     print "\e[${_[1]}C";
 }
+
+
+sub __beep {
+    my ( $self, $beep ) = @_;
+    print BEEP if $beep;
+}
+
 
 
 1;

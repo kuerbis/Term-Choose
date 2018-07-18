@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.604';
+our $VERSION = '1.605';
 
 use Exporter qw( import );
 
@@ -16,10 +16,11 @@ our @EXPORT_OK = qw(
         GET_CURSOR_POSITION
         SET_ANY_EVENT_MOUSE_1003 SET_EXT_MODE_MOUSE_1005 SET_SGR_EXT_MODE_MOUSE_1006
         UNSET_ANY_EVENT_MOUSE_1003 UNSET_EXT_MODE_MOUSE_1005 UNSET_SGR_EXT_MODE_MOUSE_1006
-        BEEP CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN RESET REVERSE BOLD_UNDERLINE
+        CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN CLEAR_TO_END_OF_LINE
+        RESET REVERSE UNDERLINE BOLD_UNDERLINE BEEP
         NEXT_get_key
         CONTROL_SPACE CONTROL_A CONTROL_B CONTROL_C CONTROL_D CONTROL_E CONTROL_F CONTROL_H KEY_BTAB CONTROL_I KEY_TAB
-        KEY_ENTER KEY_ESC KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_q KEY_Tilde KEY_BSPACE
+        CONTROL_K KEY_ENTER CONTROL_U KEY_ESC KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_q KEY_Tilde KEY_BSPACE
         VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_INSERT VK_DELETE
         MOUSE_WHEELED
         LEFTMOST_BUTTON_PRESSED RIGHTMOST_BUTTON_PRESSED FROM_LEFT_2ND_BUTTON_PRESSED
@@ -31,14 +32,20 @@ our %EXPORT_TAGS = (
         LF CR
         WIDTH_CURSOR
         MAX_ROW_MOUSE_1003 MAX_COL_MOUSE_1003
-        BEEP
         NEXT_get_key
         CONTROL_SPACE CONTROL_A CONTROL_B CONTROL_C CONTROL_D CONTROL_E CONTROL_F CONTROL_H KEY_BTAB CONTROL_I KEY_TAB
         KEY_ENTER KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_q KEY_Tilde KEY_BSPACE
         VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN
     ) ],
+    form => [ qw(
+        NEXT_get_key
+        CONTROL_A CONTROL_B CONTROL_D CONTROL_E CONTROL_F CONTROL_H KEY_BTAB KEY_TAB CONTROL_K CONTROL_U KEY_ENTER
+        KEY_SPACE KEY_h KEY_j KEY_k KEY_l KEY_BSPACE KEY_ESC
+        VK_PAGE_UP VK_PAGE_DOWN VK_END VK_HOME VK_LEFT VK_UP VK_RIGHT VK_DOWN VK_DELETE
+    ) ],
     screen => [ qw(
-        CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN RESET REVERSE BOLD_UNDERLINE HIDE_CURSOR SHOW_CURSOR
+        CLEAR_SCREEN CLEAR_TO_END_OF_SCREEN CLEAR_TO_END_OF_LINE
+        RESET REVERSE UNDERLINE BOLD_UNDERLINE HIDE_CURSOR SHOW_CURSOR BEEP
     ) ],
     linux  => [ qw(
         GET_CURSOR_POSITION WIDTH_CURSOR
@@ -67,12 +74,14 @@ use constant {
     LF => "\n",
     CR => "\r",
 
-    BEEP                   => "\a",
-    CLEAR_SCREEN           => "\e[H\e[J",
-    CLEAR_TO_END_OF_SCREEN => "\e[0J",
-    RESET                  => "\e[0m",
-    BOLD_UNDERLINE         => "\e[1m\e[4m",
-    REVERSE                => "\e[7m",
+    BEEP                    => "\a",
+    CLEAR_SCREEN            => "\e[H\e[J",
+    CLEAR_TO_END_OF_SCREEN  => "\e[0J",
+    CLEAR_TO_END_OF_LINE    => "\e[K",
+    RESET                   => "\e[0m",
+    UNDERLINE               => "\e[4m",
+    BOLD_UNDERLINE          => "\e[1m\e[4m",
+    REVERSE                 => "\e[7m",
 
     HIDE_CURSOR  => "\e[?25l",
     SHOW_CURSOR  => "\e[?25h",
@@ -113,7 +122,9 @@ use constant {
     KEY_BTAB      => 0x08,
     CONTROL_I     => 0x09,
     KEY_TAB       => 0x09,
+    CONTROL_K     => 0x0b,
     KEY_ENTER     => 0x0d,
+    CONTROL_U     => 0x15,
     KEY_ESC       => 0x1b,
     KEY_SPACE     => 0x20,
     KEY_h         => 0x68,
@@ -132,8 +143,8 @@ use constant {
     VK_UP         => 38,
     VK_RIGHT      => 39,
     VK_DOWN       => 40,
-    VK_INSERT     => 45, # unused
-    VK_DELETE     => 46, # unused
+    VK_INSERT     => 45,
+    VK_DELETE     => 46,
 };
 
 

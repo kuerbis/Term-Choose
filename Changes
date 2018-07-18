@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.605   2018-07-18
+        - Bugfix "my $Term_ReadKey": don't assign a value.
+        - Timeout for 'getc' with "Time::HiRes".
+        - "Term::Choose::Constants": new tag 'form'.
+
 1.604   2018-07-14
         - Removed the optional module "Term::ReadKey" from the Makefile.PL.
 

@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.604';
+our $VERSION = '1.605';
 
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
@@ -199,6 +199,16 @@ sub __right {
     my ( $col, $row ) = $_[0]->__get_cursor_position;
     $_[0]->__set_cursor_position( $col + $_[1], $row );
 }
+
+
+sub __beep {
+    my ( $self, $beep ) = @_;
+    if ( $beep ) {
+    }
+}
+
+
+
 
 1;
 
