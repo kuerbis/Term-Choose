@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.608   2018-07-20
+        - Bugfix key codes Win32.
+
 1.607   2018-07-18
         - Modified constant values.
 
