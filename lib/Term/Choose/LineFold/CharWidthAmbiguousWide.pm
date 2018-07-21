@@ -1,10 +1,10 @@
-package Term::Choose::LineFold::CharWidthXTerm;
+package Term::Choose::LineFold::CharWidthAmbiguousWide;
 
 use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.608';
+our $VERSION = '1.609';
 
 use Exporter qw( import );
 
@@ -18,14 +18,69 @@ sub table_char_width { [
 #[0x00000, 0x0001f, 0], #*) C0 Controls and Basic Latin             Range: 0000–007F
 #[0x0007f, 0x0007f, 0], #*)
 #[0x00080, 0x0009f, 0], #*) C1 Controls and Latin-1 Supplement      Range: 0080–00FF
+ [0x000a1, 0x000a1, 2],
+ [0x000a4, 0x000a4, 2],
+ [0x000a7, 0x000a8, 2],
+ [0x000aa, 0x000aa, 2],
 #[0x000ad, 0x000ad, 0], #*)
-                        #   Latin Extended-A                        Range: 0100–017F
-                        #   Latin Extended-B                        Range: 0180–024F
-                        #   IPA Extensions                          Range: 0250–02AF
-                        #   Spacing Modifier Letters                Range: 02B0–02FF
+ [0x000ae, 0x000ae, 2],
+ [0x000b0, 0x000b4, 2],
+ [0x000b6, 0x000ba, 2],
+ [0x000bc, 0x000bf, 2],
+ [0x000c6, 0x000c6, 2],
+ [0x000d0, 0x000d0, 2],
+ [0x000d7, 0x000d8, 2],
+ [0x000de, 0x000e1, 2],
+ [0x000e6, 0x000e6, 2],
+ [0x000e8, 0x000ea, 2],
+ [0x000ec, 0x000ed, 2],
+ [0x000f0, 0x000f0, 2],
+ [0x000f2, 0x000f3, 2],
+ [0x000f7, 0x000fa, 2],
+ [0x000fc, 0x000fc, 2],
+ [0x000fe, 0x000fe, 2],
+ [0x00101, 0x00101, 2], #   Latin Extended-A                        Range: 0100–017F
+ [0x00111, 0x00111, 2],
+ [0x00113, 0x00113, 2],
+ [0x0011b, 0x0011b, 2],
+ [0x00126, 0x00127, 2],
+ [0x0012b, 0x0012b, 2],
+ [0x00131, 0x00133, 2],
+ [0x00138, 0x00138, 2],
+ [0x0013f, 0x00142, 2],
+ [0x00144, 0x00144, 2],
+ [0x00148, 0x0014b, 2],
+ [0x0014d, 0x0014d, 2],
+ [0x00152, 0x00153, 2],
+ [0x00166, 0x00167, 2],
+ [0x0016b, 0x0016b, 2],
+ [0x001ce, 0x001ce, 2], #   Latin Extended-B                        Range: 0180–024F
+ [0x001d0, 0x001d0, 2],
+ [0x001d2, 0x001d2, 2],
+ [0x001d4, 0x001d4, 2],
+ [0x001d6, 0x001d6, 2],
+ [0x001d8, 0x001d8, 2],
+ [0x001da, 0x001da, 2],
+ [0x001dc, 0x001dc, 2],
+ [0x00251, 0x00251, 2], #   IPA Extensions                          Range: 0250–02AF
+ [0x00261, 0x00261, 2],
+ [0x002c4, 0x002c4, 2], #   Spacing Modifier Letters                Range: 02B0–02FF
+ [0x002c7, 0x002c7, 2],
+ [0x002c9, 0x002cb, 2],
+ [0x002cd, 0x002cd, 2],
+ [0x002d0, 0x002d0, 2],
+ [0x002d8, 0x002db, 2],
+ [0x002dd, 0x002dd, 2],
+ [0x002df, 0x002df, 2],
  [0x00300, 0x0036f, 0], #   Combining Diacritical Marks             Range: 0300–036F
-                        #   Greek and Coptic                        Range: 0370–03FF
- [0x00483, 0x00489, 0], #   Cyrillic                                Range: 0400–04FF
+ [0x00391, 0x003a1, 2], #   Greek and Coptic                        Range: 0370–03FF
+ [0x003a3, 0x003a9, 2],
+ [0x003b1, 0x003c1, 2],
+ [0x003c3, 0x003c9, 2],
+ [0x00401, 0x00401, 2], #   Cyrillic                                Range: 0400–04FF
+ [0x00410, 0x0044f, 2],
+ [0x00451, 0x00451, 2],
+ [0x00483, 0x00489, 0],
                         #   Cyrillic Supplement                     Range: 0500–052F
                         #   Armenian                                Range: 0530–058F
  [0x00591, 0x005bd, 0], #   Hebrew                                  Range: 0590–05FF
@@ -100,8 +155,8 @@ sub table_char_width { [
  [0x00c62, 0x00c63, 0],
  [0x00c81, 0x00c81, 0], #   Kannada                                 Range: 0C80–0CFF
  [0x00cbc, 0x00cbc, 0],
- [0x00cbf, 0x00cbf, 0], # ###
- [0x00cc6, 0x00cc6, 0], # ###
+ [0x00cbf, 0x00cbf, 0],
+ [0x00cc6, 0x00cc6, 0],
  [0x00ccc, 0x00ccd, 0],
  [0x00ce2, 0x00ce3, 0],
  [0x00d00, 0x00d01, 0], #   Malayalam                               Range: 0D00–0D7F
@@ -142,7 +197,7 @@ sub table_char_width { [
  [0x0109d, 0x0109d, 0],
                         #   Georgian                                Range: 10A0–10FF
  [0x01100, 0x0115f, 2], #   Hangul Jamo                             Range: 1100–11FF
- [0x01160, 0x011ff, 0], # ###
+ [0x01160, 0x011ff, 0], #
  [0x0135d, 0x0135f, 0], #   Ethiopic                                Range: 1200–137F
                         #   Ethiopic Supplement                     Range: 1380–139F
                         #   Cherokee                                Range: 13A0–13FF
@@ -211,49 +266,128 @@ sub table_char_width { [
                         #   Latin Extended Additional               Range: 1E00–1EFF
                         #   Greek Extended                          Range: 1F00–1FFF
 #[0x0200b, 0x0200f, 0], #*) General Punctuation                     Range: 2000–206F
+ [0x02010, 0x02010, 2],
+ [0x02013, 0x02016, 2],
+ [0x02018, 0x02019, 2],
+ [0x0201c, 0x0201d, 2],
+ [0x02020, 0x02022, 2],
+ [0x02024, 0x02027, 2],
 #[0x02028, 0x02029, 0], #*)
 #[0x0202a, 0x0202e, 0], #*)
+ [0x02030, 0x02030, 2],
+ [0x02032, 0x02033, 2],
+ [0x02035, 0x02035, 2],
+ [0x0203b, 0x0203b, 2],
+ [0x0203e, 0x0203e, 2],
 #[0x0206a, 0x0206f, 0], #*)
-                        #   Superscripts and Subscripts             Range: 2070–209F
-                        #   Currency Symbols                        Range: 20A0–20CF
+ [0x02074, 0x02074, 2], #   Superscripts and Subscripts             Range: 2070–209F
+ [0x0207f, 0x0207f, 2],
+ [0x02081, 0x02084, 2],
+ [0x020ac, 0x020ac, 2], #   Currency Symbols                        Range: 20A0–20CF
  [0x020d0, 0x020f0, 0], #   Combining Diacritical Marks for Symbols Range: 20D0–20FF
-                        #   Letterlike Symbols                      Range: 2100–214F
-                        #   Number Forms                            Range: 2150–218F
-                        #   Arrows                                  Range: 2190–21FF
-                        #   Mathematical Operators                  Range: 2200–22FF
- [0x0231a, 0x0231b, 2], #   Miscellaneous Technical                 Range: 2300–23FF
+ [0x02103, 0x02103, 2], #   Letterlike Symbols                      Range: 2100–214F
+ [0x02105, 0x02105, 2],
+ [0x02109, 0x02109, 2],
+ [0x02113, 0x02113, 2],
+ [0x02116, 0x02116, 2],
+ [0x02121, 0x02122, 2],
+ [0x02126, 0x02126, 2],
+ [0x0212b, 0x0212b, 2],
+ [0x02153, 0x02154, 2], #   Number Forms                            Range: 2150–218F
+ [0x0215b, 0x0215e, 2],
+ [0x02160, 0x0216b, 2],
+ [0x02170, 0x02179, 2],
+ [0x02189, 0x02189, 2],
+ [0x02190, 0x02199, 2],#   Arrows                                  Range: 2190–21FF
+ [0x021b8, 0x021b9, 2],
+ [0x021d2, 0x021d2, 2],
+ [0x021d4, 0x021d4, 2],
+ [0x021e7, 0x021e7, 2],
+ [0x02200, 0x02200, 2], #   Mathematical Operators                  Range: 2200–22FF
+ [0x02202, 0x02203, 2],
+ [0x02207, 0x02208, 2],
+ [0x0220b, 0x0220b, 2],
+ [0x0220f, 0x0220f, 2],
+ [0x02211, 0x02211, 2],
+ [0x02215, 0x02215, 2],
+ [0x0221a, 0x0221a, 2],
+ [0x0221d, 0x02220, 2],
+ [0x02223, 0x02223, 2],
+ [0x02225, 0x02225, 2],
+ [0x02227, 0x0222c, 2],
+ [0x0222e, 0x0222e, 2],
+ [0x02234, 0x02237, 2],
+ [0x0223c, 0x0223d, 2],
+ [0x02248, 0x02248, 2],
+ [0x0224c, 0x0224c, 2],
+ [0x02252, 0x02252, 2],
+ [0x02260, 0x02261, 2],
+ [0x02264, 0x02267, 2],
+ [0x0226a, 0x0226b, 2],
+ [0x0226e, 0x0226f, 2],
+ [0x02282, 0x02283, 2],
+ [0x02286, 0x02287, 2],
+ [0x02295, 0x02295, 2],
+ [0x02299, 0x02299, 2],
+ [0x022a5, 0x022a5, 2],
+ [0x022bf, 0x022bf, 2],
+ [0x02312, 0x02312, 2], #   Miscellaneous Technical                 Range: 2300–23FF
+ [0x0231a, 0x0231b, 2],
  [0x02329, 0x0232a, 2],
  [0x023e9, 0x023ec, 2],
  [0x023f0, 0x023f0, 2],
  [0x023f3, 0x023f3, 2],
                         #   Control Pictures                        Range: 2400–243F
                         #   Optical Character Recognition           Range: 2440–245F
-                        #   Enclosed Alphanumerics                  Range: 2460–24FF
-                        #   Box Drawing                             Range: 2500–257F
-                        #   Block Elements                          Range: 2580–259F
- [0x025fd, 0x025fe, 2], #   Geometric Shapes                        Range: 25A0–25FF
- [0x02614, 0x02615, 2], #   Miscellaneous Symbols                   Range: 2600–26FF
+ [0x02460, 0x024e9, 2], #   Enclosed Alphanumerics                  Range: 2460–24FF
+ [0x024eb, 0x0254b, 2],
+ [0x02550, 0x02573, 2], #   Box Drawing                             Range: 2500–257F
+ [0x02580, 0x0258f, 2], #   Block Elements                          Range: 2580–259F
+ [0x02592, 0x02595, 2],
+ [0x025a0, 0x025a1, 2], #   Geometric Shapes                        Range: 25A0–25FF
+ [0x025a3, 0x025a9, 2],
+ [0x025b2, 0x025b3, 2],
+ [0x025b6, 0x025b7, 2],
+ [0x025bc, 0x025bd, 2],
+ [0x025c0, 0x025c1, 2],
+ [0x025c6, 0x025c8, 2],
+ [0x025cb, 0x025cb, 2],
+ [0x025ce, 0x025d1, 2],
+ [0x025e2, 0x025e5, 2],
+ [0x025ef, 0x025ef, 2],
+ [0x025fd, 0x025fe, 2],
+ [0x02605, 0x02606, 2], #   Miscellaneous Symbols                   Range: 2600–26FF
+ [0x02609, 0x02609, 2],
+ [0x0260e, 0x0260f, 2],
+ [0x02614, 0x02615, 2],
+ [0x0261c, 0x0261c, 2],
+ [0x0261e, 0x0261e, 2],
+ [0x02640, 0x02640, 2],
+ [0x02642, 0x02642, 2],
  [0x02648, 0x02653, 2],
+ [0x02660, 0x02661, 2],
+ [0x02663, 0x02665, 2],
+ [0x02667, 0x0266a, 2],
+ [0x0266c, 0x0266d, 2],
+ [0x0266f, 0x0266f, 2],
  [0x0267f, 0x0267f, 2],
  [0x02693, 0x02693, 2],
+ [0x0269e, 0x0269f, 2],
  [0x026a1, 0x026a1, 2],
  [0x026aa, 0x026ab, 2],
- [0x026bd, 0x026be, 2],
- [0x026c4, 0x026c5, 2],
- [0x026ce, 0x026ce, 2],
- [0x026d4, 0x026d4, 2],
- [0x026ea, 0x026ea, 2],
- [0x026f2, 0x026f3, 2],
- [0x026f5, 0x026f5, 2],
- [0x026fa, 0x026fa, 2],
- [0x026fd, 0x026fd, 2],
+ [0x026bd, 0x026bf, 2],
+ [0x026c4, 0x026e1, 2],
+ [0x026e3, 0x026e3, 2],
+ [0x026e8, 0x026ff, 2],
  [0x02705, 0x02705, 2], #   Dingbats                                Range: 2700–27BF
  [0x0270a, 0x0270b, 2],
  [0x02728, 0x02728, 2],
+ [0x0273d, 0x0273d, 2],
  [0x0274c, 0x0274c, 2],
  [0x0274e, 0x0274e, 2],
  [0x02753, 0x02755, 2],
  [0x02757, 0x02757, 2],
+ [0x02776, 0x0277f, 2],
  [0x02795, 0x02797, 2],
  [0x027b0, 0x027b0, 2],
  [0x027bf, 0x027bf, 2],
@@ -265,7 +399,7 @@ sub table_char_width { [
                         #   Supplemental Mathematical Operators     Range: 2A00–2AFF
  [0x02b1b, 0x02b1c, 2], #   Miscellaneous Symbols and Arrows        Range: 2B00–2BFF
  [0x02b50, 0x02b50, 2],
- [0x02b55, 0x02b55, 2],
+ [0x02b55, 0x02b59, 2],
                         #   Glagolitic                              Range: 2C00–2C5F
                         #   Latin Extended-C                        Range: 2C60–2C7F
  [0x02cef, 0x02cf1, 0], #   Coptic                                  Range: 2C80–2CFF
@@ -279,11 +413,11 @@ sub table_char_width { [
                         #                                           Range: 2FE0-2FEF    not_assigned
  [0x02ff0, 0x03029, 2], #   Ideographic Description Character       Range: 2FF0–2FFF
                         #   CJK Symbols and Punctuation             Range: 3000–303F
- [0x0302a, 0x0302d, 0], # ###
+ [0x0302a, 0x0302d, 0], #
  [0x0302e, 0x0303e, 2],
  [0x03040, 0x03096, 2], #   Hiragana                                Range: 3040–309F
- [0x03099, 0x0309a, 0], # ###
- [0x0309b, 0x03247, 2],
+ [0x03099, 0x0309a, 0], #
+ [0x0309b, 0x04db5, 2],
                         #   Katakana                                Range: 30A0–30FF
                         #   Bopomofo                                Range: 3100–312F
                         #   Hangul Compatibility Jamo               Range: 3130–318F
@@ -292,7 +426,6 @@ sub table_char_width { [
                         #   CJK Strokes                             Range: 31C0–31EF
                         #   Katakana Phonetic Extensions            Range: 31F0–31FF
                         #   Enclosed CJK Letters and Months         Range: 3200–32FF
- [0x03250, 0x04db5, 2],
                         #   CJK Compatibility                       Range: 3300–33FF
                         #   CJK Unified Ideographs Extension A      Range: 3400–4DB5
                         #                                           Range: 4DB6-4DBF    not_assigned
@@ -345,11 +478,13 @@ sub table_char_width { [
  [0x0abe8, 0x0abe8, 0],
  [0x0abed, 0x0abed, 0],
  [0x0ac00, 0x0d7af, 2], #   Hangul Syllables                        Range: AC00–D7AF
-#[0x0d7b0, 0x0d7ff, 1], #   Hangul Jamo Extended-B                  Range: D7B0–D7FF ###
+#[0x0d7b0, 0x0d7ff, 1], #   Hangul Jamo Extended-B                  Range: D7B0–D7FF
 #[0x0d800, 0x0dbff, 0], #*) High Surrogate Area                     Range: D800-DBFF    non_print
 #[0x0dc00, 0x0dfff, 0], #*) Low Surrogate Area                      Range: DC00-DFFF    non_print
                         #   Private Use Area                        Range: E000-F8FF    private
- [0x0f900, 0x0faff, 2], #   CJK Compatibility Ideographs            Range: F900–FAFF
+
+ [0x0e000, 0x0faff, 2],
+                        #   CJK Compatibility Ideographs            Range: F900–FAFF
  [0x0fb1e, 0x0fb1e, 0], #   Alphabetic Presentation Forms           Range: FB00–FB4F
                         #   Arabic Presentation Forms-A             Range: FB50–FDFF
  [0x0fe00, 0x0fe0f, 0], #   Variation Selectors                     Range: FE00–FE0F
@@ -361,22 +496,21 @@ sub table_char_width { [
  [0x0ff00, 0x0ff60, 2], #   Halfwidth and Fullwidth Forms           Range: FF00–FFEF
  [0x0ffe0, 0x0ffe6, 2],
 #[0x0fff0, 0x0fffb, 0], #*) Specials                                Range: FFF0–FFFF    not_assigned
+ [0x0fffd, 0x0fffd, 2],
 #[0x0fffe, 0x0ffff, 0], #*)
                         #   Linear B Syllabary                      Range: 10000–1007F
                         #   Linear B Ideograms                      Range: 10080–100FF
                         #   Aegean Numbers                          Range: 10100–1013F
                         #   Ancient Greek Numbers                   Range: 10140–1018F
                         #   Ancient Symbols                         Range: 10190–101CF
-                        #   Phaistos Disc                           Range: 101D0–101FF
- [0x101fd, 0x101fd, 0],
+ [0x101fd, 0x101fd, 0], #   Phaistos Disc                           Range: 101D0–101FF
                         #                                           Range: 10200-1027F  not_assigned
                         #   Lycian                                  Range: 10280–1029F
                         #   Carian                                  Range: 102A0–102DF
  [0x102e0, 0x102e0, 0], #   Coptic Epact Numbers                    Range: 102E0–102FF
                         #   Old Italic                              Range: 10300–1032F
                         #   Gothic                                  Range: 10330–1034F
-                        #   Old Permic                              Range: 10350–1037F
- [0x10376, 0x1037a, 0],
+ [0x10376, 0x1037a, 0], #   Old Permic                              Range: 10350–1037F
                         #   Ugaritic                                Range: 10380–1039F
                         #   Old Persian                             Range: 103A0–103DF
                         #                                           Range: 103E0-103FF  not_assigned
@@ -400,14 +534,12 @@ sub table_char_width { [
                         #                                           Range: 10940-1097F  not_assigned
                         #   Meroitic Hieroglyphs                    Range: 10980–1099F
                         #   Meroitic Cursive                        Range: 109A0–109FF
-                        #   Kharoshthi                              Range: 10A00–10A5F
- [0x10a01, 0x10a0f, 0],
+ [0x10a01, 0x10a0f, 0], #   Kharoshthi                              Range: 10A00–10A5F
  [0x10a38, 0x10a3f, 0],
                         #   Old South Arabian                       Range: 10A60–10A7F
                         #   Old North Arabian                       Range: 10A80–10A9F
                         #                                           Range: 10AA0-10ABF  not_assigned
-                        #   Manichaean                              Range: 10AC0–10AFF
- [0x10ae5, 0x10ae6, 0],
+ [0x10ae5, 0x10ae6, 0], #   Manichaean                              Range: 10AC0–10AFF
                         #   Avestan                                 Range: 10B00–10B3F
                         #   Inscriptional Parthian                  Range: 10B40–10B5F
                         #   Inscriptional Pahlavi                   Range: 10B60–10B7F
@@ -423,8 +555,7 @@ sub table_char_width { [
  [0x11001, 0x11001, 0], #   Brahmi                                  Range: 11000–1107F
  [0x11038, 0x11046, 0],
  [0x1107f, 0x11081, 0],
-                        #   Kaithi                                  Range: 11080–110CF
- [0x110b3, 0x110b6, 0],
+ [0x110b3, 0x110b6, 0], #   Kaithi                                  Range: 11080–110CF
  [0x110b9, 0x110ba, 0],
 #[0x110bd, 0x110bd, 0], #*)
 #[0x110cd, 0x110cd, 0], #*)
@@ -492,7 +623,7 @@ sub table_char_width { [
                         #                                           Range: 11B00-11BFF  not_assigned
  [0x11c30, 0x11c36, 0], #   Bhaiksuki                               Range: 11C00–11C6F
  [0x11c38, 0x11c3d, 0],
- [0x11c3f, 0x11c3f, 0], # ###
+ [0x11c3f, 0x11c3f, 0], #
  [0x11c92, 0x11ca7, 0], #   Marchen                                 Range: 11C70–11CBF
  [0x11caa, 0x11cb0, 0],
  [0x11cb2, 0x11cb3, 0],
@@ -558,8 +689,11 @@ sub table_char_width { [
  [0x1f004, 0x1f004, 2], #   Mahjong Tiles                           Range: 1F000–1F02F
                         #   Domino Tiles                            Range: 1F030–1F09F
  [0x1f0cf, 0x1f0cf, 2], #   Playing Cards                           Range: 1F0A0–1F0FF
- [0x1f18e, 0x1f18e, 2], #   Enclosed Alphanumeric Supplement        Range: 1F100–1F1FF
- [0x1f191, 0x1f19a, 2],
+
+ [0x1f100, 0x1f10a, 2], #   Enclosed Alphanumeric Supplement        Range: 1F100–1F1FF
+ [0x1f110, 0x1f12d, 2],
+ [0x1f130, 0x1f169, 2],
+ [0x1f170, 0x1f1ac, 2],
  [0x1f200, 0x1f320, 2], #   Enclosed Ideographic Supplemet          Range: 1F200–1F2FF
                         #   Miscellaneous Symbols and Pictograph    Range: 1F300–1F5FF
  [0x1f32d, 0x1f335, 2],
@@ -613,6 +747,10 @@ sub table_char_width { [
 #[0xe0020, 0xe007f, 0], #*)
                         #                                           Range: E0080-E00FF
  [0xe0100, 0xe01ef, 0], #   Variation Selectors Supplement          Range: E0100–E01EF
+                        #                                           Range: E01F0–EFF7F  not_assigned
+                        #                                           Range: EFF80–EFFFF  not_assigned
+#[0xf0000, 0xffffd, 2], #*)   Supplementary Private Use Area-A      Range: F0000-FFFFF
+#[0x100000, 0x10fffd, 2], #*) Supplementary Private Use Area-B      Range: 100000-10FFFD
 ];
 }
 
