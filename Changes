@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.620   2018-08-06
+        - Added the posibility to move forward/backward 25 pages at once.
+
 1.610   2018-08-03
         - Bugfix in page-down.
 
