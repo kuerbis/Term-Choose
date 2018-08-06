@@ -282,7 +282,6 @@ sub __choose {
             $saved_pos = undef;
         }
 
-
         # $self->{rc2idx} holds the new list (AoA) formatted in "__size_and_layout" appropriate to the chosen layout.
         # $self->{rc2idx} does not hold the values directly but the respective list indexes from the original list.
         # If the original list would be ( 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h' ) and the new formatted list should be
@@ -417,7 +416,6 @@ sub __choose {
             }
             else {
                 $self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) - $page_step );
-                #$self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) - 1 );
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 if ( $saved_pos ) {
                     $self->{pos}[ROW] = $saved_pos->[ROW];
@@ -426,7 +424,6 @@ sub __choose {
                 }
                 else {
                     $self->{pos}[ROW] -= $self->{avail_height} * $page_step;
-                    #$self->{pos}[ROW] -= $self->{avail_height};
                 }
                 $self->__wr_screen();
             }
@@ -437,7 +434,6 @@ sub __choose {
             }
             else {
                 $self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + $page_step );
-                #$self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + 1 );
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 $self->{p_end}   = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
                 if (   $self->{pos}[ROW] + $self->{avail_height} > $#{$self->{rc2idx}}
@@ -451,7 +447,6 @@ sub __choose {
                 }
                 else {
                     $self->{pos}[ROW] += $self->{avail_height} * $page_step;
-                    #$self->{pos}[ROW] += $self->{avail_height};
                 }
                 $self->__wr_screen();
             }
