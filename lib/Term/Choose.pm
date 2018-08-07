@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.620';
+our $VERSION = '1.621';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -418,7 +418,7 @@ sub __choose {
                 $self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) - $page_step );
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 if ( $saved_pos ) {
-                    $self->{pos}[ROW] = $saved_pos->[ROW];
+                    $self->{pos}[ROW] = $saved_pos->[ROW] + $self->{p_begin};
                     $self->{pos}[COL] = $saved_pos->[COL];
                     $saved_pos = undef;
                 }
@@ -433,13 +433,14 @@ sub __choose {
                 $self->{plugin}->__beep();
             }
             else {
+                my $backup_p_begin = $self->{p_begin};
                 $self->{p_begin} = $self->{avail_height} * ( int( $self->{pos}[ROW] / $self->{avail_height} ) + $page_step );
                 $self->{p_end}   = $self->{p_begin} + $self->{avail_height} - 1;
                 $self->{p_end}   = $#{$self->{rc2idx}} if $self->{p_end} > $#{$self->{rc2idx}};
                 if (   $self->{pos}[ROW] + $self->{avail_height} > $#{$self->{rc2idx}}
                     || $self->{pos}[COL] > $#{$self->{rc2idx}[$self->{pos}[ROW] + $self->{avail_height}]}
                 ) {
-                    $saved_pos = [ $self->{pos}[ROW], $self->{pos}[COL] ];
+                    $saved_pos = [ $self->{pos}[ROW] - $backup_p_begin, $self->{pos}[COL] ];
                     $self->{pos}[ROW] = $#{$self->{rc2idx}};
                     if ( $self->{pos}[COL] > $#{$self->{rc2idx}[$self->{pos}[ROW]]} ) {
                         $self->{pos}[COL] = $#{$self->{rc2idx}[$self->{pos}[ROW]]};
@@ -1098,7 +1099,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.620
+Version 1.621
 
 =cut
 
