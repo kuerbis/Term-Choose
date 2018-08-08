@@ -1513,7 +1513,7 @@ Allowed values: 1 or greater
 
 If defined sets the maximal number of rows used for printing list items.
 
-If the available height is less than I<max_height> I<max_height> is set to the available height.
+If the available height is less than I<max_height> then I<max_height> is set to the available height.
 
 Height in this context means print rows.
 
