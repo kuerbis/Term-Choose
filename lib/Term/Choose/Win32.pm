@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.623';
+our $VERSION = '1.624';
 
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
@@ -103,7 +103,7 @@ sub __set_mode {
     $self->{fg_color} = $self->{def_attr} & 0x7;
     $self->{bg_color} = $self->{def_attr} & 0x70;
     $self->{inverse}  = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
-    $self->__hide_cursor if $hide_cursor;
+    $self->{output}->Cursor( -1, -1, -1, 0 ); if $hide_cursor;
     return $mouse;
 }
 
@@ -122,7 +122,7 @@ sub __reset_mode {
     }
     if ( defined $self->{output} ) {
         $self->__reset;
-        $self->__show_cursor if $hide_cursor;
+        $self->{output}->Cursor( -1, -1, -1, 1 ) if $hide_cursor;
         #$self->{output}->Free();
         delete $self->{output}{handle}; # ?
     }
@@ -145,18 +145,6 @@ sub __get_cursor_position {
 sub __set_cursor_position {
     my ( $self, $col, $row ) = @_;
     $self->{output}->Cursor( $col, $row );
-}
-
-
-sub __hide_cursor {
-    my ( $self ) = @_;
-    $self->{output}->Cursor( -1, -1, -1, 0 );
-}
-
-
-sub __show_cursor {
-    my ( $self ) = @_;
-    $self->{output}->Cursor( -1, -1, -1, 1 );
 }
 
 

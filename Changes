@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.624   2018-08-14
+        - Undo "1.623".
+
 1.623   2018-08-14
         - Added methods 'hide_cursor', 'show_cursor'.
 
