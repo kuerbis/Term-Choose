@@ -1,6 +1,12 @@
 Revision history for Term::Choose
 
 
+1.623   2018-08-14
+        - Added methods 'hide_cursor', 'show_cursor'.
+
+1.622   2018-08-08
+        - Fixed minor typo in the pod. [GH #2 manwar]
+
 1.621   2018-08-07
         - Bugfix page-down saved position.
 
