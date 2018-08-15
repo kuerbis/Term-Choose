@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.624';
+our $VERSION = '1.625';
 
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
@@ -103,7 +103,7 @@ sub __set_mode {
     $self->{fg_color} = $self->{def_attr} & 0x7;
     $self->{bg_color} = $self->{def_attr} & 0x70;
     $self->{inverse}  = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
-    $self->{output}->Cursor( -1, -1, -1, 0 ); if $hide_cursor;
+    $self->{output}->Cursor( -1, -1, -1, 0 ) if $hide_cursor;
     return $mouse;
 }
 

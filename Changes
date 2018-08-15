@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.625   2018-08-15
+        - Fixed syntax error in "Term::Choose::Win23".
+
 1.624   2018-08-14
         - Undo "1.623".
 
