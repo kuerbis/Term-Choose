@@ -8,6 +8,7 @@ my %prereqs_os_specific;
 
 if ( $^O eq 'MSWin32' ) {
     %prereqs_os_specific = (
+        'parent'         => 0,
         'Win32::Console' => 0,
     );
 }

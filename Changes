@@ -1,8 +1,11 @@
 Revision history for Term::Choose
 
 
+1.625_01   2018-08-16
+        - Developer release - MSWin32
+
 1.625   2018-08-15
-        - Fixed syntax error in "Term::Choose::Win23".
+        - Fixed syntax error in "Term::Choose::Win32".
 
 1.624   2018-08-14
         - Undo "1.623".
