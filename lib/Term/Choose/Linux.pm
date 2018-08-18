@@ -172,7 +172,7 @@ sub __mouse_event_to_button {
 }
 
 
-sub __set_mode {
+sub __set_mode_raw {
     my ( $self, $mouse, $hide_cursor ) = @_;
     if ( $mouse ) {
         if ( $mouse == 3 ) {
@@ -221,6 +221,20 @@ sub __set_mode {
     }
     $self->__hide_cursor if $hide_cursor;
     return $mouse;
+};
+
+
+sub __set_mode_cbreak {
+    my ( $self, $hide_cursor ) = @_;
+    if ( $Term_ReadKey ) {
+        Term::ReadKey::ReadMode( 'cbreak' );
+    }
+    else {
+        $Stty = `stty --save`;
+        chomp $Stty;
+        system( "stty -echo cbreak" ) == 0 or die $?;
+    }
+    $self->__hide_cursor() if $hide_cursor;
 };
 
 

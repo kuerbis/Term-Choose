@@ -158,7 +158,7 @@ sub __validate_and_add_options {
 
 sub __init_term {
     my ( $self ) = @_;
-    $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse}, $self->{hide_cursor} );
+    $self->{mouse} = $self->{plugin}->__set_mode_raw( $self->{mouse}, $self->{hide_cursor} );
 }
 
 
