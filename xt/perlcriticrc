@@ -7,3 +7,4 @@ exclude_functions = print
 
 [TestingAndDebugging::ProhibitNoWarnings]
 allow = utf8 uninitialized
+

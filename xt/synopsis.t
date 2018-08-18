@@ -8,3 +8,4 @@ use lib 'lib';
 use Term::Choose;
 
 all_synopsis_ok();
+

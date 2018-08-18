@@ -8,9 +8,9 @@ use Test::Fatal;
 use lib 'lib';
 use Term::Choose qw( choose );
 
-
-plan( skip_all => "Failed test 'Illegal division by zero at lib/Term/Choose.pm line 889. - terminal height" );
-
+plan( skip_all =>
+"Failed test 'Illegal division by zero at lib/Term/Choose.pm line 889. - terminal height"
+);
 
 __DATA__
 
@@ -134,3 +134,4 @@ ok( ! defined( exception {  $d = choose( [ 'aaa' .. 'zzz' ], {
 done_testing();
 
 __DATA__
+

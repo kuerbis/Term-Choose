@@ -3,9 +3,7 @@ use strict;
 use warnings;
 use Test::More tests => 1;
 
-
 my $file = 'lib/Term/Choose.pm';
-
 
 my $test_env = 0;
 
@@ -27,3 +25,4 @@ while ( my $line = <$fh1> ) {
 close $fh1;
 
 is( $test_env, 0, "OK - test environment in $file disabled." );
+

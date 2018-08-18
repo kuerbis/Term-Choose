@@ -13,30 +13,30 @@ our @EXPORT_OK = qw( line_fold print_columns cut_to_printwidth );
 BEGIN {
     if ( $ENV{TC_AMBIGUOUS_WIDE} ) {
         require Term::Choose::LineFold::CharWidthAmbiguousWide;
-        Term::Choose::LineFold::CharWidthAmbiguousWide->import( 'table_char_width' );
+        Term::Choose::LineFold::CharWidthAmbiguousWide->import(
+            'table_char_width');
     }
     else {
         require Term::Choose::LineFold::CharWidthDefault;
-        Term::Choose::LineFold::CharWidthDefault->import( 'table_char_width' );
+        Term::Choose::LineFold::CharWidthDefault->import('table_char_width');
     }
 }
-
 
 my $table = table_char_width();
 
 my $cache = [];
 
-
 sub char_width {
+
     # $_[0] == ord $char
     my $min = 0;
     my $mid;
     my $max = $#$table;
-    if ($_[0] < $table->[0][0] || $_[0] > $table->[$max][1] ) {
+    if ( $_[0] < $table->[0][0] || $_[0] > $table->[$max][1] ) {
         return 1;
     }
     while ( $max >= $min ) {
-        $mid = int( ( $min + $max) / 2 );
+        $mid = int( ( $min + $max ) / 2 );
         if ( $_[0] > $table->[$mid][1] ) {
             $min = $mid + 1;
         }
@@ -50,22 +50,22 @@ sub char_width {
     return 1;
 }
 
-
 sub print_columns {
+
     # $_[0] == string
     my $width = 0;
     for my $i ( 0 .. ( length( $_[0] ) - 1 ) ) {
         my $c = ord substr $_[0], $i, 1;
-        if ( ! defined $cache->[$c] ) {
-            $cache->[$c] = char_width( $c )
+        if ( !defined $cache->[$c] ) {
+            $cache->[$c] = char_width($c);
         }
         $width = $width + $cache->[$c];
     }
     return $width;
 }
 
-
 sub cut_to_printwidth {
+
     # $_[0] == string
     # $_[1] == available width
     # $_[2] == return the rest (yes/no)
@@ -73,12 +73,13 @@ sub cut_to_printwidth {
     my $total = 0;
     for my $i ( 0 .. ( length( $_[0] ) - 1 ) ) {
         my $c = ord substr $_[0], $i, 1;
-        if ( ! defined $cache->[$c] ) {
-            $cache->[$c] = char_width( $c )
+        if ( !defined $cache->[$c] ) {
+            $cache->[$c] = char_width($c);
         }
         if ( ( $total = $total + $cache->[$c] ) > $_[1] ) {
             if ( ( $total - $cache->[$c] ) < $_[1] ) {
-                return substr( $_[0], 0, $count ) . ' ', substr( $_[0], $count ) if $_[2];
+                return substr( $_[0], 0, $count ) . ' ', substr( $_[0], $count )
+                  if $_[2];
                 return substr( $_[0], 0, $count ) . ' ';
             }
             return substr( $_[0], 0, $count ), substr( $_[0], $count ) if $_[2];
@@ -91,12 +92,11 @@ sub cut_to_printwidth {
     return $_[0];
 }
 
-
 sub line_fold {
-    my ( $string, $avail_width, $init_tab, $subseq_tab ) = @_; #copy
-    # return if ! length $string;
+    my ( $string, $avail_width, $init_tab, $subseq_tab ) = @_;    #copy
+            # return if ! length $string;
     for ( $init_tab, $subseq_tab ) {
-        if ( $_ ) {
+        if ($_) {
             s/\s/ /g;
             s/\p{C}//g;
             if ( length > $avail_width / 4 ) {
@@ -109,7 +109,9 @@ sub line_fold {
     }
     $string =~ s/[^\n\P{Space}]/ /g;
     $string =~ s/[^\n\P{C}]//g;
-    if ( $string !~ /\n/ && print_columns( $init_tab . $string ) <= $avail_width ) {
+    if ( $string !~ /\n/
+        && print_columns( $init_tab . $string ) <= $avail_width )
+    {
         return $init_tab . $string;
     }
     my @paragraph;
@@ -127,18 +129,20 @@ sub line_fold {
             else {
                 my $tmp;
                 if ( $i == 0 ) {
-                    $tmp = $init_tab . $words[$i];;
+                    $tmp = $init_tab . $words[$i];
                 }
                 else {
                     push( @lines, $line );
                     $words[$i] =~ s/^\s+//;
                     $tmp = $subseq_tab . $words[$i];
                 }
-                ( $line, my $remainder ) = cut_to_printwidth( $tmp, $avail_width, 1 );
+                ( $line, my $remainder ) =
+                  cut_to_printwidth( $tmp, $avail_width, 1 );
                 while ( length $remainder ) {
                     push( @lines, $line );
                     $tmp = $subseq_tab . $remainder;
-                    ( $line, $remainder ) = cut_to_printwidth( $tmp, $avail_width, 1 );
+                    ( $line, $remainder ) =
+                      cut_to_printwidth( $tmp, $avail_width, 1 );
                 }
             }
             if ( $i == $#words ) {
@@ -149,16 +153,5 @@ sub line_fold {
     }
     return join( "\n", @paragraph );
 }
-
-
-
-
-
-
-
-
-
-
-
 
 1;
