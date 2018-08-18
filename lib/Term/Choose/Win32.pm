@@ -121,6 +121,11 @@ sub __set_mode_raw {
 }
 
 
+sub __set_mode_cbreak {
+    $_[0]->__set_mode_raw( $_[2] );
+}
+
+
 sub __reset_mode {
     my ( $self, $mouse, $hide_cursor ) = @_;  # no use for $mouse on win32
     if ( defined $self->{input} ) {

@@ -2,6 +2,8 @@ Revision history for Term::Choose
 
 1.625_03 yyyy-mm-dd
         - Rename Plugin method __set_mode to __set_mode_raw
+        - Copy code from Term::Form::[Plugin]::__set_mode as
+          [Plugin]::__set_mode_cbreak.
 
 1.625_02   2018-08-18
         - Developer release

@@ -224,6 +224,20 @@ sub __set_mode_raw {
 };
 
 
+sub __set_mode_cbreak {
+    my ( $self, $hide_cursor ) = @_;
+    if ( $Term_ReadKey ) {
+        Term::ReadKey::ReadMode( 'cbreak' );
+    }
+    else {
+        $Stty = `stty --save`;
+        chomp $Stty;
+        system( "stty -echo cbreak" ) == 0 or die $?;
+    }
+    $self->__hide_cursor() if $hide_cursor;
+};
+
+
 sub __reset_mode {
     my ( $self, $mouse, $hide_cursor ) = @_;
     $self->__show_cursor() if $hide_cursor;
