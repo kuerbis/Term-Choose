@@ -60,3 +60,5 @@
 
 ^\..+
 MANIFEST.SKIP
+^\.perltidyrc
+^\.podtidy-ops
