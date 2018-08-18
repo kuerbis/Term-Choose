@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_01';
+our $VERSION = '1.625_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -731,12 +731,12 @@ sub __write_first_screen {
         $self->__prepare_page_number();
     }
     $self->{avail_height_idx} = $self->{avail_height} - 1;
-    $self->{p_begin}    = 0;
-    $self->{p_end}      = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
-    $self->{i_row}      = 0;
-    $self->{i_col}      = 0;
-    $self->{pos}        = [ 0, 0 ];
-    $self->{marked}     = [];
+    $self->{p_begin} = 0;
+    $self->{p_end}   = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
+    $self->{i_row}   = 0;
+    $self->{i_col}   = 0;
+    $self->{pos}     = [ 0, 0 ];
+    $self->{marked}  = [];
     if ( $self->{wantarray} && defined $self->{mark} ) {
         $self->__marked_idx2rc( $self->{mark}, 1 );
     }
@@ -903,7 +903,7 @@ sub __goto {
 sub __prepare_page_number {
     my ( $self ) = @_;
     #my $total_pp = 0;
-    if ( $#{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) {
+    if ( @{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) {           # changelog
         my $total_pp = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
         my $total_pp_w = length $total_pp;
         $self->{footer_fmt} = '--- Page %0' . $total_pp_w . 'd/' . $total_pp . ' ---';
@@ -1099,7 +1099,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.625_01
+Version 1.625_02
 
 =cut
 

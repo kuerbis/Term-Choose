@@ -5,7 +5,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_01';
+our $VERSION = '1.625_02';
 
 use parent qw( Win32::Console );
 
@@ -52,3 +52,6 @@ sub DESTROY {
 1;
 
 __END__
+
+
+# Use of inherited AUTOLOAD for non-method Term::Choose::Win32::Console::constant() is no longer allowed at C:/Strawberry/perl/site/lib/Term/Choose/Win32/Console.pm line 20.

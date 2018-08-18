@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_01';
+our $VERSION = '1.625_02';
 
 use Term::Choose::Constants qw( :screen :linux );
 
@@ -297,6 +297,12 @@ sub __clear_to_end_of_screen {
 }
 
 
+sub __clear_line {
+    #my ( $self ) = @_;
+    print "\r", CLEAR_TO_END_OF_LINE;
+}
+
+
 sub __bold_underline {
     #my ( $self ) = @_;
     print BOLD_UNDERLINE;
@@ -318,6 +324,12 @@ sub __reset {
 sub __up {
     #my ( $self ) = @_;
     print "\e[${_[1]}A";
+}
+
+
+sub __down  {
+    #my ( $self ) = @_;
+    print "\e[${_[1]}B";
 }
 
 

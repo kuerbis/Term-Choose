@@ -4,14 +4,18 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_01';
+our $VERSION = '1.625_02';
 
+
+use Encode qw( decode );
+
+use Encode::Locale qw();
 use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPUT STD_OUTPUT_HANDLE
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
                        FOREGROUND_INTENSITY BACKGROUND_INTENSITY );
 
 use Term::Choose::Constants      qw( :win32 );
-use Term::Choose::Win32::Console qw();
+#use Term::Choose::Win32::Console qw();
 
 sub SHIFTED_MASK () {
       RIGHT_ALT_PRESSED
@@ -20,7 +24,6 @@ sub SHIFTED_MASK () {
     | LEFT_CTRL_PRESSED
     | SHIFT_PRESSED
 }
-
 
 
 sub new {
@@ -41,7 +44,8 @@ sub __get_key_OS {
                 return CONTROL_SPACE;
             }
             else {
-                return $char;
+                #return $char;
+                return ord decode( 'console_in', chr( $char & 0xff ) ); #
             }
         }
         else{
@@ -94,18 +98,24 @@ sub __get_key_OS {
 
 sub __set_mode {
     my ( $self, $mouse, $hide_cursor ) = @_;
+    if ( defined $self->{input}{handle} ) {
+        delete $self->{input}{handle};
+    }
     $self->{input} = Win32::Console->new( STD_INPUT_HANDLE );
+    #$self->{input} = Term::Choose::Win32::Console->new( STD_INPUT_HANDLE );
     $self->{old_in_mode} = $self->{input}->Mode();
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT )                    if ! $mouse;
     $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT ) if   $mouse;
-    if ( exists $self->{output}{handle} && defined $self->{output}{handle} ) {
+    if ( defined $self->{output}{handle} ) {
         delete $self->{output}{handle};
     }
     $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
+    #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
     $self->{curr_attr} = $self->{output}->Attr();
-    $self->{fg_color} = $self->{curr_attr} & 0x7;
-    $self->{bg_color} = $self->{curr_attr} & 0x70;
-    $self->{inverse}  = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
+    $self->{fg_color}  = $self->{curr_attr} & 0x7;
+    $self->{bg_color}  = $self->{curr_attr} & 0x70;
+    $self->{fill_attr} = $self->{bg_color} | $self->{bg_color};
+    $self->{inverse}   = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
     $self->__hide_cursor() if $hide_cursor;
     return $mouse;
 }
@@ -134,6 +144,7 @@ sub __reset_mode {
 sub __get_term_size {
     my ( $self ) = @_;
     my ( $term_width, $term_height ) = Win32::Console->new()->Size();
+    #my ( $term_width, $term_height ) = Term::Choose::Win32::Console->new()->Size();
     return $term_width - 1, $term_height - 1;
 }
 
@@ -152,8 +163,9 @@ sub __set_cursor_position {
 
 sub __hide_cursor {
     my ( $self ) = @_;
-    if ( ! exists $self->{output}{handle} && ! defined $self->{output}{handle} ) {
+    if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
         $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
+        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
         $self->{output}->Cursor( -1, -1, -1, 0 );
         delete $self->{output}{handle};
     }
@@ -165,8 +177,9 @@ sub __hide_cursor {
 
 sub __show_cursor {
     my ( $self ) = @_;
-    if ( ! exists $self->{output}{handle} && ! defined $self->{output}{handle} ) {
+    if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
         $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
+        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
         $self->{output}->Cursor( -1, -1, -1, 1 );
         delete $self->{output}{handle};
     }
@@ -178,8 +191,9 @@ sub __show_cursor {
 
 sub __clear_screen {
     my ( $self ) = @_;
-    if ( ! exists $self->{output}{handle} && ! defined $self->{output}{handle} ) {
+    if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
         $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
+        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
         $self->{curr_attr} = $self->{output}->Attr();
         $self->{output}->Cls( $self->{curr_attr} );
         delete $self->{output}{handle};
@@ -195,9 +209,21 @@ sub __clear_to_end_of_screen {
     my ( $width, $height ) = $self->{output}->Size();
     $self->__get_cursor_position();
     $self->{output}->FillAttr(
-            $self->{bg_color} | $self->{bg_color},
+            $self->{fill_attr},
             $width * $height,
             $self->{abs_cursor_x}, $self->{abs_cursor_y} );
+}
+
+
+sub __clear_line {
+    my ( $self ) = @_;
+    my ( $width, $height ) = $self->{output}->Size(); #
+    $self->__get_cursor_position();
+    $self->__set_cursor_position( 0, $self->{abs_cursor_y} );
+    $self->{output}->FillAttr(
+            $self->{fill_attr},
+            $width,
+            0, $self->{abs_cursor_y} );
 }
 
 
@@ -224,6 +250,14 @@ sub __up {
     my ( $col, $row ) = $_[0]->__get_cursor_position;
     $_[0]->__set_cursor_position( $col, $row - $_[1] );
 }
+
+
+sub __down {
+    #my ( $self, $rows_down ) = @_;
+    my ( $col, $row ) = $_[0]->__get_cursor_position;
+    $_[0]->__set_cursor_position( $col, $row + $_[1]  );
+}
+
 
 sub __left {
     #my ( $self, $cols_left ) = @_;
