@@ -172,7 +172,7 @@ sub __mouse_event_to_button {
 }
 
 
-sub __set_mode {
+sub __set_mode_raw {
     my ( $self, $mouse, $hide_cursor ) = @_;
     if ( $mouse ) {
         if ( $mouse == 3 ) {

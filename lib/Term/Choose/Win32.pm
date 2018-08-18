@@ -96,7 +96,7 @@ sub __get_key_OS {
 }
 
 
-sub __set_mode {
+sub __set_mode_raw {
     my ( $self, $mouse, $hide_cursor ) = @_;
     if ( defined $self->{input}{handle} ) {
         delete $self->{input}{handle};

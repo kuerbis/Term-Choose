@@ -1,5 +1,7 @@
 Revision history for Term::Choose
 
+1.625_03 yyyy-mm-dd
+        - Rename Plugin method __set_mode to __set_mode_raw
 
 1.625_02   2018-08-18
         - Developer release
