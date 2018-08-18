@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_02';
+our $VERSION = '1.625_03';
 
 
 use Encode qw( decode );
@@ -15,7 +15,7 @@ use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPU
                        FOREGROUND_INTENSITY BACKGROUND_INTENSITY );
 
 use Term::Choose::Constants      qw( :win32 );
-#use Term::Choose::Win32::Console qw();
+use Term::Choose::Win32::Console qw();
 
 sub SHIFTED_MASK () {
       RIGHT_ALT_PRESSED
@@ -97,54 +97,51 @@ sub __get_key_OS {
 
 
 sub __set_mode {
-    my ( $self, $mouse, $hide_cursor ) = @_;
-    if ( defined $self->{input}{handle} ) {
-        delete $self->{input}{handle};
-    }
-    $self->{input} = Win32::Console->new( STD_INPUT_HANDLE );
-    #$self->{input} = Term::Choose::Win32::Console->new( STD_INPUT_HANDLE );
+    my ( $self, $config ) = @_;
+    $self->{input} = Term::Choose::Win32::Console->new( STD_INPUT_HANDLE );
     $self->{old_in_mode} = $self->{input}->Mode();
-    $self->{input}->Mode( !ENABLE_PROCESSED_INPUT )                    if ! $mouse;
-    $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT ) if   $mouse;
-    if ( defined $self->{output}{handle} ) {
-        delete $self->{output}{handle};
+    if ( $config->{mouse} ) {
+        $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT );
     }
-    $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
-    #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+    else {
+        $self->{input}->Mode( !ENABLE_PROCESSED_INPUT );
+    }
+    $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
     $self->{curr_attr} = $self->{output}->Attr();
     $self->{fg_color}  = $self->{curr_attr} & 0x7;
     $self->{bg_color}  = $self->{curr_attr} & 0x70;
     $self->{fill_attr} = $self->{bg_color} | $self->{bg_color};
     $self->{inverse}   = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
-    $self->__hide_cursor() if $hide_cursor;
-    return $mouse;
+    if ( $config->{hide_cursor} ) {
+        $self->{hide_cursor} = $config->{hide_cursor};
+        $self->__hide_cursor();
+    }
+    return $config->{mouse};
 }
 
 
 sub __reset_mode {
-    my ( $self, $mouse, $hide_cursor ) = @_;  # no use for $mouse on win32
+    my ( $self ) = @_;
     if ( defined $self->{input} ) {
         if ( defined $self->{old_in_mode} ) {
             $self->{input}->Mode( $self->{old_in_mode} );
             delete $self->{old_in_mode};
         }
         $self->{input}->Flush;
-        # workaround Bug #33513:
-        delete $self->{input}{handle};
     }
     if ( defined $self->{output} ) {
         $self->__reset;
-        $self->__show_cursor() if $hide_cursor;
+        if ( delete $self->{hide_cursor} ) {
+            $self->__show_cursor();
+        }
         #$self->{output}->Free();
-        delete $self->{output}{handle};
     }
 }
 
 
 sub __get_term_size {
     my ( $self ) = @_;
-    my ( $term_width, $term_height ) = Win32::Console->new()->Size();
-    #my ( $term_width, $term_height ) = Term::Choose::Win32::Console->new()->Size();
+    my ( $term_width, $term_height ) = Term::Choose::Win32::Console->new()->Size();
     return $term_width - 1, $term_height - 1;
 }
 
@@ -164,43 +161,30 @@ sub __set_cursor_position {
 sub __hide_cursor {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
-        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
-        $self->{output}->Cursor( -1, -1, -1, 0 );
-        delete $self->{output}{handle};
+        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
     }
-    else {
-        $self->{output}->Cursor( -1, -1, -1, 0 );
-    }
+    $self->{output}->Cursor( -1, -1, -1, 0 );
 }
 
 
 sub __show_cursor {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
-        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
-        $self->{output}->Cursor( -1, -1, -1, 1 );
-        delete $self->{output}{handle};
+        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
     }
-    else {
-        $self->{output}->Cursor( -1, -1, -1, 1 );
-    }
+    $self->{output}->Cursor( -1, -1, -1, 1 );
 }
 
 
 sub __clear_screen {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
-        #$self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+    }
+    if ( ! defined $self->{curr_attr} ) {
         $self->{curr_attr} = $self->{output}->Attr();
-        $self->{output}->Cls( $self->{curr_attr} );
-        delete $self->{output}{handle};
     }
-    else {
-        $self->{output}->Cls( $self->{curr_attr} );
-    }
+    $self->{output}->Cls( $self->{curr_attr} );
 }
 
 

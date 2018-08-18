@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_02';
+our $VERSION = '1.625_03';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -158,7 +158,8 @@ sub __validate_and_add_options {
 
 sub __init_term {
     my ( $self ) = @_;
-    $self->{mouse} = $self->{plugin}->__set_mode( $self->{mouse}, $self->{hide_cursor} );
+    my $config = { mode => 'ultra-raw', mouse => $self->{mouse}, hide_cursor => $self->{hide_cursor} };
+    $self->{mouse} = $self->{plugin}->__set_mode( $config );
 }
 
 
@@ -171,7 +172,7 @@ sub __reset_term {
         $self->{plugin}->__clear_to_end_of_screen();
     }
     if ( defined $self->{plugin} ) {
-        $self->{plugin}->__reset_mode( $self->{mouse}, $self->{hide_cursor} );
+        $self->{plugin}->__reset_mode();
     }
     if ( exists $self->{backup_opt} ) {
         my $backup_opt = $self->{backup_opt};
@@ -1099,7 +1100,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.625_02
+Version 1.625_03
 
 =cut
 
