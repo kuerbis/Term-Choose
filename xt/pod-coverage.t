@@ -12,4 +12,5 @@ use Term::Choose;
 #all_pod_coverage_ok();
 
 plan tests => 1;
-pod_coverage_ok( 'Term::Choose' );
+pod_coverage_ok('Term::Choose');
+

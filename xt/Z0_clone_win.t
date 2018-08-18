@@ -2,20 +2,21 @@ use 5.008003;
 use warnings;
 use strict;
 use Test::More;
-use FindBin               qw( $RealBin );
+use FindBin qw( $RealBin );
 use File::Spec::Functions qw( catfile );
 
 BEGIN {
     if ( $^O eq 'MSWin32' ) {
         plan skip_all => "MSWin32: Expect not available.";
     }
-    #if ( ! $ENV{TESTS_USING_EXPECT_OK} ) {
-    #    plan skip_all => "Environment variable 'TESTS_USING_EXPECT_OK' not enabled.";
-    #}
+
+#if ( ! $ENV{TESTS_USING_EXPECT_OK} ) {
+#    plan skip_all => "Environment variable 'TESTS_USING_EXPECT_OK' not enabled.";
+#}
 }
 
 eval "use Expect";
-if ( $@ ) {
+if ($@) {
     plan skip_all => $@;
 }
 
@@ -27,34 +28,35 @@ my $type = 'simple';
 my $exp;
 eval {
     $exp = Expect->new();
-    $exp->raw_pty( 1 );
-    $exp->log_stdout( 0 );
+    $exp->raw_pty(1);
+    $exp->log_stdout(0);
     $exp->slave->clone_winsize_from( \*STDIN );
 
-    my $command     = $^X;
-    my $script      = catfile $RealBin, 'Z_choose.pl';
-    my @parameters  = ( $script, $type );
+    my $command    = $^X;
+    my $script     = catfile $RealBin, 'Z_choose.pl';
+    my @parameters = ( $script, $type );
 
     -r $script or die "$script is NOT readable";
-    $exp->spawn( $command, @parameters ) or die "Spawn '$command @parameters' NOT ok $!";
+    $exp->spawn( $command, @parameters )
+      or die "Spawn '$command @parameters' NOT ok $!";
     1;
 }
-or plan skip_all => $@;
+  or plan skip_all => $@;
 
+my $a_ref = Z_Data_Test_Choose::return_test_data($type);
+my $ref   = shift @$a_ref;
 
-my $a_ref = Z_Data_Test_Choose::return_test_data( $type );
-my $ref = shift @$a_ref;
-
-my $ret = $exp->expect( 2, [ qr/Your choice: .*/ ] );
+my $ret = $exp->expect( 2, [qr/Your choice: .*/] );
 my $expected = $ref->{expected};
-$exp->send( "\r" );
-$ret = $exp->expect( 2, [ qr/<.+>/ ] );
+$exp->send("\r");
+$ret = $exp->expect( 2, [qr/<.+>/] );
 ok( $ret, 'matched something' );
 
 my $result = $exp->match();
-$result = '' if ! defined $result;
+$result = '' if !defined $result;
 ok( $result eq $expected, qq[expected: "$expected", got: "$result"] );
 
 $exp->hard_close();
 
 done_testing();
+
