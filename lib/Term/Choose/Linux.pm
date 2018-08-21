@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_03';
+our $VERSION = '1.626';
 
 use Term::Choose::Constants qw( :screen :linux );
 
@@ -238,10 +238,10 @@ sub __set_mode {
 
 sub __reset_mode {
     my ( $self ) = @_;
-    if ( $self->{hide_cursor} ) {
+    if ( delete $self->{hide_cursor} ) {
         $self->__show_cursor();
     }
-    if ( $self->{mouse} ) {
+    if ( delete $self->{mouse} ) {
         binmode STDIN, ':encoding(UTF-8)' or warn "binmode STDIN, :encoding(UTF-8): $!\n";
         print UNSET_EXT_MODE_MOUSE_1005     if $self->{mouse} == 3;
         print UNSET_SGR_EXT_MODE_MOUSE_1006 if $self->{mouse} == 4;
@@ -305,9 +305,9 @@ sub __clear_screen {
 }
 
 
-sub __clear_to_end_of_screen {
+sub __clear_lines_to_end_of_screen {
     #my ( $self ) = @_;
-    print CLEAR_TO_END_OF_SCREEN;
+    print "\r", CLEAR_TO_END_OF_SCREEN;
 }
 
 
@@ -334,6 +334,8 @@ sub __reset {
     print RESET;
 }
 
+
+# up, down, left, right: $_[1] has to be 1 or greater
 
 sub __up {
     #my ( $self ) = @_;

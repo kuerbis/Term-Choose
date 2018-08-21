@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.625_03';
+our $VERSION = '1.626';
 
 
 use Encode qw( decode );
@@ -14,8 +14,9 @@ use Win32::Console qw( STD_INPUT_HANDLE ENABLE_MOUSE_INPUT ENABLE_PROCESSED_INPU
                        RIGHT_ALT_PRESSED LEFT_ALT_PRESSED RIGHT_CTRL_PRESSED LEFT_CTRL_PRESSED SHIFT_PRESSED
                        FOREGROUND_INTENSITY BACKGROUND_INTENSITY );
 
-use Term::Choose::Constants      qw( :win32 );
-use Term::Choose::Win32::Console qw();
+use Win32::Console::PatchForRT33513 qw();
+use Term::Choose::Constants         qw( :win32 );
+
 
 sub SHIFTED_MASK () {
       RIGHT_ALT_PRESSED
@@ -44,8 +45,7 @@ sub __get_key_OS {
                 return CONTROL_SPACE;
             }
             else {
-                #return $char;
-                return ord decode( 'console_in', chr( $char & 0xff ) ); #
+                return ord decode( 'console_in', chr( $char & 0xff ) );
             }
         }
         else{
@@ -98,7 +98,7 @@ sub __get_key_OS {
 
 sub __set_mode {
     my ( $self, $config ) = @_;
-    $self->{input} = Term::Choose::Win32::Console->new( STD_INPUT_HANDLE );
+    $self->{input} = Win32::Console->new( STD_INPUT_HANDLE );
     $self->{old_in_mode} = $self->{input}->Mode();
     if ( $config->{mouse} ) {
         $self->{input}->Mode( !ENABLE_PROCESSED_INPUT|ENABLE_MOUSE_INPUT );
@@ -106,7 +106,7 @@ sub __set_mode {
     else {
         $self->{input}->Mode( !ENABLE_PROCESSED_INPUT );
     }
-    $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+    $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
     $self->{curr_attr} = $self->{output}->Attr();
     $self->{fg_color}  = $self->{curr_attr} & 0x7;
     $self->{bg_color}  = $self->{curr_attr} & 0x70;
@@ -141,8 +141,8 @@ sub __reset_mode {
 
 sub __get_term_size {
     my ( $self ) = @_;
-    my ( $term_width, $term_height ) = Term::Choose::Win32::Console->new()->Size();
-    return $term_width - 1, $term_height - 1;
+    my ( $term_width, $term_height ) = Win32::Console->new()->Size();
+    return $term_width - 1, $term_height;
 }
 
 
@@ -161,7 +161,7 @@ sub __set_cursor_position {
 sub __hide_cursor {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
     }
     $self->{output}->Cursor( -1, -1, -1, 0 );
 }
@@ -170,7 +170,7 @@ sub __hide_cursor {
 sub __show_cursor {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
     }
     $self->{output}->Cursor( -1, -1, -1, 1 );
 }
@@ -179,7 +179,7 @@ sub __show_cursor {
 sub __clear_screen {
     my ( $self ) = @_;
     if ( ! exists $self->{output}{handle} || ! defined $self->{output}{handle} ) {
-        $self->{output} = Term::Choose::Win32::Console->new( STD_OUTPUT_HANDLE );
+        $self->{output} = Win32::Console->new( STD_OUTPUT_HANDLE );
     }
     if ( ! defined $self->{curr_attr} ) {
         $self->{curr_attr} = $self->{output}->Attr();
@@ -188,14 +188,15 @@ sub __clear_screen {
 }
 
 
-sub __clear_to_end_of_screen {
+sub __clear_lines_to_end_of_screen {
     my ( $self ) = @_;
     my ( $width, $height ) = $self->{output}->Size();
     $self->__get_cursor_position();
+    $self->__set_cursor_position( 0, $self->{abs_cursor_y}  );
     $self->{output}->FillAttr(
             $self->{fill_attr},
             $width * $height,
-            $self->{abs_cursor_x}, $self->{abs_cursor_y} );
+            0, $self->{abs_cursor_y} );
 }
 
 
