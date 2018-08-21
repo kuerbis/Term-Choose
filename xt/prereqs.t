@@ -6,7 +6,6 @@ use Test::More;
 use Test::Prereq;
 prereq_ok( undef, [
     qw(     Term::ReadKey
-            parent
             Encode
             Encode::Locale
             Win32::Console

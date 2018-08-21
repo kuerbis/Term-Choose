@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.627   2018-08-21
+    - Code refactoring.
+
 1.626   2018-08-21
     - Bugfix in 'prepare_page_number'.
     - Modified "Term::Choose::Linux" and "Term::Choose::Win32" so that "Term::Form" can use them.

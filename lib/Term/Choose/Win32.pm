@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.626';
+our $VERSION = '1.627';
 
 
 use Encode qw( decode );
@@ -112,8 +112,7 @@ sub __set_mode {
     $self->{bg_color}  = $self->{curr_attr} & 0x70;
     $self->{fill_attr} = $self->{bg_color} | $self->{bg_color};
     $self->{inverse}   = ( $self->{bg_color} >> 4 ) | ( $self->{fg_color} << 4 );
-    if ( $config->{hide_cursor} ) {
-        $self->{hide_cursor} = $config->{hide_cursor};
+    if ( $self->{hide_cursor} = $config->{hide_cursor} ) {
         $self->__hide_cursor();
     }
     return $config->{mouse};
@@ -131,10 +130,10 @@ sub __reset_mode {
     }
     if ( defined $self->{output} ) {
         $self->__reset;
-        if ( delete $self->{hide_cursor} ) {
-            $self->__show_cursor();
-        }
         #$self->{output}->Free();
+    }
+    if ( delete $self->{hide_cursor} ) {
+        $self->__show_cursor();
     }
 }
 
@@ -231,29 +230,29 @@ sub __reset {
 
 
 sub __up {
-    #my ( $self, $rows_up ) = @_;
-    my ( $col, $row ) = $_[0]->__get_cursor_position;
-    $_[0]->__set_cursor_position( $col, $row - $_[1] );
+    my ( $self, $rows_up ) = @_;
+    $self->__get_cursor_position;
+    $self->__set_cursor_position( $self->{abs_cursor_x}, $self->{abs_cursor_y} - $rows_up );
 }
 
 
 sub __down {
-    #my ( $self, $rows_down ) = @_;
-    my ( $col, $row ) = $_[0]->__get_cursor_position;
-    $_[0]->__set_cursor_position( $col, $row + $_[1]  );
+    my ( $self, $rows_down ) = @_;
+    $self->__get_cursor_position;
+    $self->__set_cursor_position( $self->{abs_cursor_x}, $self->{abs_cursor_y} + $rows_down );
 }
 
 
 sub __left {
-    #my ( $self, $cols_left ) = @_;
-    my ( $col, $row ) = $_[0]->__get_cursor_position;
-    $_[0]->__set_cursor_position( $col - $_[1], $row );
+    my ( $self, $cols_left ) = @_;
+    $self->__get_cursor_position;
+    $self->__set_cursor_position( $self->{abs_cursor_x} - $cols_left, $self->{abs_cursor_y} );
 }
 
 sub __right {
-    #my ( $self, $cols_right ) = @_;
-    my ( $col, $row ) = $_[0]->__get_cursor_position;
-    $_[0]->__set_cursor_position( $col + $_[1], $row );
+    my ( $self, $cols_right ) = @_;
+    $self->__get_cursor_position;
+    $self->__set_cursor_position( $self->{abs_cursor_x} + $cols_right, $self->{abs_cursor_y} );
 }
 
 
