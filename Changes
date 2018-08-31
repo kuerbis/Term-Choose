@@ -1,5 +1,8 @@
 Revision history for Term::Choose
 
+1.625_3 yyyy-mm-dd
+
+        - Ensure Pod code blocks render nicely at 80 columns.
 
 1.627   2018-08-21
     - Code refactoring.
