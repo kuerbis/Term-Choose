@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.629';
+our $VERSION = '1.630';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -814,7 +814,7 @@ sub __prepare_promptline {
     $self->{nr_prompt_lines} = $self->{prompt_copy} =~ s/\n/\n\r/g;
     if ( @color ) {
         $self->{prompt_copy} =~ s/\x{feff}/shift @color/ge;
-        $self->{prompt_copy} .= "\e[0m";
+        $self->{prompt_copy} .= RESET;
     }
 }
 
@@ -1040,29 +1040,31 @@ sub __wr_cell {
         my $emphasised = ( $is_marked ? BOLD_UNDERLINE : '' ) . ( $is_current_pos ? REVERSE : '' );
         my @color = ( $self->{orig_list}[$idx] || '' ) =~ /(\e\[[\d;]*m)/g;
         if ( $emphasised ) {
+            for ( @color ) {
+                # keep emphasise after color escapes
+                $_ .= $emphasised;
+            }
             if ( $self->{color} == 1 ) {
+                # don't emphasise leading and trailing spaces
                 $str = $pre . $emphasised . $str . RESET . $post;
-                $_ .= $emphasised for @color;
             }
             elsif ( $self->{color} == 2 ) {
+                # the cursor keeps the default color
+                $str = $emphasised . $pre . $str . $post . RESET;
                 if ( $is_current_pos ) {
                     @color = ();
                     $str =~ s/\x{feff}//g;
-                    $str = REVERSE . $pre . $emphasised . $str . RESET . REVERSE . $post . RESET;
-                }
-                else {
-                    $str = $pre . $emphasised . $str . RESET . $post;
-                    #$str = $emphasised . $pre . $str . $post . RESET;
-                    $_ .= $emphasised for @color;
                 }
             }
             elsif ( $self->{color} == 3 ) {
+                # the cursor has the color of the string
                 if ( $str =~ s/^\x{feff}([^\x{feff}]*)\x{feff}?\z/$1/sm ) {
-                    $str = $emphasised . $color[0] . $pre . $str . $post . RESET;
+                    # leading and trailing spaces have the color of the string if only one color
+                    $str = $color[0] . $pre . $str . $post . RESET;
                 }
                 else {
+                    # else leading and trailing spaces have the default color
                     $str = $emphasised . $pre . $str . $post . RESET;
-                    $_ .= $emphasised for @color;
                 }
             }
         }
@@ -1167,7 +1169,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.629
+Version 1.630
 
 =cut
 
@@ -1397,9 +1399,19 @@ Options which expect a number as their value expect integers.
 
 =head3 color
 
+Setting this option to C<1>, C<2> or C<3> enables the support for color and text formatting escape sequences.
+
 0 - off (default)
 
-1, 2, 3 - enable the support for color and text formatting escape sequences.
+1, 2 or 3 - on
+
+How the current position and marked items are highlighted:
+
+1 - only the width of the string is highlighted
+
+2 - the whole column width is highlighted, the cursor keeps the default color
+
+3 - the whole column width is highlighted, the cursor takes the color of the string
 
 =head3 default
 
@@ -1537,8 +1549,6 @@ See C<INITIAL_TAB> and C<SUBSEQUENT_TAB> in L<Text::LineFold>.
 (default: undefined)
 
 =head3 ll
-
-The documentation of this option may be removed with the next release.
 
 If all elements have the same length, the length can be passed with this option. C<choose> then doesn't calculate the
 length of the longest element itself but uses the passed value. I<length> refers here to the number of print columns
