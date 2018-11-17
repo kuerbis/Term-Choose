@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.631';
+our $VERSION = '1.632';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -997,7 +997,7 @@ sub __wr_cell {
                     $str =~ s/(\e\[[\d;]*m)//g;
                 }
                 else {
-                    $str =~ s/(\e\[[\d;]*m)/$1 . $emphasised/g;
+                    $str =~ s/(\e\[[\d;]*m)/${1}$emphasised/g;
                 }
                 $str = $emphasised . $str;
             }
@@ -1172,7 +1172,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.631
+Version 1.632
 
 =cut
 
