@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.632';
+our $VERSION = '1.633';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -102,7 +102,7 @@ sub __valid_options {
         page                => '[ 0 1 ]',
         include_highlighted => '[ 0 1 2 ]',
         justify             => '[ 0 1 2 ]',
-        color               => '[ 0 1 2 3 ]',
+        color               => '[ 0 1 2 3 ]', # '[ 0 1 ]',
         layout              => '[ 0 1 2 3 ]',
         mouse               => '[ 0 1 2 3 4 ]',
         keep                => '[ 1-9 ][ 0-9 ]*',
@@ -258,6 +258,10 @@ sub __choose {
         if ( $new_width != $self->{term_width} || $new_height != $self->{term_height} ) {
             if ( $self->{ll} ) {
                 return -1;
+            }
+            if ( $^O eq 'MSWin32' ) {
+                $self->__reset_term( 1 );
+                $self->__init_term();
             }
             ( $self->{term_width}, $self->{term_height} ) = ( $new_width, $new_height );
             $self->__copy_orig_list( $orig_list_ref );
@@ -993,7 +997,8 @@ sub __wr_cell {
             my $emphasised = ( $is_marked ? BOLD_UNDERLINE : '' ) . ( $is_current_pos ? REVERSE : '' );
             my $str = $self->{list}[$idx];
             if ( $emphasised ) {
-                if ( $self->{color} == 2 && $is_current_pos ) {
+                #if ( $self->{color} == 1 && $is_current_pos ) {
+                if ( $is_current_pos ) {
                     $str =~ s/(\e\[[\d;]*m)//g;
                 }
                 else {
@@ -1046,29 +1051,29 @@ sub __wr_cell {
                     # keep emphasise after color escapes
                     $_ .= $emphasised;
                 }
-                if ( $self->{color} == 1 ) {
-                    # don't emphasise leading and trailing spaces
-                    $str = $pre . $emphasised . $str . RESET . $post;
-                }
-                elsif ( $self->{color} == 2 ) {
+                #if ( $self->{color} == 1 ) {
                     # the cursor keeps the default color
                     $str = $emphasised . $pre . $str . $post . RESET;
                     if ( $is_current_pos ) {
                         @color = ();
                         $str =~ s/\x{feff}//g;
                     }
-                }
-                elsif ( $self->{color} == 3 ) {
-                    # the cursor has the color of the string
-                    if ( $str =~ s/^\x{feff}([^\x{feff}]*)\x{feff}?\z/$1/sm ) {
-                        # leading and trailing spaces have the color of the string if only one color
-                        $str = $color[0] . $pre . $str . $post . RESET;
-                    }
-                    else {
-                        # else leading and trailing spaces have the default color
-                        $str = $emphasised . $pre . $str . $post . RESET;
-                    }
-                }
+                #}
+                #elsif ( $self->{color} == 2 ) {
+                #    # the cursor has the color of the string
+                #    if ( $str =~ s/^\x{feff}([^\x{feff}]*)\x{feff}?\z/$1/sm ) {
+                #        # leading and trailing spaces have the color of the string if only one color
+                #        $str = $color[0] . $pre . $str . $post . RESET;
+                #    }
+                #    else {
+                #        # else leading and trailing spaces have the default color
+                #        $str = $emphasised . $pre . $str . $post . RESET;
+                #    }
+                #}
+                #elsif ( $self->{color} == 3 ) {
+                #    # don't emphasise leading and trailing spaces
+                #    $str = $pre . $emphasised . $str . RESET . $post;
+                #}
             }
             else {
                 $str = $pre . $str . $post;
@@ -1172,7 +1177,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.632
+Version 1.633
 
 =cut
 
@@ -1402,19 +1407,11 @@ Options which expect a number as their value expect integers.
 
 =head3 color
 
-Setting this option to C<1>, C<2> or C<3> enables the support for color and text formatting escape sequences.
+Setting this option to C<1> enables the support for color and text formatting escape sequences.
 
 0 - off (default)
 
-1, 2 or 3 - on
-
-How the current position and marked items are highlighted:
-
-1 - only the width of the string is highlighted
-
-2 - the whole column width is highlighted, the cursor keeps the default color
-
-3 - the whole column width is highlighted, the cursor takes the color of the string
+1 - on
 
 =head3 default
 

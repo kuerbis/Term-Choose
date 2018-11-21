@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.633   2018-11-21
+    - Update option 'color'.
+
 1.632   2018-11-17
     - Bugfix string concatenation in substitution.
 
