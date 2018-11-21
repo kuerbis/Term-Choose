@@ -259,10 +259,6 @@ sub __choose {
             if ( $self->{ll} ) {
                 return -1;
             }
-            if ( $^O eq 'MSWin32' ) {
-                $self->__reset_term( 1 );
-                $self->__init_term();
-            }
             ( $self->{term_width}, $self->{term_height} ) = ( $new_width, $new_height );
             $self->__copy_orig_list( $orig_list_ref );
             $self->{default} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
