@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.634';
+our $VERSION = '1.635';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -58,7 +58,7 @@ sub __defaults {
         info                => '',
         beep                => 0,
         clear_screen        => 0,
-        codepage_mapping    => 1,
+        codepage_mapping    => 0,
         color               => 0,
         #default            => undef,
         empty               => '<empty>',
@@ -229,7 +229,12 @@ sub __choose {
     $self->__undef_to_defaults();
     if ( $^O eq "MSWin32" && $self->{color} ) {
         require Win32::Console::ANSI;
-        print "\e(U" if ! $self->{codepage_mapping};
+        if ( $self->{codepage_mapping} ) {
+            print "\e(K";
+        }
+        else {
+            print "\e(U";
+        }
     }
     $self->__copy_orig_list( $orig_list_ref );
     $self->__length_longest();
@@ -1158,7 +1163,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.634
+Version 1.635
 
 =cut
 
@@ -1388,12 +1393,13 @@ Options which expect a number as their value expect integers.
 
 =head3 codepage_mapping
 
-This option has only meaning if the operating system is MSWin32 and the option I<color> is enabled. By setting this
-option to C<0> one can disable the codepage mapping enabled by L<Win32::Console::ANSI>. See option L</color>.
+This option has only meaning if the operating system is MSWin32 and the option I<color> is enabled.
 
-0 - disable automatic codepage mapping
+By setting this option to C<1> one can enable the codepage mapping offered by L<Win32::Console::ANSI>.
 
-1 - keep automatic codepage mapping (default)
+0 - disable automatic codepage mapping (default)
+
+1 - keep automatic codepage mapping
 
 =head3 color
 
@@ -1403,11 +1409,8 @@ Setting this option to C<1> enables the support for color and text formatting es
 
 1 - on
 
-If the OS is MSWin32 and the option I<color> is enabled, L<Win32::Console::ANSI> is loaded; this module emulates an ANSI
-console.
-
-C<Win32::Console::ANSI> also converts the characters from Windows code page to DOS code page (the so-called ANSI to OEM
-conversion). To disable this character conversion set the option I<codepage_mapping> to C<0>.
+If the OS is MSWin32 and this option is enabled, L<Win32::Console::ANSI> is loaded. C<Win32::Console::ANSI> emulates
+an ANSI console. See also the option L</codepage_mapping>.
 
 =head3 default
 
@@ -1747,7 +1750,7 @@ to a true value, ambiguous width characters are treated as full width.
 
 =head2 Escape sequences
 
-It is required a terminal that supports ANSI escape sequences.
+It is required a terminal that supports ANSI escape sequences except the OS is MSWin32.
 
 If the option "hide_cursor" is enabled, it is also required the support for the following escape sequences:
 
@@ -1763,8 +1766,13 @@ If a I<mouse> mode is enabled
 
 are used to enable/disable the different I<mouse> modes.
 
-If the OS is MSWin32 L<Win32::Console> is used, to emulate the behavior of the escape sequences. If the option I<color> is
-enabled, L<Win32::Console::ANSI> is loaded to translate the color and text formatting escape sequences.
+=head2 MSWin32
+
+If the OS is MSWin32 L<Win32::Console> is used.
+
+If the option I<color> is enabled also L<Win32::Console::ANSI> is used. By default C<Win32::Console::ANSI> converts the
+characters from Windows code page to DOS code page (the so-called ANSI to OEM conversion). This conversation is disabled
+by default in C<Term::Choose> but one can enable it by setting the option L</codepage_mapping>.
 
 =head1 SUPPORT
 

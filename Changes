@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.635   2018-11-24
+    - Don't enable codepage mapping if 'color' is set to avoid two different defaults.
+
 1.634   2018-11-22
     - New option 'codepage_mapping'.
     - Code cleanup.
