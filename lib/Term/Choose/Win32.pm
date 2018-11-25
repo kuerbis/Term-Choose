@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.635';
+our $VERSION = '1.636';
 
 
 use Encode qw( decode );
@@ -129,7 +129,8 @@ sub __reset_mode {
         $self->{input}->Flush;
     }
     if ( defined $self->{output} ) {
-        $self->__reset;
+        $self->__reset; # reset attributes
+        $self->{output}->OutputCP( $self->{original_codepage} ); # ###
         #$self->{output}->Free();
     }
     if ( delete $self->{hide_cursor} ) {
