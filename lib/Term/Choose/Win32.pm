@@ -129,8 +129,7 @@ sub __reset_mode {
         $self->{input}->Flush;
     }
     if ( defined $self->{output} ) {
-        $self->__reset; # reset attributes
-        $self->{output}->OutputCP( $self->{original_codepage} ); # ###
+        $self->__reset;
         #$self->{output}->Free();
     }
     if ( delete $self->{hide_cursor} ) {
