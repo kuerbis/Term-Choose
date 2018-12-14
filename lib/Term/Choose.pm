@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.638';
+our $VERSION = '1.639';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -97,8 +97,8 @@ sub __valid_options {
     return {
         beep                => '[ 0 1 ]',
         clear_screen        => '[ 0 1 ]',
-        codepage_mapping    => '[ 0 1 ]',
         color               => '[ 0 1 ]',
+        codepage_mapping    => '[ 0 1 ]',
         hide_cursor         => '[ 0 1 ]',
         index               => '[ 0 1 ]',
         order               => '[ 0 1 ]',
@@ -1169,7 +1169,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.638
+Version 1.639
 
 =cut
 
