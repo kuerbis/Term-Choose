@@ -97,8 +97,8 @@ sub __valid_options {
     return {
         beep                => '[ 0 1 ]',
         clear_screen        => '[ 0 1 ]',
-        color               => '[ 0 1 ]',
         codepage_mapping    => '[ 0 1 ]',
+        color               => '[ 0 1 ]',
         hide_cursor         => '[ 0 1 ]',
         index               => '[ 0 1 ]',
         order               => '[ 0 1 ]',
