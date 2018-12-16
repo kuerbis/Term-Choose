@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.639';
+our $VERSION = '1.640';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -767,6 +767,9 @@ sub __write_first_screen {
     if ( $self->{clear_screen} ) {
         $self->{plugin}->__clear_screen();
     }
+    else {
+        $self->{plugin}->__clear_lines_to_end_of_screen
+    }
     if ( $self->{prompt_copy} ne '' ) {
         print $self->{prompt_copy};
     }
@@ -1169,7 +1172,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.639
+Version 1.640
 
 =cut
 
