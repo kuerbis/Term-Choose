@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.651   2019-07-02
+    - Bugfix constant LINE_FEED.
+
 1.650   2019-07-02
     - Replace KEY_ENTER with LINE_FEED/CARRIAGE_RETURN.
 

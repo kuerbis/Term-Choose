@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.650';
+our $VERSION = '1.651';
 
 use Exporter qw( import );
 
@@ -128,7 +128,7 @@ use constant {
     KEY_BTAB        => 0x08,
     CONTROL_I       => 0x09,
     KEY_TAB         => 0x09,
-    LINE_FEED       => 0x1a,
+    LINE_FEED       => 0x0a,
     CONTROL_K       => 0x0b,
     CARRIAGE_RETURN => 0x0d,
     CONTROL_Q       => 0x11,
