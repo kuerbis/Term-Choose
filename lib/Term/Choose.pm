@@ -44,7 +44,7 @@ sub new {
         }
     }
     my $self = bless $instance_defaults, $class;
-    $self->{backup_instance_defaults} = { %$self };
+    $self->{backup_instance_defaults} = { %$instance_defaults };
     $self->{plugin} = $Plugin->new();
     return $self;
 }
