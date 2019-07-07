@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.653';
+our $VERSION = '1.654';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -44,7 +44,7 @@ sub new {
         }
     }
     my $self = bless $instance_defaults, $class;
-    $self->{backup_instance_defaults} = $instance_defaults;
+    $self->{backup_instance_defaults} = { %$self };
     $self->{plugin} = $Plugin->new();
     return $self;
 }
@@ -186,7 +186,7 @@ sub __reset_term {
     if ( exists $self->{backup_instance_defaults} ) {  # backup_instance_defaults exists if ObjectOriented
         my $instance_defaults = $self->{backup_instance_defaults};
         for my $key ( keys %$self ) {
-            if ( $key eq 'plugin' || $key eq 'instance_defaults' ) {
+            if ( $key eq 'plugin' || $key eq 'backup_instance_defaults' ) {
                 next;
             }
             elsif ( exists $instance_defaults->{$key} ) {
@@ -1143,7 +1143,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.653
+Version 1.654
 
 =cut
 
