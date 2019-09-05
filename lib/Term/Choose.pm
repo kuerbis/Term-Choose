@@ -1747,7 +1747,7 @@ The escape sequences to enable the I<mouse> mode are always hardcoded.
 
 =head2 MSWin32
 
-If the OS is MSWin32 L<Win32::Console> and L<Win32::Console::ANSI> with ANSI escape sequences are used. See option also
+If the OS is MSWin32 L<Win32::Console> and L<Win32::Console::ANSI> with ANSI escape sequences are used. See also
 L</codepage_mapping>.
 
 =head1 SUPPORT
