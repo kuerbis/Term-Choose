@@ -1539,7 +1539,7 @@ From broad to narrow: 0 > 1 > 2 > 3
 
 =head3 lf
 
-If I<prompt> and I<info> lines are folded the option I<lf> allows one to insert spaces at beginning of the folded lines.
+If I<prompt> and I<info> lines are folded, the option I<lf> allows one to insert spaces at beginning of the folded lines.
 
 The option I<lf> expects a reference to an array with one or two elements:
 
