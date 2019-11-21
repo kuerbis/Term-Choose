@@ -243,7 +243,7 @@ sub __choose {
         }
         #####
 
-        ##### 15.11.2019
+        ##### 21.11.2019
         if ( ! defined $opt->{tabs_prompt} && ! defined $opt->{tabs_info} && defined $opt->{lf} ) {
             $opt->{tabs_prompt} = $opt->{lf};
             $opt->{tabs_info} = $opt->{lf};
