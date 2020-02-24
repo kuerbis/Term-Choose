@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.708   2020-02-24
+    - Experimental option 'footer_string'.
+
 1.707   2019-11-22
     - Update option validation.
 
