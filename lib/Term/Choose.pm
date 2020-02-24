@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.708';
+our $VERSION = '1.709';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -697,7 +697,7 @@ sub __prepare_page_number {
         else {
             $self->{footer_fmt} = '--- Page %0' . $pp_total_w . 'd/' . $pp_total . ' ---';
         }
-        if ( length( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) { # color
+        if ( print_columns( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) { # color, length
             $self->{footer_fmt} = '%0' . $pp_total_w . 'd/' . $pp_total;
             if ( length( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) {
                 $pp_total_w = $self->{avail_width} if $pp_total_w > $self->{avail_width};
@@ -800,7 +800,7 @@ sub __wr_screen {
         $self->__goto( $self->{avail_height_idx} + $self->{pp_row}, 0 );
         my $pp_line = sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;
         print $pp_line;
-        $self->{i_col} += length $pp_line;
+        $self->{i_col} += print_columns( $pp_line );
     }
     for my $row ( $self->{first_page_row} .. $self->{last_page_row} ) {
         for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
@@ -1196,7 +1196,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.708
+Version 1.709
 
 =cut
 
