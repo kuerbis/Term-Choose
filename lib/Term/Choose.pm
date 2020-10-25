@@ -680,11 +680,11 @@ sub __prepare_promptline {
 
 sub __prepare_page_number {
     my ( $self ) = @_;
-    if ( ( @{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) || defined $self->{footer_string} ) {
+    if ( ( @{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) || defined $self->{footer} ) {
         my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
         my $pp_total_w = length $pp_total;
-        if ( defined $self->{footer_string} ) {
-            $self->{footer_fmt} = '%0' . $pp_total_w . 'd/' . $pp_total . ' ' . $self->{footer_string};
+        if ( defined $self->{footer} ) {
+            $self->{footer_fmt} = '%0' . $pp_total_w . 'd/' . $pp_total . ' ' . $self->{footer};
         }
         else {
             $self->{footer_fmt} = '--- Page %0' . $pp_total_w . 'd/' . $pp_total . ' ---';
@@ -741,7 +741,7 @@ sub __write_first_screen {
         $self->{avail_width} = 1;
     }
     $self->__prepare_promptline();
-    $self->{pp_row} = $self->{page} || $self->{footer_string} ? 1 : 0;
+    $self->{pp_row} = $self->{page} || $self->{footer} ? 1 : 0;
     $self->{avail_height} -= $self->{count_prompt_lines} + $self->{pp_row};
     if ( $self->{avail_height} < $self->{keep} ) {
         $self->{avail_height} = $self->{term_height} >= $self->{keep} ? $self->{keep} : $self->{term_height};
