@@ -1086,9 +1086,6 @@ sub __list_idx2rc {
 
 sub __marked_idx2rc {
     my ( $self, $list_of_indexes, $boolean ) = @_;
-    if ( defined $self->{skip_items} ) {
-        $list_of_indexes = [ grep { ! /$self->{skip_items}/ } @$list_of_indexes ];
-    }
     my $last_list_idx = $#{$self->{list}};
     if ( $self->{current_layout} == 3 ) {
         for my $idx ( @$list_of_indexes ) {
