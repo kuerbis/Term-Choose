@@ -1,6 +1,12 @@
 Revision history for Term::Choose
 
 
+1.732   2021-06-17
+    - Bugfix page count.
+    - Update 'page' and 'footer'.
+    - Added environment variable TC_POS_AT_F3.
+    - Constants.pm and Screen.pm: refactoring export.
+
 1.731   2021-04-25
     - Replace 'croak' with 'die' and 'carp' with 'warn'.
     - Code refactoring.

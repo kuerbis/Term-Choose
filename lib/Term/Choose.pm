@@ -4,11 +4,11 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.731';
+our $VERSION = '1.732';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
-use Term::Choose::Constants       qw( :keys :index WIDTH_CURSOR );
+use Term::Choose::Constants       qw( :all );
 use Term::Choose::LineFold        qw( line_fold print_columns cut_to_printwidth );
 use Term::Choose::Screen          qw( :all );
 use Term::Choose::ValidateOptions qw( validate_options );
@@ -163,7 +163,7 @@ sub __length_list_elements {
             $length_elements->[$i] = print_columns( $list->[$i] );
             $longest = $length_elements->[$i] if $length_elements->[$i] > $longest;
         }
-        $self->{length} = $length_elements;
+        $self->{width_elements} = $length_elements;
         $self->{col_width} = $longest;
     }
 }
@@ -650,6 +650,7 @@ sub __choose {
         elsif ( $key == VK_F3 && $self->{f3} ) {
             require Term::Choose::Opt::Search;
             if ( $self->{ll} ) {
+                $ENV{TC_POS_AT_F3} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
                 $self->__reset_term( 0 );
                 return -13;
             }
@@ -673,7 +674,7 @@ sub __beep {
 }
 
 
-sub __prepare_promptline {
+sub __prepare_prompt_lines {
     my ( $self ) = @_;
     my $prompt = '';
     if ( length $self->{info} ) {
@@ -708,31 +709,32 @@ sub __prepare_promptline {
 }
 
 
-sub __prepare_page_number {
+sub __prepare_footer_line {
     my ( $self ) = @_;
-    if ( ( @{$self->{rc2idx}} / ( $self->{avail_height} + $self->{pp_row} ) > 1 ) || defined $self->{footer} ) {
-        my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
-        my $pp_total_w = length $pp_total;
+    my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
+    if ( $self->{pp_row} && ! $self->{clear_screen} && $pp_total == 1 ) {
+        $self->{pp_row} = 0;
+        $self->{avail_height}++;
+    }
+    if ( $self->{pp_row} ) {
+        my $pp_total_width = length $pp_total;
         if ( defined $self->{footer} ) {
-            $self->{footer_fmt} = '%0' . $pp_total_w . 'd/' . $pp_total . ' ' . $self->{footer};
+            #$self->{footer_fmt} = '%0' . $pp_total_width . 'd/' . $pp_total . ' ' . $self->{footer};
+            $self->{footer_fmt} = 'Page %0' . $pp_total_width . 'd/' . $pp_total . $self->{footer};
         }
         else {
-            $self->{footer_fmt} = '--- Page %0' . $pp_total_w . 'd/' . $pp_total . ' ---';
+            #$self->{footer_fmt} = '--- Page %0' . $pp_total_width . 'd/' . $pp_total . ' ---';
+            $self->{footer_fmt} = 'Page %0' . $pp_total_width . 'd/' . $pp_total;
         }
         if ( print_columns( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) { # color, length
-            $self->{footer_fmt} = '%0' . $pp_total_w . 'd/' . $pp_total;
+            $self->{footer_fmt} = '%0' . $pp_total_width . 'd/' . $pp_total;
             if ( length( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) {
-                $pp_total_w = $self->{avail_width} if $pp_total_w > $self->{avail_width};
-                $self->{footer_fmt} = '%0' . $pp_total_w . '.' . $pp_total_w . 's';
+                $pp_total_width = $self->{avail_width} if $pp_total_width > $self->{avail_width};
+                $self->{footer_fmt} = '%0' . $pp_total_width . '.' . $pp_total_width . 's';
             }
         }
-        $self->{pp_count} = $pp_total;
     }
-    else {
-        $self->{avail_height} += $self->{pp_row};
-        $self->{pp_row} = 0;
-        $self->{pp_count} = 1;
-    }
+    $self->{pp_count} = $pp_total;
 }
 
 
@@ -757,9 +759,7 @@ sub __wr_first_screen {
     $self->__avail_screen_size();
     $self->__current_layout();
     $self->__list_idx2rc();
-    if ( $self->{page} ) {
-        $self->__prepare_page_number();
-    }
+    $self->__prepare_footer_line();
     $self->{avail_height_idx} = $self->{avail_height} - 1;
     $self->{first_page_row} = 0;
     $self->{last_page_row}  = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
@@ -848,11 +848,11 @@ sub __wr_cell {
             if ( $col > 0 ) {
                 for my $cl ( 0 .. $col - 1 ) {
                     my $i = $self->{rc2idx}[$row][$cl];
-                    $x += $self->{length}[$i] + $self->{pad};
+                    $x += $self->{width_elements}[$i] + $self->{pad};
                 }
             }
             $self->__goto( $row - $self->{first_page_row}, $x );
-            $self->{i_col} = $self->{i_col} + $self->{length}[$idx];
+            $self->{i_col} = $self->{i_col} + $self->{width_elements}[$idx];
             $str = $self->{list}[$idx];
         }
         else {
@@ -907,20 +907,20 @@ sub __wr_cell {
 
 sub __pad_str_to_colwidth {
     my ( $self, $idx ) = @_;
-    if ( $self->{length}[$idx] < $self->{col_width} ) {
+    if ( $self->{width_elements}[$idx] < $self->{col_width} ) {
         if ( $self->{alignment} == 0 ) {
-            return $self->{list}[$idx] . ( " " x ( $self->{col_width} - $self->{length}[$idx] ) );
+            return $self->{list}[$idx] . ( " " x ( $self->{col_width} - $self->{width_elements}[$idx] ) );
         }
         elsif ( $self->{alignment} == 1 ) {
-            return " " x ( $self->{col_width} - $self->{length}[$idx] ) . $self->{list}[$idx];
+            return " " x ( $self->{col_width} - $self->{width_elements}[$idx] ) . $self->{list}[$idx];
         }
         elsif ( $self->{alignment} == 2 ) {
-            my $all = $self->{col_width} - $self->{length}[$idx];
+            my $all = $self->{col_width} - $self->{width_elements}[$idx];
             my $half = int( $all / 2 );
             return ( " " x $half ) . $self->{list}[$idx] . ( " " x ( $all - $half ) );
         }
     }
-    elsif ( $self->{length}[$idx] > $self->{col_width} ) {
+    elsif ( $self->{width_elements}[$idx] > $self->{col_width} ) {
         if ( $self->{col_width} > 6 ) {
             return cut_to_printwidth( $self->{list}[$idx], $self->{col_width} - 3 ) . '...';
         }
@@ -975,9 +975,17 @@ sub __avail_screen_size {
     if ( $self->{avail_width} < 1 ) {
         $self->{avail_width} = 1;
     }
-    $self->__prepare_promptline();
-    $self->{pp_row} = $self->{page} || $self->{footer} ? 1 : 0;
-    $self->{avail_height} -= $self->{count_prompt_lines} + $self->{pp_row};
+    $self->__prepare_prompt_lines();
+    if ( $self->{count_prompt_lines} ) {
+        $self->{avail_height} -= $self->{count_prompt_lines};
+    }
+    if ( $self->{page} || $self->{footer} ) {
+        $self->{pp_row} = 1;
+        $self->{avail_height}--;
+    }
+    else {
+        $self->{pp_row} = 0;
+    }
     if ( $self->{avail_height} < $self->{keep} ) {
         $self->{avail_height} = $self->{term_height} >= $self->{keep} ? $self->{keep} : $self->{term_height};
     }
@@ -991,15 +999,15 @@ sub __current_layout {
     my ( $self ) = @_;
     my $all_in_first_row;
     if ( $self->{layout} <= 1 && ! $self->{ll} ) {
-        my $firstrow_w = 0;
+        my $firstrow_width = 0;
         for my $list_idx ( 0 .. $#{$self->{list}} ) {
-            $firstrow_w += $self->{length}[$list_idx] + $self->{pad};
-            if ( $firstrow_w - $self->{pad} > $self->{avail_width} ) {
-                $firstrow_w = 0;
+            $firstrow_width += $self->{width_elements}[$list_idx] + $self->{pad};
+            if ( $firstrow_width - $self->{pad} > $self->{avail_width} ) {
+                $firstrow_width = 0;
                 last;
             }
         }
-        $all_in_first_row = $firstrow_w;
+        $all_in_first_row = $firstrow_width;
     }
     if ( $all_in_first_row ) {
         $self->{current_layout} = -1;
@@ -1172,7 +1180,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.731
+Version 1.732
 
 =cut
 
@@ -1644,7 +1652,10 @@ Allowed values: 0 or greater
 
 0 - off
 
-1 - print the page number on the bottom of the screen if there is more then one page. (default)
+1 - print the page number on the bottom of the screen. (default)
+
+If the options "clear_screen" and "footer" are not set and the choices fit into one page, the page number is not
+displayed.
 
 =head3 prompt
 
