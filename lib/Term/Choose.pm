@@ -1683,7 +1683,7 @@ Allowed values: 0 or greater
 1 - print the page number on the bottom of the screen. If all the choices fit into one page, the page number is not
 displayed. (default)
 
-2 - the page number is always displayed even with only one page. Setting I<page> to C<2> enables automatically the
+2 - the page number is always displayed even with only one page. Setting I<page> to C<2> automatically enables the
 option L<clear_screen>.
 
 =head3 prompt
