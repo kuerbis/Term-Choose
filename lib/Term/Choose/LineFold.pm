@@ -4,13 +4,14 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.732';
+our $VERSION = '1.733';
 
 use Exporter qw( import );
 
 our @EXPORT_OK = qw( line_fold print_columns cut_to_printwidth );
 
-use Term::Choose::Screen qw( normal );
+use Term::Choose::Constants qw( WIDTH_CURSOR );
+use Term::Choose::Screen    qw( normal );
 
 
 BEGIN {
@@ -95,7 +96,12 @@ sub cut_to_printwidth {
 
 sub line_fold {
     my ( $str, $avail_width, $opt ) = @_; #copy $str
-    return $str if ! defined $str || ! length $str;
+    if ( ! defined $str || ! length $str ) {
+        return $str;
+    }
+    if ( $^O ne 'MSWin32' && $^O ne 'cygwin' ) {
+        $avail_width += WIDTH_CURSOR;
+    }
     for ( $opt->{init_tab}, $opt->{subseq_tab} ) {
         if ( defined $_ && length $_ ) {
             s/\t/ /g;

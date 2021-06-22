@@ -4,9 +4,11 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.732';
+our $VERSION = '1.733';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
+
+use Carp qw( croak carp );
 
 use Term::Choose::Constants       qw( :all );
 use Term::Choose::LineFold        qw( line_fold print_columns cut_to_printwidth );
@@ -31,10 +33,10 @@ BEGIN {
 sub new {
     my $class = shift;
     my ( $opt ) = @_;
-    die "new: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1;
+    croak "new: called with " . @_ . " arguments - 0 or 1 arguments expected" if @_ > 1;
     my $instance_defaults = _defaults();
     if ( defined $opt ) {
-        die "new: the (optional) argument must be a HASH reference" if ref $opt ne 'HASH';
+        croak "new: the (optional) argument must be a HASH reference" if ref $opt ne 'HASH';
         validate_options( _valid_options(), $opt );
         for my $key ( keys %$opt ) {
             $instance_defaults->{$key} = $opt->{$key} if defined $opt->{$key};
@@ -66,6 +68,7 @@ sub _defaults {
         layout              => 1,
         #ll                 => undef,
         #mark               => undef,
+        #max_cols           => undef,
         #max_height         => undef,
         #max_width          => undef,
         mouse               => 0,
@@ -93,14 +96,15 @@ sub _valid_options {
         index               => '[ 0 1 ]',
         mouse               => '[ 0 1 ]',
         order               => '[ 0 1 ]',
-        page                => '[ 0 1 ]',
         alignment           => '[ 0 1 2 ]',
         color               => '[ 0 1 2 ]',
         f3                  => '[ 0 1 2 ]',
         include_highlighted => '[ 0 1 2 ]',
+        page                => '[ 0 1 2 ]',
         layout              => '[ 0 1 2 3 ]',
         keep                => '[ 1-9 ][ 0-9 ]*',
         ll                  => '[ 1-9 ][ 0-9 ]*',
+        max_cols            => '[ 1-9 ][ 0-9 ]*',
         max_height          => '[ 1-9 ][ 0-9 ]*',
         max_width           => '[ 1-9 ][ 0-9 ]*',
         default             => '[ 0-9 ]+',
@@ -110,11 +114,11 @@ sub _valid_options {
         no_spacebar         => 'Array_Int',
         tabs_info           => 'Array_Int',
         tabs_prompt         => 'Array_Int',
+        skip_items          => 'Regexp', # experimental
         empty               => 'Str',
         footer              => 'Str',
         info                => 'Str',
         prompt              => 'Str',
-        skip_items          => 'Str', # experimental
         undef               => 'Str',
         busy_string         => 'Str',
     };
@@ -212,6 +216,7 @@ sub __get_key {
     my $key;
     if ( defined $self->{skip_items} ) {
         my $idx = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
+        # if ( $self->{list}[$idx] =~ $self->{skip_items} ) { # 22.06.2021
         if ( $self->{list}[$idx] =~ /$self->{skip_items}/ ) {
             $key = $self->Term::Choose::Opt::SkipItems::__key_skipped();
         }
@@ -221,6 +226,23 @@ sub __get_key {
     }
     return $key if ref $key ne 'ARRAY';
     return $self->Term::Choose::Opt::Mouse::__mouse_info_to_key( @$key );
+}
+
+
+sub __modify_options {
+    my ( $self ) = @_;
+    if ( length $self->{footer} && $self->{page} != 2 ) {
+        $self->{page} = 2;
+    }
+    if ( $self->{page} == 2 && ! $self->{clear_screen} ) {
+        $self->{clear_screen} = 1;
+    }
+    if ( $self->{max_cols} && $self->{layout} != 0 && $self->{layout} != 3 ) {
+        $self->{layout} = 0;
+    }
+    if ( ! defined $self->{prompt} ) {
+        $self->{prompt} = defined $self->{wantarray} ? 'Your choice:' : 'Close with ENTER';
+    }
 }
 
 
@@ -237,10 +259,10 @@ sub choose {
 sub __choose {
     my $self = shift;
     my ( $orig_list_ref, $opt ) = @_;
-    die "choose: called with " . @_ . " arguments - 1 or 2 arguments expected" if @_ < 1 || @_ > 2;
-    die "choose: the first argument must be an ARRAY reference" if ref $orig_list_ref ne 'ARRAY';
+    croak "choose: called with " . @_ . " arguments - 1 or 2 arguments expected" if @_ < 1 || @_ > 2;
+    croak "choose: the first argument must be an ARRAY reference" if ref $orig_list_ref ne 'ARRAY';
     if ( defined $opt ) {
-        die "choose: the (optional) second argument must be a HASH reference" if ref $opt ne 'HASH';
+        croak "choose: the (optional) second argument must be a HASH reference" if ref $opt ne 'HASH';
         validate_options( _valid_options(), $opt );
         for my $key ( keys %$opt ) {
             $self->{$key} = $opt->{$key} if defined $opt->{$key};
@@ -257,9 +279,7 @@ sub __choose {
         print $self->{busy_string};
     }
     $self->{wantarray} = wantarray;
-    if ( ! defined $self->{prompt} ) {
-        $self->{prompt} = defined $self->{wantarray} ? 'Your choice:' : 'Close with ENTER';
-    }
+    $self->__modify_options();
     if ( $self->{mouse} ) {
         require Term::Choose::Opt::Mouse;
     }
@@ -292,7 +312,7 @@ sub __choose {
         my $key = $self->__get_key();
         if ( ! defined $key ) {
             $self->__reset_term( 1 );
-            warn "EOT: $!";
+            carp "EOT: $!";
             return;
         }
         $self->{pressed_key} = $key;
@@ -712,21 +732,17 @@ sub __prepare_prompt_lines {
 sub __prepare_footer_line {
     my ( $self ) = @_;
     my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
-    if ( $self->{pp_row} && ! $self->{clear_screen} && $pp_total == 1 ) {
+    if ( $self->{page} == 1 && $pp_total == 1 ) {
         $self->{pp_row} = 0;
         $self->{avail_height}++;
     }
     if ( $self->{pp_row} ) {
         my $pp_total_width = length $pp_total;
+        $self->{footer_fmt} = '--- %0' . $pp_total_width . 'd/' . $pp_total . ' ---';
         if ( defined $self->{footer} ) {
-            #$self->{footer_fmt} = '%0' . $pp_total_width . 'd/' . $pp_total . ' ' . $self->{footer};
-            $self->{footer_fmt} = 'Page %0' . $pp_total_width . 'd/' . $pp_total . $self->{footer};
+            $self->{footer_fmt} .= $self->{footer};
         }
-        else {
-            #$self->{footer_fmt} = '--- Page %0' . $pp_total_width . 'd/' . $pp_total . ' ---';
-            $self->{footer_fmt} = 'Page %0' . $pp_total_width . 'd/' . $pp_total;
-        }
-        if ( print_columns( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) { # color, length
+        if ( print_columns( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) { # color
             $self->{footer_fmt} = '%0' . $pp_total_width . 'd/' . $pp_total;
             if ( length( sprintf $self->{footer_fmt}, $pp_total ) > $self->{avail_width} ) {
                 $pp_total_width = $self->{avail_width} if $pp_total_width > $self->{avail_width};
@@ -979,7 +995,7 @@ sub __avail_screen_size {
     if ( $self->{count_prompt_lines} ) {
         $self->{avail_height} -= $self->{count_prompt_lines};
     }
-    if ( $self->{page} || $self->{footer} ) {
+    if ( $self->{page} ) {
         $self->{pp_row} = 1;
         $self->{avail_height}--;
     }
@@ -1053,6 +1069,9 @@ sub __list_idx2rc {
         }
         # order
         my $cols_per_row = int( $tmp_avail_width / $self->{col_width_plus} );
+        if ( $self->{max_cols} && $cols_per_row > $self->{max_cols} ) {
+            $cols_per_row = $self->{max_cols};
+        }
         $cols_per_row = 1 if $cols_per_row < 1;
         $self->{idx_of_last_col_in_last_row} = ( @{$self->{list}} % $cols_per_row || $cols_per_row ) - 1;
         if ( $self->{order} == 1 ) {
@@ -1180,7 +1199,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.732
+Version 1.733
 
 =cut
 
@@ -1233,7 +1252,7 @@ Nothing by default.
 
 =head2 new
 
-    $new = Term::Choose->new( [ \%options] );
+    $new = Term::Choose->new( \%options );
 
 This constructor returns a new C<Term::Choose> object.
 
@@ -1253,11 +1272,11 @@ values the option values.
 Options set with C<choose> overwrite options set with C<new>. Before leaving C<choose> restores the
 overwritten options.
 
-    $choice = $new->choose( $array_ref [, \%options] );
+    $choice = $new->choose( $array_ref, \%options );
 
-    @choices= $new->choose( $array_ref [, \%options] );
+    @choices= $new->choose( $array_ref, \%options );
 
-              $new->choose( $array_ref [, \%options] );
+              $new->choose( $array_ref, \%options );
 
 When in the documentation is mentioned "array" or "list" or "elements" or "items" (of the array/list) than these
 refer to this array passed as a reference as the first argument.
@@ -1270,11 +1289,11 @@ For more information how to use C<choose> and its return values see L<USAGE AND 
 
 The function C<choose> allows the user to choose from a list. It takes the same arguments as the method L</choose>.
 
-    $choice = choose( $array_ref [, \%options] );
+    $choice = choose( $array_ref, \%options );
 
-    @choices= choose( $array_ref [, \%options] );
+    @choices= choose( $array_ref, \%options );
 
-              choose( $array_ref [, \%options] );
+              choose( $array_ref, \%options );
 
 See the L</OPTIONS> section for more details about the different options and how to set them.
 
@@ -1344,7 +1363,8 @@ the C<PageUp> key (or C<Ctrl-B>) to go back one page, the C<PageDown> key (or C<
 
 =item *
 
-the C<Insert> key to go back 10 pages, the C<Delete> key to go forward 10 pages,
+the C<Insert> key to go back 10 pages, the C<Delete> key to go forward 10 pages (20 pages if the page-count is greater
+than 10_000),
 
 =item *
 
@@ -1469,11 +1489,11 @@ Sets the string displayed on the screen instead an empty string.
 
 Add a string in the bottom line.
 
+If a footer string is passed with this option, the option I<page> is automatically set to C<2>.
+
 (default: undefined)
 
 =head3 f3
-
-This option is experimental.
 
 Set the behavior of the C<F3> key.
 
@@ -1595,6 +1615,14 @@ Allowed values: 1 or greater
 
 (default: undefined)
 
+=head3 max_cols
+
+Limit the number of columns to I<max_cols>.
+
+Allowed values: 1 or greater
+
+(default: undefined)
+
 =head3 max_height
 
 If defined sets the maximal number of rows used for printing list items.
@@ -1652,10 +1680,11 @@ Allowed values: 0 or greater
 
 0 - off
 
-1 - print the page number on the bottom of the screen. (default)
+1 - print the page number on the bottom of the screen. If all the choices fit into one page, the page number is not
+displayed. (default)
 
-If the options "clear_screen" and "footer" are not set and the choices fit into one page, the page number is not
-displayed.
+2 - the page number is always displayed even with only one page. Setting I<page> to C<2> enables automatically the
+option L<clear_screen>.
 
 =head3 prompt
 
@@ -1671,9 +1700,11 @@ default in void context: C<Close with ENTER>
 
 This option is experimental.
 
-When navigating through the list, the elements that match the regex pattern passed with this option are skipped.
+When navigating through the list, the elements that match the regex pattern passed with this option will be skipped.
 
 In list context: these elements cannot be marked.
+
+Expected value: a regex quoted with the C<qr> operator.
 
 (default: undefined)
 
@@ -1765,13 +1796,13 @@ This option has only meaning in list context.
 
 =head1 ERROR HANDLING
 
-=head2 die
+=head2 croak
 
-C<new|choose> dies if passed invalid arguments.
+C<new|choose> croaks if passed invalid arguments.
 
-=head2 warn
+=head2 carp
 
-If pressing a key results in an undefined value C<choose> warns with C<EOT: $!> and returns I<undef> or an empty list in
+If pressing a key results in an undefined value C<choose> carps with C<EOT: $!> and returns I<undef> or an empty list in
 list context.
 
 =head1 REQUIREMENTS
