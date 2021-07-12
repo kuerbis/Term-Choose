@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.734';
+our $VERSION = '1.735';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -699,12 +699,19 @@ sub __beep {
 
 sub __prepare_prompt_lines {
     my ( $self ) = @_;
+    my $info_w = $self->{term_width};
+    if ( $^O ne 'MSWin32' && $^O ne 'cygwin' ) {
+        $info_w += WIDTH_CURSOR;
+    }
+    if ( $self->{max_width} && $info_w > $self->{max_width} ) { ##
+        $info_w = $self->{max_width};
+    }
     my $prompt = '';
     if ( length $self->{info} ) {
         my $init   = $self->{tabs_info}[0] ? $self->{tabs_info}[0] : 0;
         my $subseq = $self->{tabs_info}[1] ? $self->{tabs_info}[1] : 0;
         $prompt .= line_fold(
-            $self->{info}, $self->{avail_width},
+            $self->{info}, $info_w,
             { init_tab => ' ' x $init, subseq_tab => ' ' x $subseq, color => $self->{color}, join => 1 }
         );
     }
@@ -715,7 +722,7 @@ sub __prepare_prompt_lines {
         my $init   = $self->{tabs_prompt}[0] ? $self->{tabs_prompt}[0] : 0;
         my $subseq = $self->{tabs_prompt}[1] ? $self->{tabs_prompt}[1] : 0;
         $prompt .= line_fold(
-            $self->{prompt}, $self->{avail_width},
+            $self->{prompt}, $info_w,
             { init_tab => ' ' x $init, subseq_tab => ' ' x $subseq, color => $self->{color}, join => 1 }
         );
     }
@@ -1202,7 +1209,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.734
+Version 1.735
 
 =cut
 

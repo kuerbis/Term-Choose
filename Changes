@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.735   2021-07-12
+    - prepare_promptline gets its own term_w.
+
 1.734   2021-07-11
     - Bugfix: undo the last 'line_fold' update.
 
