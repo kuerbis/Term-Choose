@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.739   2021-09-17
+    - Undo the previous "bugfix".
+    - Bugfix in current_layout.
+
 1.738   2021-09-17
     - Bugfix option layout.
 
