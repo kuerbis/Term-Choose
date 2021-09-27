@@ -4,10 +4,10 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.739';
+our $VERSION = '1.740';
 
 use Term::Choose::Constants qw( ROW COL );
-use Term::Choose::Screen    qw( up clear_to_end_of_screen );
+use Term::Choose::Screen    qw( up clear_to_end_of_screen clear_screen show_cursor hide_cursor );
 
 
 sub __user_input {
@@ -21,7 +21,7 @@ sub __user_input {
         $string = $term->readline( $prompt, { hide_cursor => 2, clear_screen => 2, color => $self->{color} } );
         1 }
     ) {
-        print "\r", clear_to_end_of_line();
+        print "\r", clear_screen();
         print show_cursor() if ! $self->{hide_cursor};
         print $prompt;
         $string = <STDIN>;
