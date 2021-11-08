@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.743';
+our $VERSION = '1.744';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -138,7 +138,7 @@ sub __copy_orig_list {
         for ( @{$self->{list}} ) {
             if ( ! $_ ) {
                 $_ = $self->{undef} if ! defined $_;
-                $_ = $self->{empty} if $_ eq '';    #
+                $_ = $self->{empty} if ! length $_;
             }
             if ( $self->{color} ) {
                 s/\x{feff}//g;
@@ -1222,7 +1222,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.743
+Version 1.744
 
 =cut
 
@@ -1546,7 +1546,7 @@ Allowed values: 1 or greater
 
 (default: 5)
 
-=head3 layout CHANGED
+=head3 layout
 
 =over
 

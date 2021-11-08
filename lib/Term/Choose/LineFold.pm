@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.743';
+our $VERSION = '1.744';
 
 use Exporter qw( import );
 
@@ -99,10 +99,12 @@ sub line_fold {
     if ( ! defined $str || ! length $str ) {
         return $str;
     }
+    my $vertical_space = "[\x{000a}-\x{000d}\x{0085}\x{2028}\x{2029}]";
     for ( $opt->{init_tab}, $opt->{subseq_tab} ) {
         if ( defined $_ && length $_ ) {
             s/\t/ /g;
-            s/[\x{000a}-\x{000d}\x{0085}\x{2028}\x{2029}]+/\ \ /g;
+            #s/[\x{000a}-\x{000d}\x{0085}\x{2028}\x{2029}]+/\ \ /g;
+            s/$vertical_space+/\ \ /g;
             s/[\p{Cc}\p{Noncharacter_Code_Point}\p{Cs}]//g;
             if ( length > $avail_width / 4 ) {
                 $_ = cut_to_printwidth( $_, int( $avail_width / 2 ) );
@@ -118,15 +120,17 @@ sub line_fold {
         $str =~ s/(\e\[[\d;]*m)/push( @color, $1 ) && "\x{feff}"/ge;
     }
     $str =~ s/\t/ /g;
-    $str =~ s/[^\x{0a}\x{0b}\x{0c}\x{0d}\x{85}\P{Cc}]//g; # remove control chars but keep vertical spaces
+    #$str =~ s/[^\x{0a}\x{0b}\x{0c}\x{0d}\x{85}\P{Cc}]//g; # remove control chars but keep vertical spaces
+    $str =~ s/[^$vertical_space\P{Cc}]//g; # remove control chars but keep vertical spaces
     $str =~ s/[\p{Noncharacter_Code_Point}\p{Cs}]//g;
-    my $regex = qr/\x{0d}\x{0a}|[\x{000a}-\x{000d}\x{0085}\x{2028}\x{2029}]/; # \R 5.10
-    if ( $str !~ /$regex/ && print_columns( $opt->{init_tab} . $str ) <= $avail_width && ! @color ) {
+    #my $generic_newline = qr/\x{0d}\x{0a}|[\x{000a}-\x{000d}\x{0085}\x{2028}\x{2029}]/; # \R 5.10
+    my $generic_newline = qr/(?>\x{0d}\x{0a}|$vertical_space)/; # \R 5.10
+    if ( $str !~ /$generic_newline/ && print_columns( $opt->{init_tab} . $str ) <= $avail_width && ! @color ) {
         return $opt->{init_tab} . $str;
     }
     my @paragraphs;
 
-    for my $row ( split /$regex/, $str, -1 ) { # -1 to keep trailing empty fields
+    for my $row ( split /$generic_newline/, $str, -1 ) { # -1 to keep trailing empty fields
         my @lines;
         $row =~ s/\s+\z//;
         my @words = split( /(?<=\S)(?=\s)/, $row );

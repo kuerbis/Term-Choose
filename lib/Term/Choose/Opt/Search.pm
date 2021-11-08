@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.008003;
 
-our $VERSION = '1.743';
+our $VERSION = '1.744';
 
 use Term::Choose::Constants qw( ROW COL );
 use Term::Choose::Screen    qw( up clear_to_end_of_screen show_cursor hide_cursor );
