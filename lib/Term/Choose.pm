@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.0;
 
-our $VERSION = '1.748';
+our $VERSION = '1.749';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -70,6 +70,7 @@ sub _valid_options {
         max_height          => '[ 1-9 ][ 0-9 ]*',
         max_width           => '[ 1-9 ][ 0-9 ]*',
         default             => '[ 0-9 ]+',
+        margin              => '[ 0-9 ]+',
         pad                 => '[ 0-9 ]+',
         mark                => 'Array_Int',
         meta_items          => 'Array_Int',
@@ -99,11 +100,13 @@ sub _defaults {
         #footer             => undef,
         hide_cursor         => 1,
         include_highlighted => 0,
+
         index               => 0,
         info                => '',
         keep                => 5,
         layout              => 1,
         #ll                 => undef,
+        #margin             => undef,
         #mark               => undef,
         #max_cols           => undef,
         #max_height         => undef,
@@ -230,6 +233,7 @@ sub __get_key {
 
 sub __modify_options {
     my ( $self ) = @_;
+
     ############################## remove this with the next release
     if ( $self->{layout} == 3 ) {
         my @caller = caller( 2 );
@@ -348,7 +352,8 @@ sub __choose {
         }
         next GET_KEY if $key == NEXT_get_key;
         next GET_KEY if $key == KEY_Tilde;
-        if ( exists $ENV{TC_RESET_AUTO_UP} ) {
+        #if ( exists $ENV{TC_RESET_AUTO_UP} ) {
+        if ( exists $ENV{TC_RESET_AUTO_UP} && $ENV{TC_RESET_AUTO_UP} == 0 ) {
             if ( $key != LINE_FEED && $key != CARRIAGE_RETURN ) {
                 $ENV{TC_RESET_AUTO_UP} = 1;
             }
@@ -804,9 +809,9 @@ sub __wr_first_screen {
     $self->__current_layout();
     $self->__list_idx2rc();
     $self->__prepare_footer_line();
-    $self->{avail_height_idx} = $self->{avail_height} - 1;
     $self->{first_page_row} = 0;
-    $self->{last_page_row}  = $self->{avail_height_idx} > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $self->{avail_height_idx};
+    my $avail_height_idx = $self->{avail_height} - 1;
+    $self->{last_page_row}  = $avail_height_idx > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $avail_height_idx;
     $self->{i_row}  = 0;
     $self->{i_col}  = 0;
     $self->{pos}    = [ 0, 0 ];
@@ -839,28 +844,42 @@ sub __wr_screen {
     $self->__goto( 0, 0 );
     print "\r" . clear_to_end_of_screen();
     if ( defined $self->{footer_fmt} ) {
-        $self->__goto( $self->{avail_height_idx} + 1, 0 );
+        if ( $self->{margin} && $self->{max_height} ) { #
+            print right( $self->{margin} );
+        }
         my $pp_line = sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;
-        print $pp_line;
-        $self->{i_col} += print_columns( $pp_line );
+        print "\n" x $self->{footer_depth};
+        print $pp_line . "\r";
+        print up( $self->{footer_depth} );
     }
+    if ( $self->{margin} ) {
+        print right( $self->{margin} ); # set margin after each "\r"
+    }
+    my $pad_str = ' ' x $self->{pad};
     for my $row ( $self->{first_page_row} .. $self->{last_page_row} ) {
-        for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-            $self->__wr_cell( $row, $col );
+        my $line = $self->__prepare_cell( $row, 0 );
+        if ( $#{$self->{rc2idx}[$row]} ) { #
+            for my $col ( 1 .. $#{$self->{rc2idx}[$row]} ) {
+                $line = $line . $pad_str . $self->__prepare_cell( $row, $col );
+            }
+        }
+        print $line . "\n\r";
+        if ( $self->{margin} ) {
+            print right( $self->{margin} );
         }
     }
+    print up( $self->{last_page_row} - $self->{first_page_row} + 1 );
+    # relativ cursor pos: 0, 0
     $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
 }
 
 
-sub __wr_cell {
+sub __prepare_cell {
     my( $self, $row, $col ) = @_;
     my $is_current_pos = $row == $self->{pos}[ROW] && $col == $self->{pos}[COL];
     my $emphasised = ( $self->{marked}[$row][$col] ? bold_underline() : '' ) . ( $is_current_pos ? reverse_video() : '' );
     my $idx = $self->{rc2idx}[$row][$col];
     if ( $self->{ll} ) {
-        $self->__goto( $row - $self->{first_page_row}, $col * $self->{col_width_plus} );
-        $self->{i_col} = $self->{i_col} + $self->{col_width};
         if ( $self->{color} ) {
             my $str = $self->{list}[$idx];
             if ( $emphasised ) {
@@ -874,36 +893,19 @@ sub __wr_cell {
                 }
                 $str = $emphasised . $str;
             }
-            print $str . normal(); # if \e[
+            return $str . normal(); # if \e[
         }
         else {
             if ( $emphasised ) {
-                print $emphasised . $self->{list}[$idx] . normal();
+                return $emphasised . $self->{list}[$idx] . normal();
             }
             else {
-                print $self->{list}[$idx];
+                return $self->{list}[$idx];
             }
         }
     }
     else {
-        my $str;
-        if ( $self->{current_layout} == -1 ) {
-            my $x = 0;
-            if ( $col > 0 ) {
-                for my $cl ( 0 .. $col - 1 ) {
-                    my $i = $self->{rc2idx}[$row][$cl];
-                    $x += $self->{width_elements}[$i] + $self->{pad};
-                }
-            }
-            $self->__goto( $row - $self->{first_page_row}, $x );
-            $self->{i_col} = $self->{i_col} + $self->{width_elements}[$idx];
-            $str = $self->{list}[$idx];
-        }
-        else {
-            $self->__goto( $row - $self->{first_page_row}, $col * $self->{col_width_plus} );
-            $self->{i_col} = $self->{i_col} + $self->{col_width};
-            $str = $self->__pad_str_to_colwidth( $idx );
-        }
+        my $str = $self->{current_layout} == -1 ? $self->{list}[$idx] : $self->__pad_str_to_colwidth( $idx );
         if ( $self->{color} ) {
             my @color;
             if ( ! $self->{orig_list}[$idx] ) {
@@ -919,12 +921,12 @@ sub __wr_cell {
             }
             if ( $emphasised ) {
                 for ( @color ) {
-                    # keep cell marked after color escapes
+                    # keep marked cells marked after color escapes
                     $_ .= $emphasised;
                 }
                 $str = $emphasised . $str . normal();
                 if ( $is_current_pos && $self->{color} == 1 ) {
-                    # no color for selected cell
+                    # no color for the selected cell if color == 1
                     @color = ();
                     $str =~ s/\x{feff}//g;
                 }
@@ -935,17 +937,37 @@ sub __wr_cell {
                     $str .= normal();
                 }
             }
-            print $str;
+            return $str;
         }
         else {
             if ( $emphasised ) {
-                print $emphasised . $str . normal();
+                $str = $emphasised . $str . normal();
             }
-            else {
-                print $str;
-            }
+            return $str;
         }
     }
+}
+
+
+sub __wr_cell {
+    my( $self, $row, $col ) = @_;
+    my $idx = $self->{rc2idx}[$row][$col];
+    if ( $self->{current_layout} == -1 ) {
+        my $x = 0;
+        if ( $col > 0 ) {
+            for my $cl ( 0 .. $col - 1 ) {
+                my $i = $self->{rc2idx}[$row][$cl];
+                $x += $self->{width_elements}[$i] + $self->{pad};
+            }
+        }
+        $self->__goto( $row - $self->{first_page_row}, $x );
+        $self->{i_col} = $self->{i_col} + $self->{width_elements}[$idx];
+    }
+    else {
+        $self->__goto( $row - $self->{first_page_row}, $col * $self->{col_width_plus} );
+        $self->{i_col} = $self->{i_col} + $self->{col_width};
+    }
+    print $self->__prepare_cell( $row, $col );
 }
 
 
@@ -980,11 +1002,10 @@ sub __pad_str_to_colwidth {
 
 sub __goto {
     my ( $self, $newrow, $newcol ) = @_;
-    # up, down, left, right: 1 or greater
+    # requires up, down, left or right to be 1 or greater
     if ( $newrow > $self->{i_row} ) {
-        print "\r\n" x ( $newrow - $self->{i_row} );
+        print down( $newrow - $self->{i_row} );
         $self->{i_row} = $newrow;
-        $self->{i_col} = 0;
     }
     elsif ( $newrow < $self->{i_row} ) {
         print up( $self->{i_row} - $newrow );
@@ -1004,6 +1025,9 @@ sub __goto {
 sub __avail_screen_size {
     my ( $self ) = @_;
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
+    if ( $self->{margin} ) {
+        $self->{avail_width} -= $self->{margin}; ## limit margin
+    }
     if ( $self->{col_width} > $self->{avail_width} && $^O ne 'MSWin32' && $^O ne 'cygwin' ) {
         $self->{avail_width} += WIDTH_CURSOR;
         # + WIDTH_CURSOR: use also the last terminal column if there is only one print-column;
@@ -1029,8 +1053,12 @@ sub __avail_screen_size {
     if ( $self->{avail_height} < $self->{keep} ) {
         $self->{avail_height} = $self->{term_height} >= $self->{keep} ? $self->{keep} : $self->{term_height};
     }
+    $self->{footer_depth} = $self->{avail_height};
     if ( $self->{max_height} && $self->{max_height} < $self->{avail_height} ) {
         $self->{avail_height} = $self->{max_height};
+        if ( ! $self->{clear_screen} ) {
+            $self->{footer_depth} = $self->{max_height};
+        }
     }
 }
 
@@ -1222,7 +1250,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.748
+Version 1.749
 
 =cut
 
@@ -1607,6 +1635,17 @@ If I<ll> is set to a value less than the length of the elements, the output coul
 If I<ll> is set and the window size has changed, choose returns immediately C<-1>.
 
 Allowed values: 1 or greater
+
+(default: undefined)
+
+=head3 margin
+
+If set, a margin of I<margin> spaces will be placed on the left side of the listed items.
+
+I<margin> does not affect the I<info> and I<prompt> string. To add whitespaces in front of the I<info> and I<prompt>
+string see I<tabs_info> and I<tabs_prompt>.
+
+Allowed values: 0 or greater
 
 (default: undefined)
 

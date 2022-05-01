@@ -1,6 +1,11 @@
 Revision history for Term::Choose
 
 
+1.749   2022-05-01
+    - Removed vt52 spezial keys.
+    - 'qr'-operator for the search regexp.
+    - New option 'margin'.
+
 1.748   2022-04-06
     - Search: 'readline' is now in Term::From::ReadLine.
 
