@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.0;
 
-our $VERSION = '1.749';
+our $VERSION = '1.750';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -70,8 +70,8 @@ sub _valid_options {
         max_height          => '[ 1-9 ][ 0-9 ]*',
         max_width           => '[ 1-9 ][ 0-9 ]*',
         default             => '[ 0-9 ]+',
-        margin              => '[ 0-9 ]+',
         pad                 => '[ 0-9 ]+',
+        margin              => 'Array_Int',
         mark                => 'Array_Int',
         meta_items          => 'Array_Int',
         no_spacebar         => 'Array_Int',
@@ -100,7 +100,6 @@ sub _defaults {
         #footer             => undef,
         hide_cursor         => 1,
         include_highlighted => 0,
-
         index               => 0,
         info                => '',
         keep                => 5,
@@ -352,7 +351,6 @@ sub __choose {
         }
         next GET_KEY if $key == NEXT_get_key;
         next GET_KEY if $key == KEY_Tilde;
-        #if ( exists $ENV{TC_RESET_AUTO_UP} ) {
         if ( exists $ENV{TC_RESET_AUTO_UP} && $ENV{TC_RESET_AUTO_UP} == 0 ) {
             if ( $key != LINE_FEED && $key != CARRIAGE_RETURN ) {
                 $ENV{TC_RESET_AUTO_UP} = 1;
@@ -844,16 +842,16 @@ sub __wr_screen {
     $self->__goto( 0, 0 );
     print "\r" . clear_to_end_of_screen();
     if ( defined $self->{footer_fmt} ) {
-        if ( $self->{margin} && $self->{max_height} ) { #
-            print right( $self->{margin} );
+        if ( $self->{margin}[0] && $self->{max_height} ) { #
+            print right( $self->{margin}[0] );
         }
         my $pp_line = sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;
         print "\n" x $self->{footer_depth};
         print $pp_line . "\r";
         print up( $self->{footer_depth} );
     }
-    if ( $self->{margin} ) {
-        print right( $self->{margin} ); # set margin after each "\r"
+    if ( $self->{margin}[0] ) {
+        print right( $self->{margin}[0] ); # set left margin after each "\r"
     }
     my $pad_str = ' ' x $self->{pad};
     for my $row ( $self->{first_page_row} .. $self->{last_page_row} ) {
@@ -864,8 +862,8 @@ sub __wr_screen {
             }
         }
         print $line . "\n\r";
-        if ( $self->{margin} ) {
-            print right( $self->{margin} );
+        if ( $self->{margin}[0] ) {
+            print right( $self->{margin}[0] );
         }
     }
     print up( $self->{last_page_row} - $self->{first_page_row} + 1 );
@@ -1025,8 +1023,8 @@ sub __goto {
 sub __avail_screen_size {
     my ( $self ) = @_;
     ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
-    if ( $self->{margin} ) {
-        $self->{avail_width} -= $self->{margin}; ## limit margin
+    if ( $self->{margin}[0] ) {
+        $self->{avail_width} -= $self->{margin}[0]; ## limit margin
     }
     if ( $self->{col_width} > $self->{avail_width} && $^O ne 'MSWin32' && $^O ne 'cygwin' ) {
         $self->{avail_width} += WIDTH_CURSOR;
@@ -1037,6 +1035,9 @@ sub __avail_screen_size {
     #if ( $self->{ll} && $self->{ll} > $self->{avail_width} ) {
     #    return -2;
     #}
+    if ( $self->{margin}[1] ) {
+        $self->{avail_width} -= $self->{margin}[1]; ## limit margin
+    }
     if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
         $self->{avail_width} = $self->{max_width};
     }
@@ -1250,7 +1251,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.749
+Version 1.750
 
 =cut
 
@@ -1640,12 +1641,20 @@ Allowed values: 1 or greater
 
 =head3 margin
 
-If set, a margin of I<margin> spaces will be placed on the left side of the listed items.
+Experimental
+
+The option I<margin> allows one to set a margin one the left and right of the listed items.
+
+I<margin> expects a reference to an array with one or two elements:
+
+- the first element specifies the number spaces that will be placed on the left side
+
+- the second element specifies the number spaces that will be placed on the right side
 
 I<margin> does not affect the I<info> and I<prompt> string. To add whitespaces in front of the I<info> and I<prompt>
 string see I<tabs_info> and I<tabs_prompt>.
 
-Allowed values: 0 or greater
+Allowed values: 0 or greater. Elements beyond the second are ignored.
 
 (default: undefined)
 
