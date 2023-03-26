@@ -99,10 +99,10 @@ my $width_ambiguous = [];
 for my $c ( 0x0 .. 0x10ffff ) {
     printf "0x%x\n", $c;
     my $category = $unicode_data->[$c]{category} // '';
-    my $bidi_class =  $unicode_data->[$c]{bidi_class} // '';
+    my $bidi_class = $unicode_data->[$c]{bidi_class} // '';
     my $east_asian_width = width_east_asian( $east_asian_width_table, $c );
     my $print_width;
-    if ( chr( $c ) =~ /(?:\p{Cc}|\p{Cs})/ ) {
+    if ( $category =~ /^(?:Cc|Cs)\z/ ) {
         # Other, control
         # Other, surrogate
         $print_width = [ -1, -1 ];
@@ -212,7 +212,7 @@ sub table_char_width { [
     my $number_of_ranges = 0;
     for my $r ( @$ranges ) {
         my $cm = '#';
-        # less than 0 is \p{Cc} and \p{Cs}
+        # less than 0 is Cc and Cs
         if ( $r->{width} >= 0 ) {
             $cm = '';
             $number_of_ranges++;

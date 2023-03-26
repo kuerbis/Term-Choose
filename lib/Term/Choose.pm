@@ -1538,7 +1538,7 @@ Enable the support for ANSI SGR escape sequences.
 
 1 - enabled but the current selected element is not colored.
 
-2 - enabled including for the current selected element.
+2 - enabled
 
 =head3 default
 
