@@ -178,15 +178,6 @@ sub line_fold {
             }
         }
     }
-    #if ( @color ) {
-    #    for my $paragraph ( @paragraphs ) {
-    #        $paragraph =~ s/\x{feff}/shift @color/ge;
-    #        if ( ! @color ) {
-    #            last;
-    #        }
-    #    }
-    #    $paragraphs[-1] .= "\e[0m";
-    #}
     if ( @color ) {
         my $last_color;
         for my $paragraph ( @paragraphs ) {
@@ -206,7 +197,6 @@ sub line_fold {
         }
         $paragraphs[-1] .= "\e[0m";
     }
-
     if ( $opt->{join} ) {
         return join( "\n", @paragraphs );
     }
