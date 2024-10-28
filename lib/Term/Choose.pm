@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.0;
 
-our $VERSION = '1.765';
+our $VERSION = '1.766';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1280,7 +1280,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.765
+Version 1.766
 
 =cut
 
@@ -1684,8 +1684,7 @@ I<margin> expects a reference to an array with four elements in the following or
 
 - left margin (number of terminal columns)
 
-I<margin> does not affect the I<info> and I<prompt> string. To add margins to the I<info> and I<prompt> string see
-I<tabs_info> and I<tabs_prompt>.
+See also L</tabs_info> and L</tabs_prompt>.
 
 Allowed values: 0 or greater. Elements beyond the fourth are ignored.
 
