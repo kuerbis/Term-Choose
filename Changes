@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.767   2024-10-28
+    - Fixed spelling in pod.
+
 1.766   2024-10-28
     - Unicode 16.
 

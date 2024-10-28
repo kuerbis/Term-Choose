@@ -10,6 +10,7 @@ if ( $^O eq 'MSWin32' ) {
 
 vars_ok( 'lib/Term/Choose/Screen.pm', ignore_vars => [ '$size' ] );
 
+
 my @modules = qw(
     lib/Term/Choose.pm
     lib/Term/Choose/Constants.pm
