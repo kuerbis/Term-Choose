@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.0;
 
-our $VERSION = '1.769';
+our $VERSION = '1.770';
 
 use Exporter qw( import );
 
@@ -257,11 +257,11 @@ __END__
 
 =head1 NAME
 
-Term::Choose::LineFold
+Term::Choose::LineFold - print_columns, cut_to_printwidth and line_fold
 
 =head1 VERSION
 
-Version 1.769
+Version 1.770
 
 =cut
 
@@ -277,7 +277,7 @@ C<TC_AMBIGUOUS_WIDTH_IS_WIDE> is set to a true value, ambiguous width characters
 
 Nothing by default.
 
-    use Term::Choose qw( print_columns );
+    use Term::Choose::LineFold qw( print_columns );
 
 =head1 FUNCTIONS
 
@@ -303,6 +303,10 @@ If there is no remaining portion, it returns an empty string instead.
     ( $cut_string, $remainder ) = cut_to_printwidth( $string, $width );
 
 If the width of the cut string is less than C<$width>, a space character is appended.
+
+    $cut_string = cut_to_printwidth(  "A🙂🙂🙂🙂", 6 );
+
+    say "|$cut_string|"; # |A🙂🙂 |
 
 =head2 line_fold
 
