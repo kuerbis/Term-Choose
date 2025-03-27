@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.0;
 
-our $VERSION = '1.770';
+our $VERSION = '1.771';
 
 use Exporter qw( import );
 
@@ -257,11 +257,11 @@ __END__
 
 =head1 NAME
 
-Term::Choose::LineFold - print_columns, cut_to_printwidth and line_fold
+Term::Choose::LineFold
 
 =head1 VERSION
 
-Version 1.770
+Version 1.771
 
 =cut
 
@@ -288,25 +288,6 @@ Get the number of occupied columns of a character string on a terminal.
 The string passed to this function is a decoded string, free of control characters, non-characters, and surrogates.
 
     $print_width = print_columns( $string );
-
-=head2 cut_to_printwidth
-
-Cut a string to a specified width.
-
-The string passed to this function is a decoded string, free of control characters, non-characters, and surrogates.
-
-    $cut_string = cut_to_printwidth( $string, $width );
-
-When used in a list context, the function returns both the cut string and the remaining portion of the original string.
-If there is no remaining portion, it returns an empty string instead.
-
-    ( $cut_string, $remainder ) = cut_to_printwidth( $string, $width );
-
-If the width of the cut string is less than C<$width>, a space character is appended.
-
-    $cut_string = cut_to_printwidth(  "A🙂🙂🙂🙂", 6 );
-
-    say "|$cut_string|"; # |A🙂🙂 |
 
 =head2 line_fold
 

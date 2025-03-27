@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.771   2025-03-27
+    - Removed 'cut_to_printwidth' from the public.
+
 1.770   2025-03-26
     - Bugfix documentation Term::Choose::LineFold.
 
