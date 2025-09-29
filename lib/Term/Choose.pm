@@ -1911,10 +1911,10 @@ implementations, providing faster performance. C<Term::Choose::LineFold::XS> req
 
 =head3 Term::ReadKey
 
-If L<Term::ReadKey> is available it is used C<ReadKey> to read the user input and C<GetTerminalSize> to get the
-terminal size. Without C<Term::ReadKey> C<getc> is used to read the input and C<stty size> to get the terminal size.
+If L<Term::ReadKey> is available, C<ReadKey> is used to read the user input and C<GetTerminalSize> to get the
+terminal size. Without C<Term::ReadKey>, C<getc> is used to read the input and C<stty size> to get the terminal size.
 
-If the OS is MSWin32 it is used L<Win32::Console> to read the user input and to get the terminal size.
+If the OS is MSWin32, it is used L<Win32::Console> to read the user input and to get the terminal size.
 
 =head2 Decoded strings
 
