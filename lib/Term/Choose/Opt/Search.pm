@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.777';
+our $VERSION = '1.778_01';
 
 use Term::Choose::Constants qw( ROW COL );
 use Term::Choose::Screen    qw( up clear_to_end_of_screen show_cursor hide_cursor );
@@ -105,7 +105,7 @@ sub __search_begin {
             $self->{$opt} = $tmp;
         }
     }
-    my $up = $self->{i_row} + $self->{count_prompt_lines} + 1; # + 1 => readline
+    my $up = $self->{i_row} + $self->{count_pre_rows} + 1; # + 1 => readline
     print up( $up ) if $up;
     $self->__wr_first_screen();
 }
@@ -132,7 +132,7 @@ sub __search_end {
         $self->{$key} = $self->{$key_backup} if defined $self->{$key_backup};
         delete $self->{$key_backup};
     }
-    my $up = $self->{i_row} + $self->{count_prompt_lines};
+    my $up = $self->{i_row} + $self->{count_pre_rows};
     print up( $up ) if $up;
     print "\r" . clear_to_end_of_screen();
     $self->__wr_first_screen();

@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.777';
+our $VERSION = '1.778_01';
 
 use Exporter qw( import );
 
@@ -195,7 +195,7 @@ Term::Choose::LineFold
 
 =head1 VERSION
 
-Version 1.777
+Version 1.778_01
 
 =cut
 
@@ -274,7 +274,7 @@ Matthäus Kiem <cuer2s@gmail.com>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2025 Matthäus Kiem.
+Copyright (C) 2026 Matthäus Kiem.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
 details, see the full text of the licenses in the file LICENSE.

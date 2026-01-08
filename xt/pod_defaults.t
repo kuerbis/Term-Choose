@@ -8,7 +8,7 @@ use List::Util qw( any );
 my @long = qw( pad empty undef ll default max_cols max_height max_width keep no_spacebar mark footer skip_items margin );
 my @simple = qw( alignment layout order clear_screen mouse beep hide_cursor index color codepage_mapping search ); # prompt
 my @all = ( @long, @simple );
-my @skip = qw( info prompt include_highlighted meta_items busy_string page tabs_prompt tabs_info );
+my @skip = qw( info prompt bottom_text include_highlighted meta_items busy_string page tabs_prompt tabs_info tabs_bottom_text );
 
 
 plan tests => 2 + scalar @all;

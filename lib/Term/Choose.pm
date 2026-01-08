@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.777';
+our $VERSION = '1.778_01';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -93,9 +93,11 @@ sub _valid_options {
         mark                => 'Array_Int',
         meta_items          => 'Array_Int',
         no_spacebar         => 'Array_Int',
+        tabs_bottom_text    => 'Array_Int', # documentation
         tabs_info           => 'Array_Int',
         tabs_prompt         => 'Array_Int',
         skip_items          => 'Regexp',
+        bottom_text         => 'Str',       # documentation
         empty               => 'Str',
         footer              => 'Str',
         info                => 'Str',
@@ -110,6 +112,7 @@ sub _defaults {
     return {
         alignment           => 0,
         beep                => 0,
+        #bottom_text        => undef,
         clear_screen        => 0,
         codepage_mapping    => 0,
         color               => 0,
@@ -119,7 +122,7 @@ sub _defaults {
         hide_cursor         => 1,
         include_highlighted => 0,
         index               => 0,
-        info                => '',
+        #info               => undef,
         keep                => 5,
         layout              => 1,
         #ll                 => undef,
@@ -131,12 +134,13 @@ sub _defaults {
         #meta_items         => undef,
         mouse               => 0,
         #no_spacebar        => undef,
-        order               => 1,
+        order               => 1,           # ###
         pad                 => 2,
         page                => 1,
         #prompt             => undef,
         search              => 1,
         #skip_items         => undef,
+        #tabs_bottom_text   => undef,
         #tabs_info          => undef,
         #tabs_prompt        => undef,
         undef               => '<undef>',
@@ -190,6 +194,7 @@ sub __length_list_elements {
         $self->{width_elements} = $length_elements;
         $self->{col_width} = $longest;
     }
+    $self->{bu_col_width} = $self->{col_width};
 }
 
 
@@ -210,7 +215,7 @@ sub __reset_term {
         $self->{plugin}->__reset_mode( { mouse => $self->{mouse}, hide_cursor => $self->{hide_cursor} } );
     }
     if ( $clear_choose ) {
-        my $up = $self->{i_row} + $self->{count_prompt_lines};
+        my $up = $self->{i_row} + $self->{count_pre_rows};
         print up( $up ) if $up;
         print "\r" . clear_to_end_of_screen();
     }
@@ -272,6 +277,9 @@ sub __modify_options {
         }
         if ( ! defined $self->{tabs_info} ) {
             $self->{tabs_info} = [ $self->{margin_left}, $self->{margin_left}, $self->{margin_right} ];
+        }
+        if ( ! defined $self->{tabs_bottom_text} ) {
+            $self->{tabs_bottom_text} = [ $self->{margin_left}, $self->{margin_left}, $self->{margin_right} ];
         }
     }
 }
@@ -354,15 +362,31 @@ sub __choose {
                 $self->__reset_term( 0 );
                 return -1;
             }
+            my $reduced_width = $new_width < $self->{term_width};
             ( $self->{term_width}, $self->{term_height} ) = ( $new_width, $new_height );
-            $self->__copy_orig_list( $orig_list_ref );
+            $self->{col_width} = $self->{bu_col_width};
+            $self->__modify_options();
             $self->{default} = $self->{rc2idx}[$self->{pos}[ROW]][$self->{pos}[COL]];
             if ( $self->{wantarray} && @{$self->{marked}} ) {
                 $self->{mark} = $self->__marked_rc2idx();
             }
-            my $up = $self->{i_row} + $self->{count_prompt_lines};
-            print up( $up ) if $up;
-            print "\r" . clear_to_end_of_screen();
+            my $up;
+            if ( $reduced_width ) {
+                $up = $self->{i_row} + ( $self->{margin_top} // 0 );
+                for my $row ( @{$self->{info_rows}//[]}, @{$self->{prompt_rows}//[]} ) {
+                    next if ! length $row;
+                    $up += scalar line_fold( $row, { width => $new_width + EXTRA_W, init_tab => $self->{margin_left},
+                                                     color => $self->{color}, join => 0 } );
+                }
+                $up++ if length $self->{search_info};
+            }
+            else {
+                $up = $self->{i_row} + $self->{count_pre_rows};
+            }
+            if ( $up ) {
+                print up( $up );
+            }
+            # print "\r" . clear_to_end_of_screen();
             $self->__wr_first_screen();
             next GET_KEY;
         }
@@ -727,46 +751,351 @@ sub __beep {
 }
 
 
-sub __prepare_info_and_prompt_lines {
+sub __wr_first_screen {
     my ( $self ) = @_;
     my $info_w = $self->{term_width} + EXTRA_W;
-    if ( $self->{max_width} && $info_w > $self->{max_width} ) { ##
-        $info_w = $self->{max_width};
+    $info_w = $self->{max_width} if $self->{max_width} && $info_w > $self->{max_width};
+
+    for my $opt ( qw( info prompt bottom_text ) ) {
+        if ( length $self->{$opt} ) {
+            my $init     = $self->{'tabs_' . $opt}[0] // 0;
+            my $subseq   = $self->{'tabs_' . $opt}[1] // 0;
+            my $r_margin = $self->{'tabs_' . $opt}[2] // 0;
+            $self->{$opt . '_rows'} = [ line_fold(
+                $self->{$opt}, { width => $info_w - $r_margin, init_tab => $init, subseq_tab => $subseq,
+                color => $self->{color}, join => 0 }
+            ) ];
+        }
     }
-    my @tmp_prompt;
-    if ( $self->{margin_top} ) {
-        push @tmp_prompt, ( '' ) x $self->{margin_top};
+    $self->__avail_screen_size();
+    $self->__current_layout();
+    $self->__list_idx2rc();
+    $self->__prepare_footer_line();
+    $self->{first_page_row} = 0;
+    if ( $#{$self->{rc2idx}} > $self->{avail_height} - 1 ) {
+        $self->{last_page_row} = $self->{avail_height} - 1;
     }
-    if ( length $self->{info} ) {
-        my $init     = $self->{tabs_info}[0] // 0;
-        my $subseq   = $self->{tabs_info}[1] // 0;
-        my $r_margin = $self->{tabs_info}[2] // 0;
-        push @tmp_prompt, line_fold(
-            $self->{info},
-            { width => $info_w - $r_margin, init_tab => ' ' x $init, subseq_tab => ' ' x $subseq,
-              color => $self->{color}, join => 0 }
-        );
+    else {
+        $self->{last_page_row} = $#{$self->{rc2idx}};
     }
-    if ( length $self->{prompt} ) {
-        my $init     = $self->{tabs_prompt}[0] // 0;
-        my $subseq   = $self->{tabs_prompt}[1] // 0;
-        my $r_margin = $self->{tabs_prompt}[2] // 0;
-        push @tmp_prompt, line_fold(
-            $self->{prompt},
-            { width => $info_w - $r_margin, init_tab => ' ' x $init, subseq_tab => ' ' x $subseq,
-              color => $self->{color}, join => 0 }
-        );
+    $self->{i_row}  = 0;
+    $self->{i_col}  = 0;
+    $self->{pos}    = [ 0, 0 ];
+    $self->{marked} = [];
+    if ( $self->{wantarray} && defined $self->{mark} ) {
+        $self->__marked_idx2rc( $self->{mark}, 1 );
     }
+    if ( defined $self->{default} && $self->{default} <= $#{$self->{list}} ) {
+        $self->__set_cell( $self->{default} );
+    }
+    if ( $self->{clear_screen} ) {
+        print clear_screen();
+    }
+    else {
+        print "\r" . clear_to_end_of_screen();
+    }
+    my $pre_string;
+    $pre_string .=  "\n\r" x $self->{margin_top}                    if $self->{margin_top};
+    $pre_string .= join( "\n\r", @{$self->{info_rows}} )   . "\n\r" if $self->{info_rows};
+    $pre_string .= join( "\n\r", @{$self->{prompt_rows}} ) . "\n\r" if $self->{prompt_rows};
     if ( length $self->{search_info} ) {
-        push @tmp_prompt, ( $self->{margin_left} ? ' ' x $self->{margin_left} : '' ) . $self->{search_info};
+        $pre_string .= ( $self->{margin_left} ? ' ' x $self->{margin_left} : '' ) . $self->{search_info} . "\n\r";
     }
-    $self->{count_prompt_lines} = @tmp_prompt;
-    if ( ! $self->{count_prompt_lines} ) {
-        $self->{prompt_copy} = '';
+    # \n\r -> stty 'raw' mode and Term::Readkey 'ultra-raw' mode don't translate newline to carriage_return/newline
+    if ( length $pre_string ) {
+        print $pre_string;
+    }
+    $self->__wr_screen();
+    if ( $self->{mouse} ) {
+        my $abs_cursor_y = $self->{plugin}->__get_cursor_row();
+        $self->{offset_rows} = $abs_cursor_y - 1 - $self->{i_row};
+    }
+}
+
+
+sub __avail_screen_size {
+    my ( $self ) = @_;
+    ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
+    if ( $self->{margin_right} || ( $self->{col_width} > $self->{avail_width} ) ) {
+        $self->{avail_width} += EXTRA_W;
+        # + EXTRA_W: use also the last terminal column if there is only one item-column;
+        #            with only one item-column the output doesn't get messed up if an item
+        #            reaches the right edge of the terminal on a non-MSWin32-OS (EXTRA_W is 0 if OS is MSWin32)
+    }
+    $self->{avail_width} -= $self->{margin_left}  if $self->{margin_left};
+    $self->{avail_width} -= $self->{margin_right} if $self->{margin_right};
+    $self->{avail_width} = $self->{max_width}     if $self->{max_width} && $self->{avail_width} > $self->{max_width};
+    $self->{avail_width} = 1                      if $self->{avail_width} < 1;
+    #if ( $self->{ll} && $self->{ll} > $self->{avail_width} ) {
+    #    return -2;
+    #}
+    $self->{avail_height} -= $self->{margin_top}          if $self->{margin_top};
+    $self->{avail_height} -= @{$self->{info_rows}}        if $self->{info_rows};
+    $self->{avail_height} -= @{$self->{prompt_rows}}      if $self->{prompt_rows};
+    $self->{avail_height}--                               if length $self->{search_info};
+    $self->{avail_height} -= @{$self->{bottom_text_rows}} if $self->{bottom_text_rows};
+    $self->{avail_height}--                               if $self->{page};
+    $self->{avail_height} -= $self->{margin_bottom}       if $self->{margin_bottom};
+    $self->{avail_height} = $self->{max_height}           if $self->{max_height} && $self->{avail_height} > $self->{max_height};
+    if ( $self->{avail_height} < $self->{keep} ) {
+        $self->__avail_height_to_keep();
+    }
+    $self->{count_pre_rows} = ( $self->{margin_top} // 0 ) + @{$self->{info_rows}//[]} + @{$self->{prompt_rows}//[]};
+    if ( length $self->{search_info} ) {
+        ++$self->{count_pre_rows};
+    }
+}
+
+
+sub __avail_height_to_keep {
+    my ( $self ) = @_;
+    my $keep = $self->{keep};
+    if ( $self->{layout} == 2 ) {
+        if ( $keep > @{$self->{list}} ) {
+            $keep = @{$self->{list}};
+        }
+    }
+    else {
+        $keep = $self->__keep_to_row_count( $keep );
+    }
+    if ( $keep <= $self->{avail_height} ) {
         return;
     }
-    $self->{prompt_copy} = join( "\n\r", @tmp_prompt ) . "\n\r"; #
-    # \n\r -> stty 'raw' mode and Term::Readkey 'ultra-raw' mode don't translate newline to carriage_return/newline
+    if ( $self->{margin_top} || $self->{margin_bottom} ) {
+
+        REDUCE: while ( 1 ) {
+            my $prev_avail_height = $self->{avail_height};
+
+            for my $margin_type ( qw( margin_top margin_bottom ) ) {
+                if ( $self->{$margin_type} ) {
+                    --$self->{$margin_type};
+                    ++$self->{avail_height};
+                    last REDUCE if $self->{avail_height} == $keep;
+                }
+            }
+            last REDUCE if $prev_avail_height == $self->{avail_height};
+        }
+    }
+    if ( $keep <= $self->{avail_height} ) {
+        return;
+    }
+    my $orig_margin_right = $self->{margin_right};
+    my $orig_margin_left = $self->{margin_left};
+    $self->{margin_right} = 1 if $self->{margin_right};
+    $self->{margin_left}  = 1 if $self->{margin_left};
+
+    for my $opt ( qw( info prompt bottom_text ) ) {
+        if ( length $self->{$opt} ) {
+            # don't change tab_prompt, tab_info and tab_text, because they are not restored on win resize.
+            my $tabs = 'tabs_' . $opt;
+            my $init     = $self->{$tabs}[0] > $self->{margin_left}  ? $self->{margin_left}  : $self->{$tabs}[0];
+            my $subseq   = $self->{$tabs}[1] > $self->{margin_left}  ? $self->{margin_left}  : $self->{$tabs}[1];
+            my $r_margin = $self->{$tabs}[2] > $self->{margin_right} ? $self->{margin_right} : $self->{$tabs}[2];
+            my $prev_row_count = @{$self->{$opt . '_rows'}};
+            $self->{$opt . '_rows'} = [ line_fold(
+                $self->{$opt}, { width => $self->{term_width} + EXTRA_W - $r_margin, init_tab => $init,
+                subseq_tab => $subseq, color => $self->{color}, join => 0 }
+            ) ];
+            $self->{avail_height} += $prev_row_count - @{$self->{$opt . '_rows'}};
+        }
+    }
+    $self->{avail_width} += ( $orig_margin_right - $self->{margin_right} ) + ( $orig_margin_left - $self->{margin_left} );
+    $keep = $self->__keep_to_row_count( $keep );
+    if ( $keep <= $self->{avail_height} ) {
+        return;
+    }
+    #unshift @{$self->{info_rows}}, '=' x $self->{term_width};
+    # Now change method:
+    my $available_rows = 0;
+    if ( $self->{term_height} > $keep ) {
+        $self->{avail_height} = $keep;
+        $available_rows = $self->{term_height} - $self->{avail_height};
+    }
+    if ( length $self->{search_info} ) {
+        if ( $available_rows ) {
+            --$available_rows;
+        }
+        else {
+            --$self->{avail_height};
+        }
+    }
+    if ( $self->{page} ) {
+        if ( $available_rows ) {
+            --$available_rows;
+        }
+        else {
+            --$self->{avail_page};
+        }
+    }
+    if ( $self->{prompt_rows} ) {
+        if ( $available_rows ) {
+            if ( @{$self->{prompt_rows}} > $available_rows ) {
+                #splice @{$self->{prompt_rows}}, 0, @{$self->{prompt_rows}} - $available_rows;
+                $available_rows = 0;
+            }
+            else {
+                $available_rows -= @{$self->{prompt_rows}};
+            }
+        }
+        elsif ( $self->{avail_height} > 4 ) {
+                #$self->{prompt_rows} = [ $self->{prompt_rows}[-1] ];
+                --$self->{avail_height};
+        }
+        #else {
+        #    delete $self->{prompt_rows};
+        #}
+    }
+    if ( ! $available_rows ) {
+        #delete $self->{info_rows};
+        delete $self->{bottom_text_rows};
+        return;
+    }
+    if ( $self->{bottom_text_rows} ) {
+        if ( @{$self->{bottom_text_rows}} > $available_rows ) {
+            $#{$self->{bottom_text_rows}} = $available_rows - 1;
+            my $ellipsis = ' ...';
+            my $avail_w = $self->{avail_width} + EXTRA_W + ( $self->{margin_left} // 0 );
+            $self->{bottom_text_rows}[-1] =~ s/\s+\z//;
+
+            while ( print_columns( $self->{bottom_text_rows}[-1] ) + length( $ellipsis ) > $avail_w ) {
+                $self->{bottom_text_rows}[-1] =~ s/\s+\S+\z//;
+            }
+            $self->{bottom_text_rows}[-1] .= $ellipsis;
+            $available_rows = 0;
+        }
+        else {
+            $available_rows -= @{$self->{bottom_text_rows}};
+        }
+    }
+    #if ( ! $available_rows ) {
+    #    delete $self->{info_rows};
+    #    return;
+    #}
+    #if (  $self->{info_rows} ) {
+    #    if ( @{$self->{info_rows}} > $available_rows ) { ##
+    #        splice @{$self->{info_rows}}, 0, @{$self->{info_rows}} - $available_rows;
+    #    }
+    #}
+}
+
+
+sub __keep_to_row_count {
+    my ( $self, $keep ) = @_;
+    my $row_w = $self->{col_width};
+    my $count = 1;
+
+    while ( 1 ) { ##
+        $row_w += $self->{pad} + $self->{col_width};
+        if ( $row_w >= $self->{avail_width} ) {
+            last;
+        }
+        ++$count;
+    }
+    my $rows = int( @{$self->{list}} / $count );
+    if ( @{$self->{list}} % $count ) {
+        ++$rows;
+    }
+    if ( $keep > $rows ) {
+        $keep = $rows;
+    }
+    return $keep;
+}
+
+
+sub __current_layout {
+    my ( $self ) = @_;
+    my $all_in_first_row;
+    if ( $self->{layout} <= 1 && ! $self->{ll} && ! $self->{max_cols} ) {
+        my $firstrow_width = 0;
+        for my $list_idx ( 0 .. $#{$self->{list}} ) {
+            $firstrow_width += $self->{width_elements}[$list_idx] + $self->{pad};
+            if ( $firstrow_width - $self->{pad} > $self->{avail_width} ) {
+                $firstrow_width = 0;
+                last;
+            }
+        }
+        $all_in_first_row = $firstrow_width;
+    }
+    if ( $all_in_first_row ) {
+        $self->{current_layout} = -1;
+    }
+    elsif ( $self->{col_width} >= $self->{avail_width} ) {
+        $self->{current_layout} = 2;
+        $self->{col_width} = $self->{avail_width};
+    }
+    else {
+        $self->{current_layout} = $self->{layout};
+    }
+    $self->{col_width_plus} = $self->{col_width} + $self->{pad};
+    # 'col_width_plus' no effects if layout == 2
+}
+
+
+sub __list_idx2rc {
+    my ( $self ) = @_;
+    $self->{rc2idx} = [];
+    if ( $self->{current_layout} == -1 ) {
+        $self->{rc2idx}[0] = [ 0 .. $#{$self->{list}} ];
+        $self->{idx_of_last_col_in_last_row} = $#{$self->{list}};
+    }
+    elsif ( $self->{current_layout} == 2 ) {
+        for my $list_idx ( 0 .. $#{$self->{list}} ) {
+            $self->{rc2idx}[$list_idx][0] = $list_idx;
+            $self->{idx_of_last_col_in_last_row} = 0;
+        }
+    }
+    else {
+        my $tmp_avail_width = $self->{avail_width} + $self->{pad};
+        # auto_format
+        if ( $self->{current_layout} == 1 ) {
+            my $tmc = int( @{$self->{list}} / $self->{avail_height} );
+            $tmc++ if @{$self->{list}} % $self->{avail_height};
+            $tmc *= $self->{col_width_plus};
+            if ( $tmc < $tmp_avail_width ) {
+                $tmc = int( $tmc + ( ( $tmp_avail_width - $tmc ) / 1.5 ) );
+                $tmp_avail_width = $tmc;
+            }
+        }
+        # order
+        my $cols_per_row = int( $tmp_avail_width / $self->{col_width_plus} );
+        if ( $self->{max_cols} && $cols_per_row > $self->{max_cols} ) {
+            $cols_per_row = $self->{max_cols};
+        }
+        $cols_per_row = 1 if $cols_per_row < 1;
+        $self->{idx_of_last_col_in_last_row} = ( @{$self->{list}} % $cols_per_row || $cols_per_row ) - 1;
+        if ( $self->{order} == 1 ) {
+            my $rows = int( ( @{$self->{list}} - 1 + $cols_per_row ) / $cols_per_row );
+            my @rearranged_idx;
+            my $begin = 0;
+            my $end = $rows - 1 ;
+            for my $c ( 0 .. $cols_per_row - 1 ) {
+                --$end if $c > $self->{idx_of_last_col_in_last_row};
+                $rearranged_idx[$c] = [ $begin .. $end ];
+                $begin = $end + 1;
+                $end = $begin + $rows - 1;
+            }
+            for my $r ( 0 .. $rows - 1 ) {
+                my @temp_idx;
+                for my $c ( 0 .. $cols_per_row - 1 ) {
+                    next if $r == $rows - 1 && $c > $self->{idx_of_last_col_in_last_row};
+                    push @temp_idx, $rearranged_idx[$c][$r];
+                }
+                push @{$self->{rc2idx}}, \@temp_idx;
+            }
+        }
+        else {
+            my $begin = 0;
+            my $end = $cols_per_row - 1;
+            $end = $#{$self->{list}} if $end > $#{$self->{list}};
+            push @{$self->{rc2idx}}, [ $begin .. $end ];
+            while ( $end < $#{$self->{list}} ) {
+                $begin += $cols_per_row;
+                $end   += $cols_per_row;
+                $end    = $#{$self->{list}} if $end > $#{$self->{list}};
+                push @{$self->{rc2idx}}, [ $begin .. $end ];
+            }
+        }
+    }
 }
 
 
@@ -775,7 +1104,7 @@ sub __prepare_footer_line {
     if ( exists $self->{footer_fmt} ) {
         delete $self->{footer_fmt};
     }
-    my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1;
+    my $pp_total = int( $#{$self->{rc2idx}} / $self->{avail_height} ) + 1; ##
     if ( $self->{page} == 0 ) {
         # nothing to do
     }
@@ -795,8 +1124,60 @@ sub __prepare_footer_line {
                 $self->{footer_fmt} = '%0' . $pp_total_width . '.' . $pp_total_width . 's';
             }
         }
+        if ( $self->{margin_left} ) {
+            $self->{footer_fmt} = ( ' ' x $self->{margin_left} ) . $self->{footer_fmt};
+        }
     }
     $self->{pp_count} = $pp_total;
+}
+
+
+sub __marked_idx2rc {
+    my ( $self, $list_of_indexes, $boolean ) = @_;
+    my $last_list_idx = $#{$self->{list}};
+    if ( $self->{current_layout} == 2 ) {
+        for my $list_idx ( @$list_of_indexes ) {
+            if ( $list_idx > $last_list_idx ) {
+                next;
+            }
+            $self->{marked}[$list_idx][0] = $boolean;
+        }
+        return;
+    }
+    my ( $row, $col );
+    my $cols_per_row = @{$self->{rc2idx}[0]};
+    if ( $self->{order} == 0 ) {
+        for my $list_idx ( @$list_of_indexes ) {
+            if ( $list_idx > $last_list_idx ) {
+                next;
+            }
+            $row = int( $list_idx / $cols_per_row );
+            $col = $list_idx % $cols_per_row;
+            $self->{marked}[$row][$col] = $boolean;
+        }
+    }
+    elsif ( $self->{order} == 1 ) {
+        my $rows_per_col = @{$self->{rc2idx}};
+        my $col_count_last_row = $self->{idx_of_last_col_in_last_row} + 1;
+        my $last_list_idx_in_cols_full = $rows_per_col * $col_count_last_row - 1;
+        my $first_list_idx_in_cols_short = $last_list_idx_in_cols_full + 1;
+
+        for my $list_idx ( @$list_of_indexes ) {
+            if ( $list_idx > $last_list_idx ) {
+                next;
+            }
+            if ( $list_idx < $last_list_idx_in_cols_full ) {
+                $row = $list_idx % $rows_per_col;
+                $col = int( $list_idx / $rows_per_col );
+            }
+            else {
+                my $rows_per_col_short = $rows_per_col - 1;
+                $row = ( $list_idx - $first_list_idx_in_cols_short ) % $rows_per_col_short;
+                $col = int( ( $list_idx - $col_count_last_row ) / $rows_per_col_short );
+            }
+            $self->{marked}[$row][$col] = $boolean;
+        }
+    }
 }
 
 
@@ -821,39 +1202,28 @@ sub __set_cell {
 }
 
 
-sub __wr_first_screen {
+sub __marked_rc2idx {
     my ( $self ) = @_;
-    $self->__avail_screen_size();
-    $self->__current_layout();
-    $self->__list_idx2rc();
-    $self->__prepare_footer_line();
-    $self->{first_page_row} = 0;
-    my $avail_height_idx = $self->{avail_height} - 1;
-    $self->{last_page_row}  = $avail_height_idx > $#{$self->{rc2idx}} ? $#{$self->{rc2idx}} : $avail_height_idx;
-    $self->{i_row}  = 0;
-    $self->{i_col}  = 0;
-    $self->{pos}    = [ 0, 0 ];
-    $self->{marked} = [];
-    if ( $self->{wantarray} && defined $self->{mark} ) {
-        $self->__marked_idx2rc( $self->{mark}, 1 );
-    }
-    if ( defined $self->{default} && $self->{default} <= $#{$self->{list}} ) {
-        $self->__set_cell( $self->{default} );
-    }
-    if ( $self->{clear_screen} ) {
-        print clear_screen();
+    my $list_idx = [];
+    if ( $self->{order} == 1 ) {
+        for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
+            for my $row ( 0 .. $#{$self->{rc2idx}} ) {
+                if ( $self->{marked}[$row][$col] ) {
+                    push @$list_idx, $self->{rc2idx}[$row][$col];
+                }
+            }
+        }
     }
     else {
-        print "\r" . clear_to_end_of_screen();
+        for my $row ( 0 .. $#{$self->{rc2idx}} ) {
+            for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
+                if ( $self->{marked}[$row][$col] ) {
+                    push @$list_idx, $self->{rc2idx}[$row][$col];
+                }
+            }
+        }
     }
-    if ( $self->{prompt_copy} ne '' ) {
-        print $self->{prompt_copy};
-    }
-    $self->__wr_screen();
-    if ( $self->{mouse} ) {
-        my $abs_cursor_y = $self->{plugin}->__get_cursor_row();
-        $self->{offset_rows} = $abs_cursor_y - 1 - $self->{i_row};
-    }
+    return $list_idx;
 }
 
 
@@ -861,28 +1231,46 @@ sub __wr_screen {
     my ( $self ) = @_;
     $self->__goto( 0, 0 );
     print "\r" . clear_to_end_of_screen();
-    if ( defined $self->{footer_fmt} ) {
-        my $pp_line = sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;
-        if ( $self->{margin_left} ) {
-            print right( $self->{margin_left} );
-        }
-        print "\n" x ( $self->{avail_height} );
-        print $pp_line . "\r";
-        if ( $self->{margin_bottom} ) {
-            print "\n" x $self->{margin_bottom};
-            print up( $self->{margin_bottom} );
-        }
-        print up( $self->{avail_height} );
+    my $line_feeds;
+    #if ( $self->{footer_fmt} ) {
+    if ( $self->{footer_fmt} || $self->{pp_count} > 1 ) { ##
+        $line_feeds = $self->{avail_height};
     }
-    elsif ( $self->{margin_bottom} ) {
-        my $count = ( $self->{last_page_row} - $self->{first_page_row} ) + $self->{margin_bottom};
-        print "\n" x $count;
-        print up( $count );
+    else {
+        $line_feeds = $self->{last_page_row} - $self->{first_page_row} + 1;
     }
-    if ( $self->{margin_left} ) {
-        print right( $self->{margin_left} ); # left margin after each "\r"
+    #if ( $self->{bottom_text_rows} ) {                 ## before and moving
+    #    $line_feeds += @{$self->{bottom_text_rows}};   ## before and moving
+    #}                                                  ## before and moving
+    my $up = $line_feeds;
+    # @post_rows have the `margin_left` is build if any
+    my @post_rows;
+    if ( $self->{footer_fmt} ) {                                                                                    ## after
+        @post_rows = ( sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1 );   ## after
+        $up += 1;                                                                                                   ## after
+    }                                                                                                               ## after
+    if ( $self->{bottom_text_rows} ) {                                                                              ## after or before, not moving
+        push @post_rows, @{$self->{bottom_text_rows}};                                                              ## after or before, not moving
+        $up += @{$self->{bottom_text_rows}};                                                                        ## after or before, not moving
+    }                                                                                                               ## after or before, not moving
+    #if ( $self->{footer_fmt} ) {                                                                                    ##          before, not moving
+    #    push @post_rows, sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;   ##          before, not moving
+    #    $up += 1;                                                                                                   ##          before, not moving
+    #}                                                                                                               ##          before, not moving
+    if ( $self->{margin_bottom} ) {
+        push @post_rows, ( '' ) x $self->{margin_bottom};
+        $up += $self->{margin_bottom};
     }
+    print "\n" x $line_feeds;
+    if ( @post_rows ) {
+        # no leading line-feed because the menu has a trailing line-feed.
+        print join( "\n\r", @post_rows ) . "\r";
+        --$up; # last @post_rows row has no trailing line-feed.
+    }
+    print up( $up );
     my $pad_str = ' ' x $self->{pad};
+    my $left_margin = ' ' x ( $self->{margin_left} // 0 );
+
     for my $row ( $self->{first_page_row} .. $self->{last_page_row} ) {
         my $line = $self->__prepare_cell( $row, 0 );
         if ( $#{$self->{rc2idx}[$row]} ) { #
@@ -890,13 +1278,23 @@ sub __wr_screen {
                 $line = $line . $pad_str . $self->__prepare_cell( $row, $col );
             }
         }
-        print $line . "\n\r";
-        if ( $self->{margin_left} ) {
-            print right( $self->{margin_left} );
+        if ( $left_margin ) {
+            print $left_margin . $line . "\n\r";
+        }
+        else {
+            print $line . "\n\r";
         }
     }
+    #if ( $self->{bottom_text_rows} ) {                                 ## before and moving
+    #    # text_rows have a set margin_left build in                    ## before and moving
+    #    print join( "\n\r", @{$self->{bottom_text_rows}} ) . "\r";     ## before and moving
+    #    print up( @{$self->{bottom_text_rows}} - 1 );                  ## before and moving
+    #}                                                                  ## before and moving
     print up( $self->{last_page_row} - $self->{first_page_row} + 1 );
     # relativ cursor pos: 0, 0
+    if ( $self->{margin_left} ) {
+        print right( $self->{margin_left} ); # reset left margin after "\r"
+    }
     $self->__wr_cell( $self->{pos}[ROW], $self->{pos}[COL] );
 }
 
@@ -1049,220 +1447,6 @@ sub __goto {
 }
 
 
-sub __avail_screen_size {
-    my ( $self ) = @_;
-    ( $self->{avail_width}, $self->{avail_height} ) = ( $self->{term_width}, $self->{term_height} );
-    if ( $self->{margin_left} ) {
-        $self->{avail_width} -= $self->{margin_left};
-    }
-    if ( $self->{margin_right} ) {
-        $self->{avail_width} -= $self->{margin_right};
-    }
-
-    if ( $self->{margin_right} || ( $self->{col_width} > $self->{avail_width} ) ) {
-        $self->{avail_width} += EXTRA_W;
-        # + EXTRA_W: use also the last terminal column if there is only one item-column;
-        #            with only one item-column the output doesn't get messed up if an item
-        #            reaches the right edge of the terminal on a non-MSWin32-OS (EXTRA_W is 0 if OS is MSWin32)
-    }
-    if ( $self->{max_width} && $self->{avail_width} > $self->{max_width} ) {
-        $self->{avail_width} = $self->{max_width};
-    }
-    if ( $self->{avail_width} < 1 ) {
-        $self->{avail_width} = 1;
-    }
-    #if ( $self->{ll} && $self->{ll} > $self->{avail_width} ) {
-    #    return -2;
-    #}
-    $self->__prepare_info_and_prompt_lines();
-    if ( $self->{count_prompt_lines} ) {
-        $self->{avail_height} -= $self->{count_prompt_lines};
-    }
-    if ( $self->{page} ) {
-        $self->{avail_height}--;
-    }
-    if ( $self->{margin_bottom} ) {
-        $self->{avail_height} -= $self->{margin_bottom};
-    }
-    if ( $self->{avail_height} < $self->{keep} ) {
-        $self->{avail_height} = $self->{term_height} >= $self->{keep} ? $self->{keep} : $self->{term_height};
-    }
-    if ( $self->{max_height} && $self->{max_height} < $self->{avail_height} ) {
-        $self->{avail_height} = $self->{max_height};
-    }
-}
-
-
-sub __current_layout {
-    my ( $self ) = @_;
-    my $all_in_first_row;
-    if ( $self->{layout} <= 1 && ! $self->{ll} && ! $self->{max_cols} ) {
-        my $firstrow_width = 0;
-        for my $list_idx ( 0 .. $#{$self->{list}} ) {
-            $firstrow_width += $self->{width_elements}[$list_idx] + $self->{pad};
-            if ( $firstrow_width - $self->{pad} > $self->{avail_width} ) {
-                $firstrow_width = 0;
-                last;
-            }
-        }
-        $all_in_first_row = $firstrow_width;
-    }
-    if ( $all_in_first_row ) {
-        $self->{current_layout} = -1;
-    }
-    elsif ( $self->{col_width} >= $self->{avail_width} ) {
-        $self->{current_layout} = 2;
-        $self->{col_width} = $self->{avail_width};
-    }
-    else {
-        $self->{current_layout} = $self->{layout};
-    }
-    $self->{col_width_plus} = $self->{col_width} + $self->{pad};
-    # 'col_width_plus' no effects if layout == 2
-}
-
-
-sub __list_idx2rc {
-    my ( $self ) = @_;
-    my $layout = $self->{current_layout};
-    $self->{rc2idx} = [];
-    if ( $layout == -1 ) {
-        $self->{rc2idx}[0] = [ 0 .. $#{$self->{list}} ];
-        $self->{idx_of_last_col_in_last_row} = $#{$self->{list}};
-    }
-    elsif ( $layout == 2 ) {
-        for my $list_idx ( 0 .. $#{$self->{list}} ) {
-            $self->{rc2idx}[$list_idx][0] = $list_idx;
-            $self->{idx_of_last_col_in_last_row} = 0;
-        }
-    }
-    else {
-        my $tmp_avail_width = $self->{avail_width} + $self->{pad};
-        # auto_format
-        if ( $layout == 1 ) {
-            my $tmc = int( @{$self->{list}} / $self->{avail_height} );
-            $tmc++ if @{$self->{list}} % $self->{avail_height};
-            $tmc *= $self->{col_width_plus};
-            if ( $tmc < $tmp_avail_width ) {
-                $tmc = int( $tmc + ( ( $tmp_avail_width - $tmc ) / 1.5 ) );
-                $tmp_avail_width = $tmc;
-            }
-        }
-        # order
-        my $cols_per_row = int( $tmp_avail_width / $self->{col_width_plus} );
-        if ( $self->{max_cols} && $cols_per_row > $self->{max_cols} ) {
-            $cols_per_row = $self->{max_cols};
-        }
-        $cols_per_row = 1 if $cols_per_row < 1;
-        $self->{idx_of_last_col_in_last_row} = ( @{$self->{list}} % $cols_per_row || $cols_per_row ) - 1;
-        if ( $self->{order} == 1 ) {
-            my $rows = int( ( @{$self->{list}} - 1 + $cols_per_row ) / $cols_per_row );
-            my @rearranged_idx;
-            my $begin = 0;
-            my $end = $rows - 1 ;
-            for my $c ( 0 .. $cols_per_row - 1 ) {
-                --$end if $c > $self->{idx_of_last_col_in_last_row};
-                $rearranged_idx[$c] = [ $begin .. $end ];
-                $begin = $end + 1;
-                $end = $begin + $rows - 1;
-            }
-            for my $r ( 0 .. $rows - 1 ) {
-                my @temp_idx;
-                for my $c ( 0 .. $cols_per_row - 1 ) {
-                    next if $r == $rows - 1 && $c > $self->{idx_of_last_col_in_last_row};
-                    push @temp_idx, $rearranged_idx[$c][$r];
-                }
-                push @{$self->{rc2idx}}, \@temp_idx;
-            }
-        }
-        else {
-            my $begin = 0;
-            my $end = $cols_per_row - 1;
-            $end = $#{$self->{list}} if $end > $#{$self->{list}};
-            push @{$self->{rc2idx}}, [ $begin .. $end ];
-            while ( $end < $#{$self->{list}} ) {
-                $begin += $cols_per_row;
-                $end   += $cols_per_row;
-                $end    = $#{$self->{list}} if $end > $#{$self->{list}};
-                push @{$self->{rc2idx}}, [ $begin .. $end ];
-            }
-        }
-    }
-}
-
-
-sub __marked_idx2rc {
-    my ( $self, $list_of_indexes, $boolean ) = @_;
-    my $last_list_idx = $#{$self->{list}};
-    if ( $self->{current_layout} == 2 ) {
-        for my $list_idx ( @$list_of_indexes ) {
-            if ( $list_idx > $last_list_idx ) {
-                next;
-            }
-            $self->{marked}[$list_idx][0] = $boolean;
-        }
-        return;
-    }
-    my ( $row, $col );
-    my $cols_per_row = @{$self->{rc2idx}[0]};
-    if ( $self->{order} == 0 ) {
-        for my $list_idx ( @$list_of_indexes ) {
-            if ( $list_idx > $last_list_idx ) {
-                next;
-            }
-            $row = int( $list_idx / $cols_per_row );
-            $col = $list_idx % $cols_per_row;
-            $self->{marked}[$row][$col] = $boolean;
-        }
-    }
-    elsif ( $self->{order} == 1 ) {
-        my $rows_per_col = @{$self->{rc2idx}};
-        my $col_count_last_row = $self->{idx_of_last_col_in_last_row} + 1;
-        my $last_list_idx_in_cols_full = $rows_per_col * $col_count_last_row - 1;
-        my $first_list_idx_in_cols_short = $last_list_idx_in_cols_full + 1;
-
-        for my $list_idx ( @$list_of_indexes ) {
-            if ( $list_idx > $last_list_idx ) {
-                next;
-            }
-            if ( $list_idx < $last_list_idx_in_cols_full ) {
-                $row = $list_idx % $rows_per_col;
-                $col = int( $list_idx / $rows_per_col );
-            }
-            else {
-                my $rows_per_col_short = $rows_per_col - 1;
-                $row = ( $list_idx - $first_list_idx_in_cols_short ) % $rows_per_col_short;
-                $col = int( ( $list_idx - $col_count_last_row ) / $rows_per_col_short );
-            }
-            $self->{marked}[$row][$col] = $boolean;
-        }
-    }
-}
-
-
-sub __marked_rc2idx {
-    my ( $self ) = @_;
-    my $list_idx = [];
-    if ( $self->{order} == 1 ) {
-        for my $col ( 0 .. $#{$self->{rc2idx}[0]} ) {
-            for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-                if ( $self->{marked}[$row][$col] ) {
-                    push @$list_idx, $self->{rc2idx}[$row][$col];
-                }
-            }
-        }
-    }
-    else {
-        for my $row ( 0 .. $#{$self->{rc2idx}} ) {
-            for my $col ( 0 .. $#{$self->{rc2idx}[$row]} ) {
-                if ( $self->{marked}[$row][$col] ) {
-                    push @$list_idx, $self->{rc2idx}[$row][$col];
-                }
-            }
-        }
-    }
-    return $list_idx;
-}
 
 
 1;
@@ -1280,7 +1464,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.777
+Version 1.778_01
 
 =cut
 
@@ -1515,6 +1699,15 @@ Options which expect a number as their value expect integers.
 
 1 - on
 
+=head3 bottom_text
+
+The name of this option may change in future release.
+
+Expects as its value a string. If set, the text is printed below the menu.
+
+(default: not set)
+
+
 =head3 clear_screen
 
 0 - off (default)
@@ -1684,7 +1877,7 @@ I<margin> expects a reference to an array with four elements in the following or
 
 - left margin (number of terminal columns)
 
-See also L</tabs_info> and L</tabs_prompt>.
+See also L</tabs_info>, L</tabs_prompt> and L</tabs_bottom_text>.
 
 Allowed values: 0 or greater. Elements beyond the fourth are ignored.
 
@@ -1792,6 +1985,26 @@ In list context: these elements cannot be marked.
 Expected value: a regex quoted with the C<qr> operator.
 
 (default: undefined)
+
+=head3 tabs_bottom_text
+
+The name of this option may change in a future release.
+
+The option I<tabs_bottom_text> allows one to insert spaces at the beginning and the end of I<bottom_text> lines.
+
+I<tabs_bottom_text> expects a reference to an array with one to three elements:
+
+- the first element (initial tab) sets the number of spaces inserted at beginning of paragraphs
+
+- the second element (subsequent tab) sets the number of spaces inserted at the beginning of all broken lines apart from
+the beginning of paragraphs
+
+- the third element sets the number of spaces used as a right margin.
+
+Allowed values: 0 or greater. Elements beyond the third are ignored.
+
+default: If I<margin> is defined, the initial tab and the subsequent tab are set to left-I<margin> and the right margin
+is set to right-I<margin>. If I<margin> is not defined, the default is undefined.
 
 =head3 tabs_info
 
@@ -1972,7 +2185,7 @@ L<stackoverflow|http://stackoverflow.com> for the help.
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright (C) 2012-2025 Matthäus Kiem.
+Copyright (C) 2012-2026 Matthäus Kiem.
 
 This library is free software; you can redistribute it and/or modify it under the same terms as Perl 5.10.0. For
 details, see the full text of the licenses in the file LICENSE.

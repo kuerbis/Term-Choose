@@ -92,6 +92,7 @@ my $string = {
     prompt      => '',
     undef       => '',
     busy_string => '',
+    bottom_text => '',
 };
 my @val_string = ( 0, 'Hello' x 50, '', ' ', '☻☮☺', "\x{263a}\x{263b}", '한글', undef, 'æða' );
 for my $opt ( sort keys %$string ) {
@@ -102,8 +103,9 @@ for my $opt ( sort keys %$string ) {
 
 
 my $tabs = {
-    tabs_info   => 'Array_Int',
-    tabs_prompt => 'Array_Int',
+    tabs_info        => 'Array_Int',
+    tabs_prompt      => 'Array_Int',
+    tabs_bottom_text => 'Array_Int',
 };
 my @val_tabs = ( [ 2, 4 ], [ 8 ], [], undef );
 
