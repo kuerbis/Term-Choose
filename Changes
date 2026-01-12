@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.778_02   2026-01-12
+    - Resize window fix.
+
 1.778_01   2026-01-08
     - Resize window: different fixes.
     - New options bottom_text and tabs_bottom_text.

@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_01';
+our $VERSION = '1.778_02';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -362,7 +362,24 @@ sub __choose {
                 $self->__reset_term( 0 );
                 return -1;
             }
-            my $reduced_width = $new_width < $self->{term_width};
+            #my $reduced_width = $new_width < $self->{term_width};
+
+            if ( $new_width < $self->{term_width} ) { # ###
+                my $up = $self->{i_row} + ( $self->{margin_top} // 0 );
+                for my $opt ( qw( info prompt ) ) {
+                    next if ! $self->{$opt};
+                    for my $row ( @{$self->{$opt . '_rows'}} ) {
+                        $up++ and next if ! length $row;
+                        $row =~ s/${\SGR_ES}//g if $self->{color}; # __modify_options() resets the rows
+                        my $w = print_columns( $row );
+                        $up += int( $w / ( $new_width + EXTRA_W ) );
+                        $up++ if $w % ( $new_width + EXTRA_W );
+                    }
+                }
+                $up++ if length $self->{search_info};
+                $self->{count_pre_rows} = $up;
+            }
+
             ( $self->{term_width}, $self->{term_height} ) = ( $new_width, $new_height );
             $self->{col_width} = $self->{bu_col_width};
             $self->__modify_options();
@@ -370,19 +387,23 @@ sub __choose {
             if ( $self->{wantarray} && @{$self->{marked}} ) {
                 $self->{mark} = $self->__marked_rc2idx();
             }
-            my $up;
-            if ( $reduced_width ) {
-                $up = $self->{i_row} + ( $self->{margin_top} // 0 );
-                for my $row ( @{$self->{info_rows}//[]}, @{$self->{prompt_rows}//[]} ) {
-                    next if ! length $row;
-                    $up += scalar line_fold( $row, { width => $new_width + EXTRA_W, init_tab => $self->{margin_left},
-                                                     color => $self->{color}, join => 0 } );
-                }
-                $up++ if length $self->{search_info};
-            }
-            else {
-                $up = $self->{i_row} + $self->{count_pre_rows};
-            }
+            #my $up;
+            #if ( $reduced_width ) {
+            #    $up = $self->{i_row} + ( $self->{margin_top} // 0 );
+            #    for my $opt ( qw( info prompt ) ) {
+            #        next if ! $self->{$opt};
+            #        for my $row ( @{$self->{$opt . '_rows'}} ) {
+            #            $up++ and next if ! length $row;
+            #            $up += scalar line_fold( $row, { width => $new_width + EXTRA_W, init_tab => $self->{'tabs_' . $opt}[0],
+            #                                            color => $self->{color}, join => 0 } );
+            #        }
+            #    }
+            #    $up++ if length $self->{search_info};
+            #}
+            #else {
+            #    $up = $self->{i_row} + $self->{count_pre_rows};
+            #}
+            my $up = $self->{i_row} + $self->{count_pre_rows}; # ###
             if ( $up ) {
                 print up( $up );
             }
@@ -904,7 +925,6 @@ sub __avail_height_to_keep {
     if ( $keep <= $self->{avail_height} ) {
         return;
     }
-    #unshift @{$self->{info_rows}}, '=' x $self->{term_width};
     # Now change method:
     my $available_rows = 0;
     if ( $self->{term_height} > $keep ) {
@@ -1239,24 +1259,17 @@ sub __wr_screen {
     else {
         $line_feeds = $self->{last_page_row} - $self->{first_page_row} + 1;
     }
-    #if ( $self->{bottom_text_rows} ) {                 ## before and moving
-    #    $line_feeds += @{$self->{bottom_text_rows}};   ## before and moving
-    #}                                                  ## before and moving
     my $up = $line_feeds;
-    # @post_rows have the `margin_left` is build if any
+    # @post_rows: `margin_left` is build if any
     my @post_rows;
-    if ( $self->{footer_fmt} ) {                                                                                    ## after
-        @post_rows = ( sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1 );   ## after
-        $up += 1;                                                                                                   ## after
-    }                                                                                                               ## after
-    if ( $self->{bottom_text_rows} ) {                                                                              ## after or before, not moving
-        push @post_rows, @{$self->{bottom_text_rows}};                                                              ## after or before, not moving
-        $up += @{$self->{bottom_text_rows}};                                                                        ## after or before, not moving
-    }                                                                                                               ## after or before, not moving
-    #if ( $self->{footer_fmt} ) {                                                                                    ##          before, not moving
-    #    push @post_rows, sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1;   ##          before, not moving
-    #    $up += 1;                                                                                                   ##          before, not moving
-    #}                                                                                                               ##          before, not moving
+    if ( $self->{footer_fmt} ) {
+        @post_rows = ( sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1 );
+        $up += 1;
+    }
+    if ( $self->{bottom_text_rows} ) {
+        push @post_rows, @{$self->{bottom_text_rows}};
+        $up += @{$self->{bottom_text_rows}};
+    }
     if ( $self->{margin_bottom} ) {
         push @post_rows, ( '' ) x $self->{margin_bottom};
         $up += $self->{margin_bottom};
@@ -1285,11 +1298,6 @@ sub __wr_screen {
             print $line . "\n\r";
         }
     }
-    #if ( $self->{bottom_text_rows} ) {                                 ## before and moving
-    #    # text_rows have a set margin_left build in                    ## before and moving
-    #    print join( "\n\r", @{$self->{bottom_text_rows}} ) . "\r";     ## before and moving
-    #    print up( @{$self->{bottom_text_rows}} - 1 );                  ## before and moving
-    #}                                                                  ## before and moving
     print up( $self->{last_page_row} - $self->{first_page_row} + 1 );
     # relativ cursor pos: 0, 0
     if ( $self->{margin_left} ) {
@@ -1464,7 +1472,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.778_01
+Version 1.778_02
 
 =cut
 

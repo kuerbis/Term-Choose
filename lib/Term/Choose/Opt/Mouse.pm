@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_01';
+our $VERSION = '1.778_02';
 
 use Term::Choose::Constants qw( :all );
 
