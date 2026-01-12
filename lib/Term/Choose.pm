@@ -362,9 +362,7 @@ sub __choose {
                 $self->__reset_term( 0 );
                 return -1;
             }
-            #my $reduced_width = $new_width < $self->{term_width};
-
-            if ( $new_width < $self->{term_width} ) { # ###
+            if ( $new_width < $self->{term_width} ) {
                 my $up = $self->{i_row} + ( $self->{margin_top} // 0 );
                 for my $opt ( qw( info prompt ) ) {
                     next if ! $self->{$opt};
@@ -387,23 +385,7 @@ sub __choose {
             if ( $self->{wantarray} && @{$self->{marked}} ) {
                 $self->{mark} = $self->__marked_rc2idx();
             }
-            #my $up;
-            #if ( $reduced_width ) {
-            #    $up = $self->{i_row} + ( $self->{margin_top} // 0 );
-            #    for my $opt ( qw( info prompt ) ) {
-            #        next if ! $self->{$opt};
-            #        for my $row ( @{$self->{$opt . '_rows'}} ) {
-            #            $up++ and next if ! length $row;
-            #            $up += scalar line_fold( $row, { width => $new_width + EXTRA_W, init_tab => $self->{'tabs_' . $opt}[0],
-            #                                            color => $self->{color}, join => 0 } );
-            #        }
-            #    }
-            #    $up++ if length $self->{search_info};
-            #}
-            #else {
-            #    $up = $self->{i_row} + $self->{count_pre_rows};
-            #}
-            my $up = $self->{i_row} + $self->{count_pre_rows}; # ###
+            my $up = $self->{i_row} + $self->{count_pre_rows};
             if ( $up ) {
                 print up( $up );
             }
@@ -1260,7 +1242,6 @@ sub __wr_screen {
         $line_feeds = $self->{last_page_row} - $self->{first_page_row} + 1;
     }
     my $up = $line_feeds;
-    # @post_rows: `margin_left` is build if any
     my @post_rows;
     if ( $self->{footer_fmt} ) {
         @post_rows = ( sprintf $self->{footer_fmt}, int( $self->{first_page_row} / $self->{avail_height} ) + 1 );
