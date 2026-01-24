@@ -1,6 +1,10 @@
 Revision history for Term::Choose
 
 
+1.778_03   2026-01-24
+    - Bugfix hash key name.
+    - Bugfix mouse mode with left margin.
+
 1.778_02   2026-01-12
     - Resize window fix.
 

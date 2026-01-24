@@ -3,6 +3,10 @@ use strict;
 use warnings;
 use Test::Synopsis;
 
+
+$SIG{__WARN__} = sub { die @_ };
+
+
 use lib 'lib';
 
 use Term::Choose;

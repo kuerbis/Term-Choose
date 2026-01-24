@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_02';
+our $VERSION = '1.778_03';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -31,6 +31,11 @@ BEGIN {
 
 END {
     if ( $? == 255 ) {
+        #if ( $^O ne 'MSWin32' ) {
+        #    binmode STDIN, ':encoding(UTF-8)' or warn "binmode STDIN, :encoding(UTF-8): $!\n";
+        #    print "\e[?1006l";
+        #    print "\e[?1003l";
+        #}
         if( $^O eq 'MSWin32' ) {
             my $input = Win32::Console->new( Win32::Console::constant( "STD_INPUT_HANDLE",  0 ) );
             $input->Mode( 0x0001|0x0002|0x0004 );
@@ -798,7 +803,7 @@ sub __wr_first_screen {
         print "\r" . clear_to_end_of_screen();
     }
     my $pre_string;
-    $pre_string .=  "\n\r" x $self->{margin_top}                    if $self->{margin_top};
+    $pre_string .=  "\n" x $self->{margin_top}                      if $self->{margin_top};
     $pre_string .= join( "\n\r", @{$self->{info_rows}} )   . "\n\r" if $self->{info_rows};
     $pre_string .= join( "\n\r", @{$self->{prompt_rows}} ) . "\n\r" if $self->{prompt_rows};
     if ( length $self->{search_info} ) {
@@ -882,28 +887,31 @@ sub __avail_height_to_keep {
     if ( $keep <= $self->{avail_height} ) {
         return;
     }
-    my $orig_margin_right = $self->{margin_right};
-    my $orig_margin_left = $self->{margin_left};
-    $self->{margin_right} = 1 if $self->{margin_right};
-    $self->{margin_left}  = 1 if $self->{margin_left};
+    if ( $self->{margin_right} || $self->{margin_left} ) {
+        my $orig_margin_right = $self->{margin_right} // 0;
+        my $orig_margin_left = $self->{margin_left} // 0;
+        $self->{margin_right} = $self->{margin_right} ? 1 : 0;
+        $self->{margin_left} = $self->{margin_left} ? 1 : 0;
 
-    for my $opt ( qw( info prompt bottom_text ) ) {
-        if ( length $self->{$opt} ) {
-            # don't change tab_prompt, tab_info and tab_text, because they are not restored on win resize.
-            my $tabs = 'tabs_' . $opt;
-            my $init     = $self->{$tabs}[0] > $self->{margin_left}  ? $self->{margin_left}  : $self->{$tabs}[0];
-            my $subseq   = $self->{$tabs}[1] > $self->{margin_left}  ? $self->{margin_left}  : $self->{$tabs}[1];
-            my $r_margin = $self->{$tabs}[2] > $self->{margin_right} ? $self->{margin_right} : $self->{$tabs}[2];
-            my $prev_row_count = @{$self->{$opt . '_rows'}};
-            $self->{$opt . '_rows'} = [ line_fold(
-                $self->{$opt}, { width => $self->{term_width} + EXTRA_W - $r_margin, init_tab => $init,
-                subseq_tab => $subseq, color => $self->{color}, join => 0 }
-            ) ];
-            $self->{avail_height} += $prev_row_count - @{$self->{$opt . '_rows'}};
+        for my $opt ( qw( info prompt bottom_text ) ) {
+            if ( length $self->{$opt} ) {
+                # don't change tab_prompt, tab_info and tab_text, because they are not restored on win resize.
+                my $ts = 'tabs_' . $opt;
+                my $init     = defined $self->{$ts}[0] && $self->{$ts}[0] < $self->{margin_left} ? $self->{$ts}[0] : $self->{margin_left};
+                my $subseq   = defined $self->{$ts}[1] && $self->{$ts}[1] < $self->{margin_left} ? $self->{$ts}[1] : $self->{margin_left};
+                my $r_margin = defined $self->{$ts}[2] && $self->{$ts}[2] < $self->{margin_right} ? $self->{$ts}[2] : $self->{margin_right};
+                my $prev_row_count = @{$self->{$opt . '_rows'}};
+                $self->{$opt . '_rows'} = [ line_fold(
+                    $self->{$opt}, { width => $self->{term_width} + EXTRA_W - $r_margin, init_tab => $init,
+                    subseq_tab => $subseq, color => $self->{color}, join => 0 }
+                ) ];
+                $self->{avail_height} += $prev_row_count - @{$self->{$opt . '_rows'}};
+            }
         }
+        $self->{avail_width} += ( $orig_margin_right - $self->{margin_right} ) + ( $orig_margin_left - $self->{margin_left} );
+        $keep = $self->__keep_to_row_count( $keep );
+
     }
-    $self->{avail_width} += ( $orig_margin_right - $self->{margin_right} ) + ( $orig_margin_left - $self->{margin_left} );
-    $keep = $self->__keep_to_row_count( $keep );
     if ( $keep <= $self->{avail_height} ) {
         return;
     }
@@ -926,7 +934,7 @@ sub __avail_height_to_keep {
             --$available_rows;
         }
         else {
-            --$self->{avail_page};
+            --$self->{avail_height};
         }
     }
     if ( $self->{prompt_rows} ) {
@@ -940,8 +948,8 @@ sub __avail_height_to_keep {
             }
         }
         elsif ( $self->{avail_height} > 4 ) {
-                #$self->{prompt_rows} = [ $self->{prompt_rows}[-1] ];
-                --$self->{avail_height};
+            #$self->{prompt_rows} = [ $self->{prompt_rows}[-1] ];
+            --$self->{avail_height};
         }
         #else {
         #    delete $self->{prompt_rows};
@@ -1453,7 +1461,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.778_02
+Version 1.778_03
 
 =cut
 

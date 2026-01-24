@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_02';
+our $VERSION = '1.778_03';
 
 use Exporter qw( import );
 
@@ -195,7 +195,7 @@ Term::Choose::LineFold
 
 =head1 VERSION
 
-Version 1.778_02
+Version 1.778_03
 
 =cut
 
