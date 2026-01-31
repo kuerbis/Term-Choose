@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_03';
+our $VERSION = '1.778_04';
 
 use Exporter qw( import );
 
@@ -18,9 +18,9 @@ our @EXPORT_OK = qw( table_char_width );
 
 sub table_char_width { [
 #[     0x0,     0x1f, -1],
-[    0x20,     0x7e, 1],
+#[    0x20,     0x7e, 1],
 #[    0x7f,     0x9f, -1],
-[    0xa0,     0xa0, 1],
+#[    0xa0,     0xa0, 1],
 [    0xa1,     0xa1, 2],
 [    0xa2,     0xa3, 1],
 [    0xa4,     0xa4, 2],
@@ -1318,7 +1318,7 @@ sub table_char_width { [
 [ 0xf0000,  0xffffd, 2],
 [ 0xffffe,  0xfffff, 1],
 [0x100000, 0x10fffd, 2],
-[0x10fffe, 0x10ffff, 1],
+#[0x10fffe, 0x10ffff, 1],
 ] }
 
 

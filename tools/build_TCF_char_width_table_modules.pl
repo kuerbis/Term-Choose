@@ -168,7 +168,8 @@ sub build_ranges {
 
 
 
-# # # # #   Perl PP   # # # # #
+
+# # # # #   Perl PP   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 for my $file_name ( "CharWidthAmbiguousWide.pm", "CharWidthDefault.pm" ) {
     my $ranges;
@@ -206,18 +207,21 @@ our \@EXPORT_OK = qw( table_char_width );
 sub table_char_width { [
 PP_HEADER
 
-    for my $r ( @$ranges ) {
-        my $cm = $r->{width} < 0 ? '#' : ''; # comment out entries with a width of -1: Cc and Cs
-        printf $fh "${cm}[%8s, %8s, %d],\n", sprintf( "0x%x", $r->{begin} ), sprintf( "0x%x", $r->{end} ), $r->{width};
-    }
+    my $comment_char = '#';
+    my $format = "%s[%8s, %8s, %d],\n";
+    write_data( $fh, $ranges, $comment_char, $format );
+
     print $fh "] }\n\n\n1;\n";
     close $fh;
 }
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 
-# # # # #   Perl XS   # # # # #
+
+
+# # # # #   Perl XS   # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 for my $file_name ( "charwidth_default.h", "charwidth_ambiguous_is_wide.h" ) {
     my $ranges;
@@ -243,10 +247,9 @@ typedef struct {
 static const WidthRange width_table[] = {
 XS_HEADER
 
-    for my $r ( @$ranges ) {
-        my $cm = $r->{width} < 0 ? '//' : ''; # comment out entries with a width of -1: Cc and Cs
-        printf $fh "${cm}    { %s, %s, %d },\n", sprintf( "0x%x", $r->{begin} ), sprintf( "0x%x", $r->{end} ), $r->{width};
-    }
+    my $comment_char = '//';
+    my $format = "%s    { %s, %s, %d },\n";
+    write_data( $fh, $ranges, $comment_char, $format );
 
     print $fh <<"XS_FOOTER";
 };
@@ -260,10 +263,13 @@ XS_FOOTER
     close $fh;
 }
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 
-# # # # #   Rakudo   # # # # #
+
+
+# # # # #   Rakudo    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 for my $file_name ( "CharWidthAmbiguousWide.pm6", "CharWidthDefault.pm6" ) {
     my $ranges;
@@ -293,20 +299,31 @@ unit module Term::Choose::LineFold::$module;
 sub table_char_width is export { [
 RAKU_HEADER
 
-    for my $r ( @$ranges ) {
-        my $cm = $r->{width} < 0 ? '#' : ''; # comment out entries with a width of -1: Cc and Cs
-        printf $fh "${cm}[%8s, %8s, %d],\n", sprintf( "0x%x", $r->{begin} ), sprintf( "0x%x", $r->{end} ), $r->{width};
-      }
+    my $comment_char = '#';
+    my $format = "%s[%8s, %8s, %d],\n";
+    write_data( $fh, $ranges, $comment_char, $format );
+
     print $fh "] }\n";
     close $fh;
 }
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
 
 
 
+sub write_data {
+    my ( $fh, $ranges, $comment_char, $format ) = @_;
+    my $skip = 1;
 
-
-
-
-
+    for my $i ( 0 .. $#$ranges ) {
+        my $r = $ranges->[$i];
+        if ( $skip && $r->{width} != - 1 && $r->{width} != 1 ) {
+            $skip = 0;
+        }
+        my $cm = $skip ? $comment_char : '';
+        $cm = $comment_char if $r->{width} == -1;
+        $cm = $comment_char if $i == $#$ranges && $r->{width} == 1;
+        printf $fh $format, $cm, sprintf( "0x%x", $r->{begin} ), sprintf( "0x%x", $r->{end} ), $r->{width};
+    }
+}

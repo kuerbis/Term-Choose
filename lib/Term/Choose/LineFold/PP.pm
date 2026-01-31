@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.778_03';
+our $VERSION = '1.778_04';
 
 use Exporter qw( import );
 
@@ -61,6 +61,7 @@ sub char_width {
     }
     return 1;
 }
+
 
 sub print_columns {
     #my $str = $_[0];

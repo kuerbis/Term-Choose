@@ -3,8 +3,8 @@ package Term::Choose;
 use warnings;
 use strict;
 use 5.10.1;
-
-our $VERSION = '1.778_03';
+#$SIG{__WARN__} = sub { die @_ };
+our $VERSION = '1.778_04';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -1461,7 +1461,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.778_03
+Version 1.778_04
 
 =cut
 
