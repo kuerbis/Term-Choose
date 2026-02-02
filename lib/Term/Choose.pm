@@ -3,8 +3,8 @@ package Term::Choose;
 use warnings;
 use strict;
 use 5.10.1;
-#$SIG{__WARN__} = sub { die @_ };
-our $VERSION = '1.778_04';
+
+our $VERSION = '1.779';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -31,11 +31,6 @@ BEGIN {
 
 END {
     if ( $? == 255 ) {
-        #if ( $^O ne 'MSWin32' ) {
-        #    binmode STDIN, ':encoding(UTF-8)' or warn "binmode STDIN, :encoding(UTF-8): $!\n";
-        #    print "\e[?1006l";
-        #    print "\e[?1003l";
-        #}
         if( $^O eq 'MSWin32' ) {
             my $input = Win32::Console->new( Win32::Console::constant( "STD_INPUT_HANDLE",  0 ) );
             $input->Mode( 0x0001|0x0002|0x0004 );
@@ -98,11 +93,11 @@ sub _valid_options {
         mark                => 'Array_Int',
         meta_items          => 'Array_Int',
         no_spacebar         => 'Array_Int',
-        tabs_bottom_text    => 'Array_Int', # documentation
+        tabs_bottom_text    => 'Array_Int',
         tabs_info           => 'Array_Int',
         tabs_prompt         => 'Array_Int',
         skip_items          => 'Regexp',
-        bottom_text         => 'Str',       # documentation
+        bottom_text         => 'Str',
         empty               => 'Str',
         footer              => 'Str',
         info                => 'Str',
@@ -139,7 +134,7 @@ sub _defaults {
         #meta_items         => undef,
         mouse               => 0,
         #no_spacebar        => undef,
-        order               => 1,           # ###
+        order               => 1,           ##
         pad                 => 2,
         page                => 1,
         #prompt             => undef,
@@ -841,8 +836,8 @@ sub __avail_screen_size {
     $self->{avail_height} -= @{$self->{info_rows}}        if $self->{info_rows};
     $self->{avail_height} -= @{$self->{prompt_rows}}      if $self->{prompt_rows};
     $self->{avail_height}--                               if length $self->{search_info};
-    $self->{avail_height} -= @{$self->{bottom_text_rows}} if $self->{bottom_text_rows};
     $self->{avail_height}--                               if $self->{page};
+    $self->{avail_height} -= @{$self->{bottom_text_rows}} if $self->{bottom_text_rows};
     $self->{avail_height} -= $self->{margin_bottom}       if $self->{margin_bottom};
     $self->{avail_height} = $self->{max_height}           if $self->{max_height} && $self->{avail_height} > $self->{max_height};
     if ( $self->{avail_height} < $self->{keep} ) {
@@ -1461,7 +1456,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.778_04
+Version 1.779
 
 =cut
 
@@ -1698,12 +1693,9 @@ Options which expect a number as their value expect integers.
 
 =head3 bottom_text
 
-The name of this option may change in future release.
-
 Expects as its value a string. If set, the text is printed below the menu.
 
 (default: not set)
-
 
 =head3 clear_screen
 
@@ -1984,8 +1976,6 @@ Expected value: a regex quoted with the C<qr> operator.
 (default: undefined)
 
 =head3 tabs_bottom_text
-
-The name of this option may change in a future release.
 
 The option I<tabs_bottom_text> allows one to insert spaces at the beginning and the end of I<bottom_text> lines.
 
