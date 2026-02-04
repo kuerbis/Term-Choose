@@ -1,6 +1,9 @@
 Revision history for Term::Choose
 
 
+1.780   2026-02-04
+    - Bugfix bottom_text.
+
 1.779   2026-02-02
     - New options bottom_text and tabs_bottom_text.
     - Bugfix mouse mode with left margin.

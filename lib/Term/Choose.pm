@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.779';
+our $VERSION = '1.780';
 use Exporter 'import';
 our @EXPORT_OK = qw( choose );
 
@@ -958,14 +958,15 @@ sub __avail_height_to_keep {
     if ( $self->{bottom_text_rows} ) {
         if ( @{$self->{bottom_text_rows}} > $available_rows ) {
             $#{$self->{bottom_text_rows}} = $available_rows - 1;
-            my $ellipsis = ' ...';
+            my $ellipsis = '...';
+            my $ellipsis_w = length $ellipsis;
             my $avail_w = $self->{avail_width} + EXTRA_W + ( $self->{margin_left} // 0 );
-            $self->{bottom_text_rows}[-1] =~ s/\s+\z//;
-
-            while ( print_columns( $self->{bottom_text_rows}[-1] ) + length( $ellipsis ) > $avail_w ) {
-                $self->{bottom_text_rows}[-1] =~ s/\s+\S+\z//;
+            if ( $avail_w >= $ellipsis_w ) {
+                while ( print_columns( $self->{bottom_text_rows}[-1] ) + $ellipsis_w > $avail_w ) {
+                    $self->{bottom_text_rows}[-1] =~ s/.\z//;
+                }
+                $self->{bottom_text_rows}[-1] .= $ellipsis;
             }
-            $self->{bottom_text_rows}[-1] .= $ellipsis;
             $available_rows = 0;
         }
         else {
@@ -1456,7 +1457,7 @@ Term::Choose - Choose items from a list interactively.
 
 =head1 VERSION
 
-Version 1.779
+Version 1.780
 
 =cut
 

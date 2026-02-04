@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.779';
+our $VERSION = '1.780';
 
 use Term::Choose::Constants qw( :all );
 
@@ -20,7 +20,7 @@ sub __mouse_info_to_key {
     # ..._y, ..._x: absolute position, one-based index
     my $mouse_row = $mouse_y - 1 - $self->{offset_rows};
     my $mouse_col = $mouse_x - 1;
-    if ( $self->{margin_left} ) { # ###
+    if ( $self->{margin_left} ) {
         $mouse_col -= $self->{margin_left};
     }
     if ( $mouse_row < 0 || $mouse_row > $#{$self->{rc2idx}} ) {

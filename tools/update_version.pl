@@ -9,8 +9,8 @@ use FindBin;
 
 
 
-my $old = '1.778_04';
-my $new = '1.779';
+my $old = '1.779';
+my $new = '1.780';
  
 my $pattern_our = qr/^our \$VERSION = '\Q$old\E';/;
 my $replacement_our = "our \$VERSION = '$new';";
