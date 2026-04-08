@@ -4,7 +4,7 @@ use warnings;
 use strict;
 use 5.10.1;
 
-our $VERSION = '1.781';
+our $VERSION = '1.782';
 
 use Exporter qw( import );
 
@@ -56,6 +56,7 @@ sub line_fold {
     }
     $opt //= {};
     $opt->{join} //= 1;
+    $opt->{truncate_long_tabs} //= 1; # ###
     if ( ! defined $opt->{width} ) {
         my ( $term_width, undef ) = get_term_size();
         $opt->{width} = $term_width + EXTRA_W;
@@ -74,7 +75,7 @@ sub line_fold {
                 s/\v+/\ \ /g; ##
                 s/[\p{Cc}\p{Noncharacter_Code_Point}\p{Cs}]//g;
             }
-            if ( length > $max_tab_width ) {
+            if ( $opt->{truncate_long_tabs} && length > $max_tab_width ) { # ###
                 $_ = cut_to_printwidth( $_, $max_tab_width );
             }
         }
@@ -188,7 +189,7 @@ Term::Choose::LineFold
 
 =head1 VERSION
 
-Version 1.781
+Version 1.782
 
 =cut
 
