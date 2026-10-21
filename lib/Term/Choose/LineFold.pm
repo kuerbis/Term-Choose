@@ -75,7 +75,7 @@ sub line_fold {
                 s/\v+/\ \ /g; ##
                 s/[\p{Cc}\p{Noncharacter_Code_Point}\p{Cs}]//g;
             }
-            if ( $opt->{truncate_long_tabs} && length > $max_tab_width ) { # ###
+            if ( $opt->{truncate_long_tabs} && length > $max_tab_width ) {
                 $_ = cut_to_printwidth( $_, $max_tab_width );
             }
         }
@@ -89,12 +89,8 @@ sub line_fold {
         $str =~ s/(${\SGR_ES})/push( @color, $1 ) && ${\PH}/ge;
     }
     if ( $opt->{binary_filter} && substr( $str, 0, 100 ) =~ /[\x00-\x08\x0B-\x0C\x0E-\x1F]/ ) {
-        #$str = $self->{binary_filter} == 2 ? sprintf("%v02X", $_[0]) =~ tr/./ /r : 'BNRY';  # perl 5.14
         if ( $opt->{binary_filter} == 2 ) {
-            #( $str = sprintf( "%v02X", $_[0] ) ) =~ tr/./ /; # use unmodified string
-
-            $str = sprintf( '%*v02X', ' ', $_[0] );  # use unmodified string    # ###
-
+            $str = sprintf( '%*v02X', ' ', $_[0] );  # use unmodified string
         }
         else {
             $str = 'BNRY';

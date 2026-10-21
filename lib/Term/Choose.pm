@@ -1019,7 +1019,7 @@ sub __avail_height_to_keep {
     if ( $keep <= $self->{avail_height} ) {
         return;
     }
-    if ( $self->{max_width} || $self->{tabs_with_max_width} ) { # ###
+    if ( $self->{max_width} || $self->{tabs_with_max_width} ) { ##
         my $increase = {};
         my $steps = 10;
         my $avail_width_main = ( $self->{term_width} + $self->{extra_w} ) - ( $self->{margin_left} + $self->{margin_right} );
@@ -1070,16 +1070,13 @@ sub __avail_height_to_keep {
         my $orig_avail_width  = $self->{avail_width};
 
         for my $reduce ( 0.80, 0.75, 0.6667, 0.5, 0 ) { # 4/5, 3/4, 2/3, 1/2, 0
-            #if ( $reduce == 0 ) {
-            #    $self->{margin_right} = $self->{margin_right} ? 1 : 0; # ###
-            #    $self->{margin_left}  = $self->{margin_left}  ? 1 : 0;
-            #}
-            #else {
-                $self->{margin_right} = int( $self->{margin_right} * $reduce ) || 1 if $self->{margin_right};
-                $self->{margin_left}  = int( $self->{margin_left}  * $reduce ) || 1 if $self->{margin_left};
-            #}
-            $self->{avail_width} = $orig_avail_width + ( $orig_margin_right - $self->{margin_right} )
-                                                     + ( $orig_margin_left - $self->{margin_left} );
+            if ( $self->{margin_right} ) {
+                $self->{margin_right} = int( $self->{margin_right} * $reduce ) || 1;
+            }
+            if ( $self->{margin_left} ) {
+                $self->{margin_left}  = int( $self->{margin_left}  * $reduce ) || 1;
+            }
+            $self->{avail_width} = $orig_avail_width + ( $orig_margin_right - $self->{margin_right} ) + ( $orig_margin_left - $self->{margin_left} );
             $self->__fold_text( $reduce );
             $keep = $self->__keep_to_row_count( $keep );
             last if $keep <= $self->{avail_height}; ##
